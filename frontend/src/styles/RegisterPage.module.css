@@ -1,0 +1,170 @@
+.container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.form {
+  width: 100%;
+  max-width: 450px;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+}
+
+.titleRow {
+  position: relative;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.backButton {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+  padding: 0;
+}
+
+.backButton:hover {
+  color: #000;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+.inputGroup label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #999;
+  margin-bottom: 0.3rem;
+}
+
+.inputGroup input {
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #f4f4f4;
+  font-size: 0.95rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.inputGroup input:focus {
+  background-color: #eee;
+}
+
+.mobileRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.codeSelect {
+  width: 80px;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: none;
+  background: #f4f4f4;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.mobileInput {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  background: #f4f4f4;
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.passwordRow {
+  position: relative;
+  width: 100%;
+}
+
+.passwordRow input {
+  width: 100%;
+  padding-right: 3rem;
+}
+
+.toggle {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.checkboxRow {
+  display: inline-flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #333;
+  /* align-items: center; */
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.checkboxRow input {
+  margin: 0;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.checkboxLabel {
+  display: inline-block;
+  line-height: 1.4;
+}
+
+.checkboxLabel a {
+  color: #fbbf24;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.submitButton {
+  width: 100%;
+  background: #fbbf24;
+  color: black;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 0.9rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  font-size: 0.85rem;
+  text-align: center;
+}
