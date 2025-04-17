@@ -1,11 +1,21 @@
+// File: src/controllers/userController.js
 import User from "../models/userModel.js";
 
-// 获取当前登录用户信息
+// 获取当前登录用户信息，包含 avatarUrl
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password"); // 忽略密码
+    // 查询并关联 avatar
+    const user = await User.findById(req.user.id)
+      .select("-password")
+      .populate({ path: "avatarId", select: "avatarUrl" });
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json(user);
+
+    const userObj = user.toObject();
+    // 将 avatarId 对象展开并添加 avatarUrl 字段
+    userObj.avatarUrl = userObj.avatarId?.avatarUrl;
+    userObj.avatarId = userObj.avatarId?._id;
+
+    res.json(userObj);
   } catch (err) {
     res
       .status(500)
@@ -13,20 +23,27 @@ export const getMe = async (req, res) => {
   }
 };
 
-// 更新当前用户信息
+// 更新当前用户信息，可更新 userName 或 avatarId
 export const updateMe = async (req, res) => {
-  const updates = req.body;
-  delete updates.password; // 确保不能更新密码
+  const updates = {};
+  if (req.body.userName) updates.userName = req.body.userName;
+  if (req.body.avatarId) updates.avatarId = req.body.avatarId;
 
   try {
     const user = await User.findByIdAndUpdate(req.user.id, updates, {
-      new: true, // 返回更新后的用户
-      runValidators: true, // 确保字段验证
-    }).select("-password");
+      new: true,
+      runValidators: true,
+    })
+      .select("-password")
+      .populate({ path: "avatarId", select: "avatarUrl" });
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    res.json(user); // 返回更新后的用户数据
+    const userObj = user.toObject();
+    userObj.avatarUrl = userObj.avatarId?.avatarUrl;
+    userObj.avatarId = userObj.avatarId?._id;
+
+    res.json(userObj);
   } catch (err) {
     res
       .status(500)
@@ -39,9 +56,6 @@ export const deleteMe = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.user.id);
     if (!user) return res.status(404).json({ error: "User not found" });
-
-    // 你可以在这里添加清理其他数据的逻辑，比如删除用户相关的群组、账单等
-
     res.json({ message: "User deleted" });
   } catch (err) {
     res

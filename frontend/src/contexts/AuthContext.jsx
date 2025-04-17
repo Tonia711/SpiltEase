@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
-  // 初始化：如果有 token，设置 header 并拉取用户信息
   useEffect(() => {
     const initAuth = async () => {
       if (token) {
@@ -28,7 +27,6 @@ export function AuthProvider({ children }) {
     initAuth();
   }, [token]);
 
-  // 登录
   const login = async (email, password) => {
     try {
       const { data } = await api.post("/auth/login", { email, password });
@@ -44,7 +42,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // 注册
   const register = async ({ userName, email, password }) => {
     try {
       const { data } = await api.post("/auth/register", {
@@ -64,12 +61,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // 更新用户
   const updateUser = (me) => {
     setUser(me);
   };
 
-  // 登出
   const logout = () => {
     delete api.defaults.headers.common.Authorization;
     localStorage.removeItem("token");
