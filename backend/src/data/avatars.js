@@ -1,45 +1,56 @@
-//默认10个头像，用户上传的加在后面
+// 默认10个系统头像，用户上传的将添加在数据库中（不写在这里）
+
 const avatars = [
-    {
-        id: 1,
-        avatarUrl: "avatars/testAvatar1.png",
-    },
-    {
-        id: 2,
-        avatarUrl: "avatars/testAvatar2.png",
-    },
-    {
-        id: 3,
-        avatarUrl: "avatars/testAvatar3.png",
-    },
-    {
-        id: 4,
-        avatarUrl: "avatars/testAvatar4.png",
-    },
-    {
-        id: 5,
-        avatarUrl: "avatars/testAvatar5.png",
-    },
-    {
-        id: 6,
-        avatarUrl: "avatars/testAvatar6.png",
-    },
-    {
-        id: 7,
-        avatarUrl: "avatars/testAvatar7.png",
-    },
-    {
-        id: 8,
-        avatarUrl: "avatars/testAvatar8.png",
-    },
-    {
-        id: 9,
-        avatarUrl: "avatars/testAvatar9.png",
-    },
-    {
-        id: 10,
-        avatarUrl: "avatars/testAvatar10.png",
-    }
+  {
+    id: 1,
+    avatarUrl: "avatars/avatar1.png",
+    isSystem: true,
+  },
+  {
+    id: 2,
+    avatarUrl: "avatars/avatar2.png",
+    isSystem: true,
+  },
+  {
+    id: 3,
+    avatarUrl: "avatars/avatar3.png",
+    isSystem: true,
+  },
+  {
+    id: 4,
+    avatarUrl: "avatars/avatar4.png",
+    isSystem: true,
+  },
+  {
+    id: 5,
+    avatarUrl: "avatars/avatar5.png",
+    isSystem: true,
+  },
+  {
+    id: 6,
+    avatarUrl: "avatars/avatar6.png",
+    isSystem: true,
+  },
+  {
+    id: 7,
+    avatarUrl: "avatars/avatar7.png",
+    isSystem: true,
+  },
+  {
+    id: 8,
+    avatarUrl: "avatars/avatar8.png",
+    isSystem: true,
+  },
+  {
+    id: 9,
+    avatarUrl: "avatars/avatar9.png",
+    isSystem: true,
+  },
+  {
+    id: 10,
+    avatarUrl: "avatars/avatar10.png",
+    isSystem: true,
+  },
 ];
 
 export default avatars;

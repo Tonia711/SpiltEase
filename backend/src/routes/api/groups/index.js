@@ -1,5 +1,4 @@
 import express from "express";
-import { Group } from "../../../db/schema.js";
 
 const router = express.Router();
 
