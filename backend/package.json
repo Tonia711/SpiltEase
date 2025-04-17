@@ -4,7 +4,7 @@
   "description": "Backend for SplitMate, a split bill app",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "node src/server.js",
     "dev": "nodemon src/app.js"
   },
   "dependencies": {
