@@ -1,151 +1,81 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../contexts/AuthContext";
+import api from "../utils/api";
 import styles from "../styles/RegisterPage.module.css";
 
 export default function RegisterPage() {
-  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    mobile: "",
+  const [formData, setFormData] = useState({
+    userName: "",
     email: "",
     password: "",
-    agree: false,
   });
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setErrorMessage(""); // 清除之前的错误
 
-    if (!form.agree) {
-      setError("You must agree to the Terms of Use.");
-      return;
-    }
-    if (form.password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
+    try {
+      // 发送请求到后端
+      const res = await api.post("/auth/register", formData);
+      const { token, user } = res.data;
 
-    register({
-      email: form.email,
-      password: form.password,
-      username: form.firstName,
-      avatar: "/avatars/default1.png",
-    });
-    navigate("/home");
+      // 存储 token 在 localStorage 并跳转到主页
+      localStorage.setItem("token", token);
+      navigate("/"); // 登录后跳转到主页
+    } catch (err) {
+      // 显示错误信息
+      setErrorMessage(err.response?.data?.error || "Registration failed");
+    }
   };
 
   return (
     <div className={styles.container}>
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.titleRow}>
-          <button
-            type="button"
-            className={styles.backButton}
-            onClick={() => navigate("/login")}
-          >
-            &lt;
-          </button>
-          <h2 className={styles.title}>Create Account</h2>
-        </div>
-
-        <div className={styles.inputGroup}>
-          <label>First Name</label>
+      <h2>Register</h2>
+      {errorMessage && (
+        <div className={styles.errorMessage}>{errorMessage}</div>
+      )}
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Username</label>
           <input
             type="text"
-            name="firstName"
-            value={form.firstName}
+            name="userName"
+            value={formData.userName}
             onChange={handleChange}
             required
           />
         </div>
-
-        <div className={styles.inputGroup}>
-          <label>Last Name</label>
-          <input
-            type="text"
-            name="lastName"
-            value={form.lastName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className={styles.mobileRow}>
-          <select className={styles.codeSelect} disabled>
-            <option>+64</option>
-          </select>
-          <input
-            type="text"
-            name="mobile"
-            value={form.mobile}
-            onChange={handleChange}
-            placeholder="Mobile Number"
-            required
-            className={styles.mobileInput}
-          />
-        </div>
-
-        <div className={styles.inputGroup}>
-          <label>Email Address</label>
+        <div>
+          <label>Email</label>
           <input
             type="email"
             name="email"
-            value={form.email}
+            value={formData.email}
             onChange={handleChange}
             required
           />
         </div>
-
-        <div className={styles.inputGroup}>
+        <div>
           <label>Password</label>
-          <div className={styles.passwordRow}>
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Minimum 8 Characters"
-              required
-            />
-            <span
-              className={styles.toggle}
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "🙈" : "👁️"}
-            </span>
-          </div>
-        </div>
-
-        <div className={styles.checkboxRow}>
           <input
-            type="checkbox"
-            id="agree"
-            name="agree"
-            checked={form.agree}
+            type="password"
+            name="password"
+            value={formData.password}
             onChange={handleChange}
+            required
           />
-          <label htmlFor="agree" className={styles.checkboxLabel}>
-            I agree to Splitmate's <a href="#">Terms of Use</a>
-          </label>
         </div>
-
-        {error && <div className={styles.error}>{error}</div>}
-
-        <button type="submit" className={styles.submitButton}>
-          Continue
-        </button>
+        <button type="submit">Register</button>
       </form>
     </div>
   );

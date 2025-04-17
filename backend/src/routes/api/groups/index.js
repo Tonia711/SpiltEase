@@ -1,4 +1,6 @@
 import express from "express";
+import { getUserGroups } from "../../../controllers/groupController.js";
+import { protect } from "../../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -8,9 +10,7 @@ router.post("/", (req, res) => {
 });
 
 // Get all groups
-router.get("/", (req, res) => {
-  res.send("Get all groups API");
-});
+router.get("/", protect, getUserGroups); // ✅ GET /api/groups
 
 // Get a specific group
 router.get("/:groupId", (req, res) => {
