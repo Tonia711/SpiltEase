@@ -1,34 +1,46 @@
+// File: src/pages/ProfilePage.jsx
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
+import api from "../utils/api";
 import styles from "../styles/ProfilePage.module.css";
 
 export default function ProfilePage() {
-  const { logout } = useContext(AuthContext);
+  const { user, updateUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
-
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(savedUser.username || "");
-  const [avatar, setAvatar] = useState(savedUser.avatar || "default.png");
+  const [name, setName] = useState(user?.userName || "");
+  const [avatar, setAvatar] = useState(user?.avatarUrl || "default.png");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  console.log("avatar =", avatar);
+  // 未登录则跳转
+  if (!user) {
+    navigate("/login");
+    return null;
+  }
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const handleSave = () => {
-    const updated = { ...savedUser, username: name, avatar };
-    localStorage.setItem("user", JSON.stringify(updated));
-    setIsEditing(false);
-    alert("Profile updated!");
+  const handleSave = async () => {
+    setErrorMessage("");
+    try {
+      const payload = { userName: name, avatarUrl: avatar };
+      const { data: updated } = await api.put("/users/me", payload);
+      updateUser(updated);
+      setIsEditing(false);
+      alert("Profile updated!");
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Failed to update profile. Please try again.");
+    }
   };
 
   const handleCancel = () => {
-    setName(savedUser.username);
-    setAvatar(savedUser.avatar);
+    setName(user.userName);
+    setAvatar(user.avatarUrl);
     setIsEditing(false);
   };
 
@@ -45,17 +57,24 @@ export default function ProfilePage() {
         <h2 className={styles.title}>Profile</h2>
       </div>
 
-      <img src={`/avatars/${avatar}`} alt="avatar" className={styles.avatar} />
+      <img
+        src={avatar.startsWith("http") ? avatar : `/avatars/${avatar}`}
+        alt="avatar"
+        className={styles.avatar}
+      />
+
+      {errorMessage && (
+        <div className={styles.errorMessage}>{errorMessage}</div>
+      )}
 
       {!isEditing ? (
         <>
           <p>
-            <strong>Username:</strong> {savedUser.username}
+            <strong>Username:</strong> {user.userName}
           </p>
           <p>
-            <strong>Email:</strong> {savedUser.email}
+            <strong>Email:</strong> {user.email}
           </p>
-
           <button className={styles.editBtn} onClick={() => setIsEditing(true)}>
             Edit
           </button>

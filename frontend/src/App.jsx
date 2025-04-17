@@ -3,22 +3,22 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "./contexts/AuthContext";
 
+import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import NewGroupPage from "./pages/NewGroupPage";
 import GroupDetailPage from "./pages/GroupDetailPage";
 import ProfilePage from "./pages/ProfilePage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={isLoggedIn ? <HomePage /> : <Navigate to="/login" replace />}
-      />
+      {/* 公共页面 */}
+      <Route path="/" element={isLoggedIn ? <HomePage /> : <LandingPage />} />
       <Route
         path="/login"
         element={isLoggedIn ? <Navigate to="/" replace /> : <LoginPage />}
@@ -28,13 +28,34 @@ function App() {
         element={isLoggedIn ? <Navigate to="/" replace /> : <RegisterPage />}
       />
 
-      {isLoggedIn && (
-        <>
-          <Route path="/create-group" element={<NewGroupPage />} />
-          <Route path="/groups/:groupId" element={<GroupDetailPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-        </>
-      )}
+      {/* 下面的路由都用 ProtectedRoute 包裹 */}
+      <Route
+        path="/create-group"
+        element={
+          <ProtectedRoute>
+            <NewGroupPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/groups/:groupId"
+        element={
+          <ProtectedRoute>
+            <GroupDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 其他未匹配时跳回首页或 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

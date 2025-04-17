@@ -11,14 +11,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError(""); // 清除之前的错误信息
 
-    const success = login(email, password);
-    if (success) {
-      navigate("/home");
-    } else {
-      setError("Invalid credentials.");
+    // 调用 AuthContext 中的 login 方法
+    try {
+      const result = await login(email, password);
+
+      // 登录成功，跳转到主页
+      if (result.ok) {
+        navigate("/"); // 登录成功，跳回首页
+      } else {
+        setError(result.error || "Invalid credentials."); // 显示错误信息
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
     }
   };
 
@@ -26,12 +34,13 @@ export default function LoginPage() {
     <div className={styles.container}>
       <form className={styles.form} onSubmit={handleLogin}>
         <h2 className={styles.logo}>
-          SPLiT<span>Mate</span>
+          SPLiT<span className={styles.logoHighlight}>Mate</span>
         </h2>
 
         <div className={styles.inputGroup}>
-          <label>Email address</label>
+          <label className={styles.label}>Email address</label>
           <input
+            className={styles.input}
             type="email"
             value={email}
             placeholder="Enter email address"
@@ -41,8 +50,9 @@ export default function LoginPage() {
         </div>
 
         <div className={styles.inputGroup}>
-          <label>Password</label>
+          <label className={styles.label}>Password</label>
           <input
+            className={styles.input}
             type="password"
             value={password}
             placeholder="Enter password"
@@ -52,7 +62,9 @@ export default function LoginPage() {
         </div>
 
         <div className={styles.forgot}>
-          <a href="#">Forgot Password?</a>
+          <Link to="/forgot-password" className={styles.forgotLink}>
+            Forgot Password?
+          </Link>
         </div>
 
         <button type="submit" className={styles.button}>

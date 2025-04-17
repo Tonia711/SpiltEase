@@ -1,49 +1,80 @@
-import { createContext, useState, useEffect } from "react";
+// File: src/contexts/AuthContext.jsx
+import React, { createContext, useState, useEffect } from "react";
+import api from "../utils/api";
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // 当前用户对象
-  const [token, setToken] = useState(localStorage.getItem("token")); // 模拟 token
-  const [loading, setLoading] = useState(true); // 首次加载状态
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [loading, setLoading] = useState(true);
 
-  // 初始化：如果 token 存在，从 localStorage 中恢复 user
+  // 初始化：如果有 token，设置 header 并拉取用户信息
   useEffect(() => {
-    if (token) {
-      const savedUser = JSON.parse(localStorage.getItem("user"));
-      setUser(savedUser);
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      if (token) {
+        api.defaults.headers.common.Authorization = `Bearer ${token}`;
+        try {
+          const { data } = await api.get("/users/me");
+          setUser(data);
+        } catch (err) {
+          console.error("Failed to fetch current user", err);
+          localStorage.removeItem("token");
+          setToken(null);
+        }
+      }
+      setLoading(false);
+    };
+    initAuth();
   }, [token]);
 
-  // 登录逻辑（未来可替换为后端 API）
-  const login = (email, password) => {
-    const savedUser = JSON.parse(localStorage.getItem("user"));
-    if (savedUser?.email === email && savedUser?.password === password) {
-      localStorage.setItem("token", "mock-token");
-      setToken("mock-token");
-      setUser(savedUser);
-      return true;
-    } else {
-      return false;
+  // 登录
+  const login = async (email, password) => {
+    try {
+      const { data } = await api.post("/auth/login", { email, password });
+      const { token: jwt, user: me } = data;
+      localStorage.setItem("token", jwt);
+      api.defaults.headers.common.Authorization = `Bearer ${jwt}`;
+      setToken(jwt);
+      setUser(me);
+      return { ok: true };
+    } catch (err) {
+      console.error("Login error", err);
+      return { ok: false, error: err.response?.data?.error || err.message };
     }
   };
 
-  // 登出：清除所有登录状态
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
+  // 注册
+  const register = async ({ userName, email, password }) => {
+    try {
+      const { data } = await api.post("/auth/register", {
+        userName,
+        email,
+        password,
+      });
+      const { token: jwt, user: me } = data;
+      localStorage.setItem("token", jwt);
+      api.defaults.headers.common.Authorization = `Bearer ${jwt}`;
+      setToken(jwt);
+      setUser(me);
+      return { ok: true };
+    } catch (err) {
+      console.error("Register error", err);
+      return { ok: false, error: err.response?.data?.error || err.message };
+    }
   };
 
-  // 注册逻辑（写入 localStorage，并自动登录）
-  const register = ({ email, password, username, avatar }) => {
-    const newUser = { email, password, username, avatar };
-    localStorage.setItem("user", JSON.stringify(newUser));
-    localStorage.setItem("token", "mock-token");
-    setUser(newUser);
-    setToken("mock-token");
+  // 更新用户
+  const updateUser = (me) => {
+    setUser(me);
+  };
+
+  // 登出
+  const logout = () => {
+    delete api.defaults.headers.common.Authorization;
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
   };
 
   return (
@@ -51,13 +82,15 @@ export function AuthProvider({ children }) {
       value={{
         user,
         token,
-        isLoggedIn: !!token,
+        isLoggedIn: Boolean(user),
+        loading,
         login,
-        logout,
         register,
+        updateUser,
+        logout,
       }}
     >
-      {!loading && children}
+      {!loading ? children : <div>Loading...</div>}
     </AuthContext.Provider>
   );
 }
