@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import '../styles/GroupList.css'; // Assuming you have a CSS file for styles
 
 const GROUP_URL = 'http://localhost:3000/api/groups';
 
