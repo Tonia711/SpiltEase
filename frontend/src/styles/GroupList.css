@@ -6,19 +6,36 @@
 }
 
 .group-item {
+    position: relative;
     background-color: #2e273f;
-    border-radius: 10px;
     padding: 1rem;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     gap: 1rem;
-    cursor: pointer;
     transition: background-color 0.2s ease;
     max-width: 326px;
 }
 
-.group-item:hover {
-    background-color: #3e3455;
+.delete-btn {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    background: #ff4d4f;
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.group-item:hover .delete-btn {
+    opacity: 1;
 }
 
 .group-icon {
@@ -58,4 +75,87 @@
     padding: 1rem;
     text-align: center;
     color: #ccc;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.modal {
+    background: #fff;
+    color: #333;
+    padding: 1.5rem;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+}
+
+.modal-buttons {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-around;
+}
+
+.modal button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal .confirm {
+    background-color: #e53935;
+    color: white;
+}
+
+.modal .cancel {
+    background-color: #ccc;
+    color: #333;
+}
+
+.toast-success,
+.toast-error {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 1rem 1.5rem;
+    border-radius:10px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    animation: fadeOut 3s forwards;
+    text-align: center;
+}
+
+.toast-success {
+    background-color: #ffffff;
+}
+
+.toast-error {
+    background-color: #ffca28;
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
 }

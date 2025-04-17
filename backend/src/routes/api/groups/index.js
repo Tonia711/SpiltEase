@@ -15,6 +15,20 @@ router.get("/", async(req, res) => {
   }
 });
 
+router.delete("/:groupId", async(req, res) => {
+  const { groupId } = req.params;
+  try {
+    const deletedGroup = await Group.findByIdAndDelete(groupId);
+    if (!deletedGroup) {
+      return res.status(404).json({ message: "Group not found" });
+    } 
+    res.status(200).json({ message: "Group deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting group:", err);
+    res.status(500).json({ message: "Server error while deleting group" });
+  }
+});
+
 // Create group
 router.post("/", (req, res) => {
   res.send("Create group API");
