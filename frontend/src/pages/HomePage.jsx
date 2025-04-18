@@ -10,7 +10,20 @@ export default function HomePage() {
   const { user } = useContext(AuthContext)
   const [showOptions, setShowOptions] = useState(false);
 
-  const avatarUrl = user?.avatarUrl || "/avatars/default.png"; // 获取头像
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const res = await api.get("/groups");
+        setGroups(res.data);
+      } catch (err) {
+        console.error("Failed to fetch groups", err);
+      }
+    };
+
+    fetchGroups();
+  }, []);
+
+  const avatarUrl = user?.avatarUrl || "/avatars/avatar1.png"; // 获取头像
   const username = user?.userName || "User"; // 获取用户名
 
   const handleProfileClick = () => {

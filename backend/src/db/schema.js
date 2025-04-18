@@ -1,26 +1,16 @@
 import mongoose from "mongoose";
+import User from "../models/userModel.js";
+import Avatar from "../models/avatarModel.js";
 
-// 用户数据模型
-const userSchema = new mongoose.Schema({
-  _id: Number,
-  userName: String,
-  email: String,
-  password: {
-    type: String,
-    required: true,
-  },
-  avatarId: Number,
-  groupId: [Number],
-});
-
-// 标签数据模型
+// 标签
 const labelSchema = new mongoose.Schema({
   _id: Number,
   type: String,
   iconUrl: String,
 });
+const Label = mongoose.models.Label || mongoose.model("Label", labelSchema);
 
-// 组数据模型
+// 组
 const groupSchema = new mongoose.Schema({
   _id: Number,
   groupName: String,
@@ -32,23 +22,18 @@ const groupSchema = new mongoose.Schema({
   startDate: Date,
   endDate: Date,
   joinCode: String,
-  members: [
-    {
-      memberId: {
-        type: Number,
-      },
-      userName: String,
-    },
-  ],
+  members: [{ memberId: Number, userName: String }],
 });
+const Group = mongoose.models.Group || mongoose.model("Group", groupSchema);
 
-// 图标数据模型
+// 图标
 const iconSchema = new mongoose.Schema({
   _id: Number,
   iconUrl: String,
 });
+const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
 
-// 账单数据模型
+// 账单
 const billSchema = new mongoose.Schema({
   groupId: Number,
   groupBills: [
@@ -61,92 +46,44 @@ const billSchema = new mongoose.Schema({
       expenses: Number,
       refunds: Number,
       splitWay: String,
-      members: [
-        {
-          memberId: {
-            type: Number,
-          },
-          expense: Number,
-          refund: Number,
-        },
-      ],
+      members: [{ memberId: Number, expense: Number, refund: Number }],
     },
   ],
 });
+const Bill = mongoose.models.Bill || mongoose.model("Bill", billSchema);
 
-// 余额数据模型
+// 余额
 const balanceSchema = new mongoose.Schema({
   groupId: Number,
   groupBalances: [
     {
-      fromMemberId: {
-        type: Number,
-      },
-      toMemberId: {
-        type: Number,
-      },
+      fromMemberId: Number,
+      toMemberId: Number,
       balance: Number,
-      isFinished: {
-        type: Boolean,
-        default: false,
-      },
-      finishHistory: [
-        {
-          date: Date,
-          amount: Number,
-        },
-      ],
+      isFinished: { type: Boolean, default: false },
+      finishHistory: [{ date: Date, amount: Number }],
     },
   ],
 });
+const Balance =
+  mongoose.models.Balance || mongoose.model("Balance", balanceSchema);
 
-// 头像数据模型
-const avatarSchema = new mongoose.Schema({
-  _id: Number,
-  avatarUrl: String,
-  isSystem: {
-    type: Boolean,
-    default: true, // 默认是系统头像（旧数据）
-  },
-});
-
-// 结算数据模型
+// 结算记录
 const balancesCalculateSchema = new mongoose.Schema({
-  groupId: {
-    type: Number,
-    required: true,
-  },
-  calculatedAt: {
-    type: Date,
-    default: Date.now, // 自动记录生成结算时的时间
-  },
+  groupId: { type: Number, required: true },
+  calculatedAt: { type: Date, default: Date.now },
   groupBalances: [
     {
-      fromMemberId: {
-        type: Number,
-      },
-      toMemberId: {
-        type: Number,
-      },
-      balance: {
-        type: Number,
-        required: true,
-      },
+      fromMemberId: Number,
+      toMemberId: Number,
+      balance: Number,
     },
   ],
 });
-
-// 创建模型
-const User = mongoose.models.User || mongoose.model("User", userSchema);
-const Label = mongoose.models.Label || mongoose.model("Label", labelSchema);
-const Group = mongoose.models.Group || mongoose.model("Group", groupSchema);
-const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
-const Bill = mongoose.models.Bill || mongoose.model("Bill", billSchema);
-const Balance = mongoose.models.Balance || mongoose.model("Balance", balanceSchema);
-const Avatar = mongoose.models.Avatar || mongoose.model("Avatar", avatarSchema);
 const BalancesCalculate =
-  mongoose.models.BalancesCalculate || mongoose.model("BalancesCalculate", balancesCalculateSchema);
+  mongoose.models.BalancesCalculate ||
+  mongoose.model("BalancesCalculate", balancesCalculateSchema);
 
-
-// 导出模型
-export { User, Label, Group, Icon, Bill, Balance, Avatar, BalancesCalculate };
+// —— 最后统一导出 ——
+// User 和 Avatar 直接复用各自的 model
+export { User, Avatar, Label, Group, Icon, Bill, Balance, BalancesCalculate };
