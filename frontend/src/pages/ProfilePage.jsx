@@ -9,93 +9,81 @@ export default function ProfilePage() {
   const { user, updateUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [isInfoEditing, setIsInfoEditing] = useState(false);
-  const [isAvatarEditing, setIsAvatarEditing] = useState(false);
-  const [name, setName] = useState(user?.userName || "");
-
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+  // 静态资源根路径 & 默认头像
   const AVATAR_BASE = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
+  const DEFAULT_AVATAR = `${AVATAR_BASE}/avatars/default.png`;
 
-  // Presets with full avatarUrl objects
+  // 本地状态
+  const [isInfoEditing, setIsInfoEditing] = useState(false);
+  const [isAvatarEditing, setIsAvatarEditing] = useState(false);
+  const [name, setName] = useState(user?.userName || "");
   const [presets, setPresets] = useState([]);
-  const [avatar, setAvatar] = useState("");
+  const [avatar, setAvatar] = useState(user?.avatarUrl || DEFAULT_AVATAR);
+  const [selectedAvatarId, setSelectedAvatarId] = useState(
+    user?.avatarId || null
+  );
   const [errorMessage, setErrorMessage] = useState("");
 
+  // 当 user 更新时，初始化表单和头像列表
   useEffect(() => {
     if (!user) {
       navigate("/login");
       return;
     }
-    // Fetch system avatars
+    setName(user.userName);
+    setAvatar(user.avatarUrl || DEFAULT_AVATAR);
+    setSelectedAvatarId(user.avatarId || null);
+
     api
       .get("/avatars")
-      .then((res) => {
-        setPresets(res.data);
-        // Determine initial avatar by matching avatarId
-        const sys = res.data.find(
-          (a) => String(a._id) === String(user.avatarId)
-        );
-        const initialUrl = sys ? sys.avatarUrl : "avatars/default.png";
-        setAvatar(
-          initialUrl.startsWith("http")
-            ? initialUrl
-            : `${AVATAR_BASE}/${initialUrl}`
-        );
-      })
+      .then(({ data }) => setPresets(data))
       .catch((err) => console.error("Failed to fetch avatars:", err));
-  }, [user, navigate]);
+  }, [user, navigate, DEFAULT_AVATAR]);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
+  // 保存用户名
   const handleInfoSave = async () => {
     setErrorMessage("");
     try {
       const { data: updated } = await api.put("/users/me", { userName: name });
+      // 拼装完整头像 URL
+      updated.avatarUrl = updated.avatarUrl?.startsWith("http")
+        ? updated.avatarUrl
+        : `${AVATAR_BASE}/${updated.avatarUrl}`;
       updateUser(updated);
       setIsInfoEditing(false);
     } catch {
       setErrorMessage("Failed to update information. Please try again.");
     }
   };
+
   const handleInfoCancel = () => {
     setName(user.userName);
     setIsInfoEditing(false);
   };
 
-  const handleAvatarUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("avatar", file);
-    api
-      .post("/users/me/avatar", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((res) => {
-        const updated = res.data.user;
-        const url = updated.avatarUrl.startsWith("http")
-          ? updated.avatarUrl
-          : `${AVATAR_BASE}/${updated.avatarUrl}`;
-        setAvatar(url);
-        updateUser(updated);
-      })
-      .catch(() => setErrorMessage("Upload failed. Please try again."));
-  };
-
+  // 保存系统头像选择
   const handleAvatarSave = async () => {
     setErrorMessage("");
+    if (!selectedAvatarId) {
+      setErrorMessage("Please select an avatar first.");
+      return;
+    }
     try {
-      // strip base
-      const relative = avatar.replace(`${AVATAR_BASE}/`, "");
       const { data: updated } = await api.put("/users/me", {
-        avatarUrl: relative,
+        avatarId: selectedAvatarId,
       });
+      updated.avatarUrl = updated.avatarUrl?.startsWith("http")
+        ? updated.avatarUrl
+        : `${AVATAR_BASE}/${updated.avatarUrl}`;
       updateUser(updated);
+      setAvatar(updated.avatarUrl || DEFAULT_AVATAR);
       setIsAvatarEditing(false);
     } catch {
       setErrorMessage("Failed to save avatar. Please try again.");
@@ -103,14 +91,8 @@ export default function ProfilePage() {
   };
 
   const handleAvatarCancel = () => {
-    // reset to initial
-    const sys = presets.find((a) => String(a._id) === String(user.avatarId));
-    const initialUrl = sys ? sys.avatarUrl : "avatars/default.png";
-    setAvatar(
-      initialUrl.startsWith("http")
-        ? initialUrl
-        : `${AVATAR_BASE}/${initialUrl}`
-    );
+    setAvatar(user.avatarUrl || DEFAULT_AVATAR);
+    setSelectedAvatarId(user.avatarId || null);
     setIsAvatarEditing(false);
   };
 
@@ -132,36 +114,39 @@ export default function ProfilePage() {
 
       {isAvatarEditing && (
         <div className={styles.avatarOptions}>
-          <input type="file" accept="image/*" onChange={handleAvatarUpload} />
-          {presets.map((item) => {
-            const url = item.avatarUrl.startsWith("http")
-              ? item.avatarUrl
-              : `${AVATAR_BASE}/${item.avatarUrl}`;
-            return (
-              <img
-                key={item._id}
-                src={url}
-                alt="preset"
-                className={`${styles.option} ${
-                  avatar === url ? styles.selected : ""
-                }`}
-                onClick={() => setAvatar(url)}
-              />
-            );
-          })}
+          <div className={styles.presetsGrid}>
+            {presets.map((item) => {
+              const url = item.avatarUrl.startsWith("http")
+                ? item.avatarUrl
+                : `${AVATAR_BASE}/${item.avatarUrl}`;
+              return (
+                <img
+                  key={item._id}
+                  src={url}
+                  alt="preset"
+                  className={`${styles.option} ${
+                    selectedAvatarId === item._id ? styles.selected : ""
+                  }`}
+                  onClick={() => {
+                    setAvatar(url);
+                    setSelectedAvatarId(item._id);
+                  }}
+                />
+              );
+            })}
+          </div>
           <div className={styles.editButtons}>
             <button className={styles.saveBtn} onClick={handleAvatarSave}>
-              Save Avatar
+              Save
             </button>
             <button className={styles.cancelBtn} onClick={handleAvatarCancel}>
               Cancel
             </button>
           </div>
+          {errorMessage && (
+            <div className={styles.errorMessage}>{errorMessage}</div>
+          )}
         </div>
-      )}
-
-      {errorMessage && (
-        <div className={styles.errorMessage}>{errorMessage}</div>
       )}
 
       {!isInfoEditing && !isAvatarEditing && (
@@ -195,6 +180,9 @@ export default function ProfilePage() {
               Cancel
             </button>
           </div>
+          {errorMessage && (
+            <div className={styles.errorMessage}>{errorMessage}</div>
+          )}
         </div>
       )}
 

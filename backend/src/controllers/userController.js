@@ -3,12 +3,6 @@ import User from "../models/userModel.js";
 
 // 获取当前登录用户信息，包含 avatarUrl
 export const getMe = async (req, res) => {
-  console.log("👤 [getMe] req.user:", req.user);
-  console.log(
-    "🔎 [getMe] req.user.id 类型和值:",
-    typeof req.user.id,
-    req.user.id
-  );
   try {
     // 查询并关联 avatar
     const user = await User.findById(req.user.id)
