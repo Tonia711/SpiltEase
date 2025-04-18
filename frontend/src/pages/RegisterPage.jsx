@@ -1,10 +1,13 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../utils/api";
+import React, { useState, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { AuthContext } from "../contexts/AuthContext"; // ✅ 引入 AuthContext
 import styles from "../styles/RegisterPage.module.css";
+import MobileFrame from "../components/MobileFrame"; // ✅ 引入 MobileFrame 组件
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { register } = useContext(AuthContext); // ✅ 解构 register 方法
+
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
@@ -22,61 +25,77 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // 清除之前的错误
+    setErrorMessage("");
 
-    try {
-      // 发送请求到后端
-      const res = await api.post("/auth/register", formData);
-      const { token, user } = res.data;
-
-      // 存储 token 在 localStorage 并跳转到主页
-      localStorage.setItem("token", token);
-      navigate("/"); // 登录后跳转到主页
-    } catch (err) {
-      // 显示错误信息
-      setErrorMessage(err.response?.data?.error || "Registration failed");
+    const result = await register(formData); // ✅ 使用 AuthContext 的注册方法
+    if (result.ok) {
+      navigate("/"); // ✅ 注册成功后跳转首页（此时已登录）
+    } else {
+      setErrorMessage(result.error || "Registration failed");
     }
   };
 
   return (
-    <div className={styles.container}>
-      <h2>Register</h2>
-      {errorMessage && (
-        <div className={styles.errorMessage}>{errorMessage}</div>
-      )}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username</label>
-          <input
-            type="text"
-            name="userName"
-            value={formData.userName}
-            onChange={handleChange}
-            required
-          />
+    <MobileFrame>
+      <div className={styles.container}>
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <h2 className={styles.logo}>
+            SPLiT<span className={styles.logoHighlight}>Mate</span>
+          </h2>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Username</label>
+            <input
+              className={styles.input}
+              type="text"
+              name="userName"
+              value={formData.userName}
+              onChange={handleChange}
+              placeholder="Enter username"
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Email address</label>
+            <input
+              className={styles.input}
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter email"
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Password</label>
+            <input
+              className={styles.input}
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter password"
+              required
+            />
+          </div>
+
+          <button className={styles.button} type="submit">
+            Register
+          </button>
+
+          {errorMessage && <div className={styles.error}>{errorMessage}</div>}
+        </form>
+
+        <div className={styles.footer}>
+          Already have an account?{" "}
+          <Link to="/login" className={styles.loginLink}>
+            Sign in
+          </Link>
         </div>
-        <div>
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <button type="submit">Register</button>
-      </form>
-    </div>
+      </div>
+    </MobileFrame>
   );
 }

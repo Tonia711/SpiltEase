@@ -40,18 +40,31 @@ async function importData() {
     console.log("✅ Old data cleared");
 
     // 插入 Avatar，让 Mongo 自动生成 ObjectId
-    const avatarDocs = avatars.map((a) => ({
-      avatarUrl: a.avatarUrl,
-      isSystem: a.isSystem,
-    }));
+    const avatarDocs = avatars.map((a, index) => {
+      const doc = {
+        avatarUrl: a.avatarUrl,
+        isSystem: a.isSystem,
+      };
+
+      // ✅ 为前 10 个系统头像写死稳定 ObjectId
+      if (a.isSystem && a.id && a.id <= 10) {
+        const hexId = a.id.toString(16).padStart(24, "0");
+        doc._id = new mongoose.Types.ObjectId(hexId);
+        a._id = doc._id; // 👈 存回原始数组中供后续 avatarMap 使用
+      }
+
+      return doc;
+    });
+
     const insertedAvatars = await Avatar.insertMany(avatarDocs);
     console.log("✅ Avatars inserted");
 
-    // 建立数字 ID → ObjectId 映射
+    // ✅ Step 2: 构建 avatarMap（使用写死 _id 或查找回来的 ObjectId）
     const avatarMap = {};
-    // 假设 data/avatars.js 的顺序和 insertedAvatars 一一对应
-    avatars.forEach((a, idx) => {
-      avatarMap[a.id] = insertedAvatars[idx]._id;
+    avatars.forEach((a) => {
+      avatarMap[a.id] =
+        a._id ||
+        insertedAvatars.find((doc) => doc.avatarUrl === a.avatarUrl)._id;
     });
 
     // 处理并插入 User，使用映射后的 ObjectId

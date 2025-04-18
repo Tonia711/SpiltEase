@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Avatar",
     required: true,
-    default: 1, // 默认使用头像1
+    default: new mongoose.Types.ObjectId("000000000000000000000001"),
   },
   groupId: {
     type: [Number], // 或者 mongoose.Schema.Types.ObjectId 如果是引用 Group collection
