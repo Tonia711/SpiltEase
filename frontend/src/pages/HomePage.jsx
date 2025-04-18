@@ -1,14 +1,13 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/HomePage.module.css";
-import GroupCard from "../components/GroupCard";
 import { AuthContext } from "../contexts/AuthContext";
 import api from "../utils/api";
+import GroupList from "../components/GroupList";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-  const [groups, setGroups] = useState([]);
+  const { user } = useContext(AuthContext)
   const [showOptions, setShowOptions] = useState(false);
 
   useEffect(() => {
@@ -38,12 +37,10 @@ export default function HomePage() {
         <span className={styles.name}>{username}</span>
       </div>
 
-      <div className={styles.groupList}>
-        {groups.map((group) => (
-          <GroupCard key={group._id} group={group} />
-        ))}
+      <div className={styles.groupListContainer}>
+        <GroupList />
       </div>
-
+      
       <button
         className={styles.fab}
         onClick={() => setShowOptions(!showOptions)}
