@@ -19,8 +19,8 @@
 
 .delete-btn {
     position: absolute;
-    right: 1rem;
-    top: 1rem;
+    top: 0.5rem;
+    right: 0.5rem;
     background: #ff4d4f;
     border: none;
     color: white;
@@ -32,6 +32,9 @@
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .group-item:hover .delete-btn {
