@@ -137,17 +137,16 @@ const balancesCalculateSchema = new mongoose.Schema({
 });
 
 // 创建模型
-const User = mongoose.model("User", userSchema);
-const Label = mongoose.model("Label", labelSchema);
-const Group = mongoose.model("Group", groupSchema);
-const Icon = mongoose.model("Icon", iconSchema);
-const Bill = mongoose.model("Bill", billSchema);
-const Balance = mongoose.model("Balance", balanceSchema);
-const Avatar = mongoose.model("Avatar", avatarSchema);
-const BalancesCalculate = mongoose.model(
-  "BalancesCalculate",
-  balancesCalculateSchema
-);
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+const Label = mongoose.models.Label || mongoose.model("Label", labelSchema);
+const Group = mongoose.models.Group || mongoose.model("Group", groupSchema);
+const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
+const Bill = mongoose.models.Bill || mongoose.model("Bill", billSchema);
+const Balance = mongoose.models.Balance || mongoose.model("Balance", balanceSchema);
+const Avatar = mongoose.models.Avatar || mongoose.model("Avatar", avatarSchema);
+const BalancesCalculate =
+  mongoose.models.BalancesCalculate || mongoose.model("BalancesCalculate", balancesCalculateSchema);
+
 
 // 导出模型
 export { User, Label, Group, Icon, Bill, Balance, Avatar, BalancesCalculate };
