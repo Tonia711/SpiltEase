@@ -16,7 +16,8 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   avatarId: {
-    type: Number,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Avatar",
     required: true,
     default: 1, // 默认使用头像1
   },

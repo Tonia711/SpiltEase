@@ -24,7 +24,7 @@ export default function HomePage() {
     fetchGroups();
   }, []);
 
-  const avatarUrl = user?.avatarUrl || "/avatars/default.png"; // 获取头像
+  const avatarUrl = user?.avatarUrl || "/avatars/avatar1.png"; // 获取头像
   const username = user?.userName || "User"; // 获取用户名
 
   const handleProfileClick = () => {

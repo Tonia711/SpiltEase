@@ -42,10 +42,16 @@ export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
+  console.log("🔍 [loginUser] DB 中查到 user 实例:", user);
+
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
   const token = createToken(user);
+
+  console.log("🔑 [loginUser] 签发的 token 字符串:", token);
+  console.log("📦 [loginUser] 解码后 payload:", jwt.decode(token));
+
   res.json({ token, user });
 };
