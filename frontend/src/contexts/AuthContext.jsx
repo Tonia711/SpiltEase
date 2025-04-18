@@ -15,6 +15,12 @@ export function AuthProvider({ children }) {
         api.defaults.headers.common.Authorization = `Bearer ${token}`;
         try {
           const { data } = await api.get("/users/me");
+          const AVATAR_BASE = import.meta.env.VITE_API_BASE_URL
+            ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
+            : "";
+          data.avatarUrl = data.avatarUrl.startsWith("http")
+            ? data.avatarUrl
+            : `${AVATAR_BASE}/${data.avatarUrl}`;
           setUser(data);
         } catch (err) {
           console.error("Failed to fetch current user", err);
