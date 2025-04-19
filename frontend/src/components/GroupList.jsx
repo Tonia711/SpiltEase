@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { format } from 'date-fns';
+import { AuthContext } from '../contexts/AuthContext';
 import '../styles/GroupList.css';
 
 const GROUP_URL = 'http://localhost:3000/api/groups';
@@ -12,16 +13,30 @@ const GroupList = () => {
     const [groupToDelete, setGroupToDelete] = useState(null);
     const [success, setSuccess] = useState(null);
 
+    const { token } = useContext(AuthContext);
+
     useEffect(() => {
         const fetchGroups = async () => {
+            if (!token) {
+                setError("Authentication token not found.");
+                setLoading(false);
+                return;
+            }
+
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(GROUP_URL);
+                const response = await fetch(GROUP_URL, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const data = await response.json();
+                const data = await response.json();                
                 setGroups(data);
             } catch (e) {
                 setError('Failed to delete group.');
