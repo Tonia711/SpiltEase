@@ -1,53 +1,91 @@
-/* RegisterPage.module.css */
 .container {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  background-color: #1c1b22;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
 }
 
-h2 {
+.form {
+  width: 326px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 40px;
+}
+
+.logo {
+  font-size: 32px;
+  font-weight: bold;
   text-align: center;
-  margin-bottom: 20px;
-}
-
-.errorMessage {
-  color: red;
-  font-size: 14px;
+  color: #fcd34d;
   margin-bottom: 10px;
 }
 
-form {
+.logoHighlight {
+  color: white;
+}
+
+.inputGroup {
   display: flex;
   flex-direction: column;
 }
 
-form div {
-  margin-bottom: 15px;
+.label {
+  color: #d1d5db;
+  font-size: 14px;
+  margin-bottom: 6px;
 }
 
-label {
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-input {
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-button {
-  padding: 10px;
-  background-color: #facc15;
-  color: black;
+.input {
+  width: 100%;
+  max-width: 326px;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  border-radius: 12px;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  outline: none;
+  background-color: #f5f5f5;
+  font-size: 16px;
+  color: #111827;
 }
 
-button:hover {
-  opacity: 0.9;
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.button {
+  background-color: #fcd34d;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #fbbf24;
+}
+
+.error {
+  color: #f87171;
+  text-align: center;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #d1d5db;
+  font-size: 14px;
+}
+
+.loginLink {
+  color: #fcd34d;
+  margin-left: 0.25rem;
+  text-decoration: underline;
 }

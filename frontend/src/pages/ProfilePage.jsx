@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
 import api from "../utils/api";
 import styles from "../styles/ProfilePage.module.css";
+import MobileFrame from "../components/MobileFrame";
 
 export default function ProfilePage() {
   const { user, updateUser, logout } = useContext(AuthContext);
@@ -97,98 +98,100 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.titleRow}>
-        <button className={styles.backButton} onClick={() => navigate("/")}>
-          {"<"}
-        </button>
-        <h2 className={styles.title}>Profile</h2>
-      </div>
-
-      <img
-        src={avatar}
-        alt="avatar"
-        className={styles.avatar}
-        onClick={() => setIsAvatarEditing(true)}
-      />
-
-      {isAvatarEditing && (
-        <div className={styles.avatarOptions}>
-          <div className={styles.presetsGrid}>
-            {presets.map((item) => {
-              const url = item.avatarUrl.startsWith("http")
-                ? item.avatarUrl
-                : `${AVATAR_BASE}/${item.avatarUrl}`;
-              return (
-                <img
-                  key={item._id}
-                  src={url}
-                  alt="preset"
-                  className={`${styles.option} ${
-                    selectedAvatarId === item._id ? styles.selected : ""
-                  }`}
-                  onClick={() => {
-                    setAvatar(url);
-                    setSelectedAvatarId(item._id);
-                  }}
-                />
-              );
-            })}
-          </div>
-          <div className={styles.editButtons}>
-            <button className={styles.saveBtn} onClick={handleAvatarSave}>
-              Save
-            </button>
-            <button className={styles.cancelBtn} onClick={handleAvatarCancel}>
-              Cancel
-            </button>
-          </div>
-          {errorMessage && (
-            <div className={styles.errorMessage}>{errorMessage}</div>
-          )}
-        </div>
-      )}
-
-      {!isInfoEditing && !isAvatarEditing && (
-        <>
-          <p>
-            <strong>Username:</strong> {user.userName}
-          </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
-          <button
-            className={styles.editBtn}
-            onClick={() => setIsInfoEditing(true)}
-          >
-            Edit Info
+    <MobileFrame>
+      <div className={styles.container}>
+        <div className={styles.titleRow}>
+          <button className={styles.backButton} onClick={() => navigate("/")}>
+            {"<"}
           </button>
-        </>
-      )}
-
-      {isInfoEditing && (
-        <div className={styles.infoForm}>
-          <label>
-            Username:
-            <input value={name} onChange={(e) => setName(e.target.value)} />
-          </label>
-          <div className={styles.editButtons}>
-            <button className={styles.saveBtn} onClick={handleInfoSave}>
-              Save Info
-            </button>
-            <button className={styles.cancelBtn} onClick={handleInfoCancel}>
-              Cancel
-            </button>
-          </div>
-          {errorMessage && (
-            <div className={styles.errorMessage}>{errorMessage}</div>
-          )}
+          <h2 className={styles.title}>Profile</h2>
         </div>
-      )}
 
-      <button className={styles.logoutBtn} onClick={handleLogout}>
-        Logout
-      </button>
-    </div>
+        <img
+          src={avatar}
+          alt="avatar"
+          className={styles.avatar}
+          onClick={() => setIsAvatarEditing(true)}
+        />
+
+        {isAvatarEditing && (
+          <div className={styles.avatarOptions}>
+            <div className={styles.presetsGrid}>
+              {presets.map((item) => {
+                const url = item.avatarUrl.startsWith("http")
+                  ? item.avatarUrl
+                  : `${AVATAR_BASE}/${item.avatarUrl}`;
+                return (
+                  <img
+                    key={item._id}
+                    src={url}
+                    alt="preset"
+                    className={`${styles.option} ${
+                      selectedAvatarId === item._id ? styles.selected : ""
+                    }`}
+                    onClick={() => {
+                      setAvatar(url);
+                      setSelectedAvatarId(item._id);
+                    }}
+                  />
+                );
+              })}
+            </div>
+            <div className={styles.editButtons}>
+              <button className={styles.saveBtn} onClick={handleAvatarSave}>
+                Save
+              </button>
+              <button className={styles.cancelBtn} onClick={handleAvatarCancel}>
+                Cancel
+              </button>
+            </div>
+            {errorMessage && (
+              <div className={styles.errorMessage}>{errorMessage}</div>
+            )}
+          </div>
+        )}
+
+        {!isInfoEditing && !isAvatarEditing && (
+          <>
+            <p>
+              <strong>Username:</strong> {user.userName}
+            </p>
+            <p>
+              <strong>Email:</strong> {user.email}
+            </p>
+            <button
+              className={styles.editBtn}
+              onClick={() => setIsInfoEditing(true)}
+            >
+              Edit Info
+            </button>
+          </>
+        )}
+
+        {isInfoEditing && (
+          <div className={styles.infoForm}>
+            <label>
+              Username:
+              <input value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+            <div className={styles.editButtons}>
+              <button className={styles.saveBtn} onClick={handleInfoSave}>
+                Save Info
+              </button>
+              <button className={styles.cancelBtn} onClick={handleInfoCancel}>
+                Cancel
+              </button>
+            </div>
+            {errorMessage && (
+              <div className={styles.errorMessage}>{errorMessage}</div>
+            )}
+          </div>
+        )}
+
+        <button className={styles.logoutBtn} onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
+    </MobileFrame>
   );
 }
