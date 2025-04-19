@@ -1,12 +1,13 @@
 import Avatar from "../models/avatarModel.js";
 import User from "../models/userModel.js";
 
+// ✅ 只返回系统预设头像
 export const getAllAvatars = async (req, res) => {
   try {
-    const avatars = await Avatar.find();
+    const avatars = await Avatar.find({ isSystem: true });
     res.json(avatars);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch avatars" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get avatars" });
   }
 };
 
