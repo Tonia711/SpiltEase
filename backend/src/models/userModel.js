@@ -21,10 +21,12 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: new mongoose.Types.ObjectId("000000000000000000000001"),
   },
-  groupId: {
-    type: [Number], // 或者 mongoose.Schema.Types.ObjectId 如果是引用 Group collection
-    default: [],
-  },
+  groupId: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+    },
+  ],  
 });
 
 const User = mongoose.model("User", userSchema);

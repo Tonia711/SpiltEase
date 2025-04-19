@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const groupSchema = new mongoose.Schema({
-  _id: Number,
+  id: { type: Number, required: true, unique: true },
   groupName: String,
   note: String,
   iconId: Number,
@@ -14,8 +14,9 @@ const groupSchema = new mongoose.Schema({
   members: [
     {
       memberId: {
-        type: String,
+        type: Number,
       },
+      userId: mongoose.Schema.Types.ObjectId,
       userName: String,
     },
   ],

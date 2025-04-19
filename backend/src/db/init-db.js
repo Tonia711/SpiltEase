@@ -62,9 +62,19 @@ async function importData() {
     const avatarMap = {};
     avatars.forEach((a) => {
       avatarMap[a.id] =
-        a._id ||
-        insertedAvatars.find((doc) => doc.avatarUrl === a.avatarUrl)._id;
+        insertedAvatars.find((doc) => doc.avatarUrl === a.avatarUrl)._id
+        || a._id;
     });
+
+    const groupMap = {};
+    const groupDocs = groups.map((g) => {
+      const _id = new mongoose.Types.ObjectId();
+      groupMap[g.id] = _id;
+      return { id: g.id, groupName: g.groupName, _id };
+    });
+
+    await Group.insertMany(groupDocs);
+    console.log("✅ Groups inserted");
 
     // 处理并插入 User，使用映射后的 ObjectId
     const userDocs = await Promise.all(
@@ -72,10 +82,11 @@ async function importData() {
         userName: u.userName,
         email: u.email,
         password: await bcrypt.hash(u.password, 10),
-        avatarId: avatarMap[u.avatarId], // ← ObjectId
-        groupId: u.groupId,
+        avatarId: avatarMap[u.avatarId],
+        groupId: u.groupId.map((id) => groupMap[id]),
       }))
     );
+
     await User.insertMany(userDocs);
     console.log("✅ Users inserted");
 
@@ -84,7 +95,6 @@ async function importData() {
       // Avatar.insertMany(avatarData),
       Balance.insertMany(calculatedBalances),
       Bill.insertMany(bills),
-      Group.insertMany(groups),
       Icon.insertMany(icons),
       Label.insertMany(labels),
       // User.insertMany(hashedUsers),
