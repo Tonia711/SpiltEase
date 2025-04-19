@@ -3,6 +3,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose"; // ✅ 新增：构造默认 ObjectId
 
 // 生成 JWT
 const createToken = (user) => {
@@ -16,23 +17,29 @@ const createToken = (user) => {
 // 注册
 export const registerUser = async (req, res) => {
   try {
-    const { userName, email, password } = req.body;
+    const { userName, email, password, avatarId } = req.body;
 
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ error: "Email already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ 使用前端传入的 avatarId，否则 fallback 到默认系统头像
+    const resolvedAvatarId = avatarId
+      ? avatarId
+      : new mongoose.Types.ObjectId("000000000000000000000001");
+
     const user = await User.create({
       userName,
       email,
       password: hashedPassword,
-      avatarId: 1,
+      avatarId: resolvedAvatarId,
     });
 
     const token = createToken(user);
     res.status(201).json({ token, user });
   } catch (err) {
+    console.error("Register error:", err);
     res.status(500).json({ error: "Registration failed", detail: err.message });
   }
 };
@@ -40,6 +47,8 @@ export const registerUser = async (req, res) => {
 // 登录
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  console.log("Login attempt:", email, password);
+
   const user = await User.findOne({ email });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
