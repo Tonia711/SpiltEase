@@ -7,15 +7,17 @@ const ObjectId = mongoose.Types.ObjectId;
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id).select('groupId');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    if (!req.user || !req.user.groupId || !Array.isArray(req.user.groupId)) {
-      console.log('user.groupId before signing JWT:', user.groupId);
-      console.log('req.user:', req.user);
-      console.warn(`User ${req.user?._id || 'unknown'} missing groupId array.`);
+    if (!user.groupId || !Array.isArray(user.groupId)) {
+      console.warn(`User ${req.user.id} missing groupId array.`);
       return res.status(400).json({ message: 'User group information not found or invalid.' });
     }
 
-    const userGroupIds = req.user.groupId.map(id => ObjectId(id));
+    const userGroupIds = user.groupId.map(id => new mongoose.Types.ObjectId(id));
     if (userGroupIds.length === 0) return res.json([]);
 
     const groups = await Group.find({ _id: { $in: userGroupIds } }).sort({ startDate: -1 });
