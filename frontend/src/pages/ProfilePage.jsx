@@ -97,6 +97,34 @@ export default function ProfilePage() {
     setIsAvatarEditing(false);
   };
 
+  const handleCustomUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setErrorMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      formData.append("userId", user._id);
+
+      const { data } = await api.post("/avatars/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const uploadedUrl = data.avatarUrl.startsWith("http")
+        ? data.avatarUrl
+        : `${AVATAR_BASE}/${data.avatarUrl}`;
+
+      // ✅ 仅更新“预览”状态，用户点 Save 后再保存
+      setAvatar(uploadedUrl);
+      setSelectedAvatarId(data.avatarId);
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Upload failed. Please try again.");
+    }
+  };
+
   return (
     <MobileFrame>
       <div className={styles.container}>
@@ -107,90 +135,118 @@ export default function ProfilePage() {
           <h2 className={styles.title}>Profile</h2>
         </div>
 
-        <img
-          src={avatar}
-          alt="avatar"
-          className={styles.avatar}
-          onClick={() => setIsAvatarEditing(true)}
-        />
+        <div className={styles.content}>
+          <div className={styles.avatarWrapper}>
+            <img
+              src={avatar}
+              alt="avatar"
+              className={styles.avatar}
+              onClick={() => setIsAvatarEditing(true)}
+            />
 
-        {isAvatarEditing && (
-          <div className={styles.avatarOptions}>
-            <div className={styles.presetsGrid}>
-              {presets.map((item) => {
-                const url = item.avatarUrl.startsWith("http")
-                  ? item.avatarUrl
-                  : `${AVATAR_BASE}/${item.avatarUrl}`;
-                return (
-                  <img
-                    key={item._id}
-                    src={url}
-                    alt="preset"
-                    className={`${styles.option} ${
-                      selectedAvatarId === item._id ? styles.selected : ""
-                    }`}
-                    onClick={() => {
-                      setAvatar(url);
-                      setSelectedAvatarId(item._id);
-                    }}
-                  />
-                );
-              })}
-            </div>
-            <div className={styles.editButtons}>
-              <button className={styles.saveBtn} onClick={handleAvatarSave}>
-                Save
-              </button>
-              <button className={styles.cancelBtn} onClick={handleAvatarCancel}>
-                Cancel
-              </button>
-            </div>
-            {errorMessage && (
-              <div className={styles.errorMessage}>{errorMessage}</div>
+            {isAvatarEditing && (
+              <>
+                <label htmlFor="avatarUpload" className={styles.cameraIcon}>
+                  📷
+                </label>
+                <input
+                  id="avatarUpload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCustomUpload}
+                  style={{ display: "none" }}
+                />
+              </>
             )}
           </div>
-        )}
 
-        {!isInfoEditing && !isAvatarEditing && (
-          <>
-            <p>
-              <strong>Username:</strong> {user.userName}
-            </p>
-            <p>
-              <strong>Email:</strong> {user.email}
-            </p>
-            <button
-              className={styles.editBtn}
-              onClick={() => setIsInfoEditing(true)}
-            >
-              Edit Info
-            </button>
-          </>
-        )}
+          {isAvatarEditing && (
+            <div className={styles.avatarOptions}>
+              <div className={styles.presetsGrid}>
+                {presets.map((item) => {
+                  const url = item.avatarUrl.startsWith("http")
+                    ? item.avatarUrl
+                    : `${AVATAR_BASE}/${item.avatarUrl}`;
+                  return (
+                    <img
+                      key={item._id}
+                      src={url}
+                      alt="preset"
+                      className={`${styles.option} ${
+                        selectedAvatarId === item._id ? styles.selected : ""
+                      }`}
+                      onClick={() => {
+                        setAvatar(url);
+                        setSelectedAvatarId(item._id);
+                      }}
+                    />
+                  );
+                })}
+              </div>
 
-        {isInfoEditing && (
-          <div className={styles.infoForm}>
-            <label>
-              Username:
-              <input value={name} onChange={(e) => setName(e.target.value)} />
-            </label>
-            <div className={styles.editButtons}>
-              <button className={styles.saveBtn} onClick={handleInfoSave}>
-                Save Info
-              </button>
-              <button className={styles.cancelBtn} onClick={handleInfoCancel}>
-                Cancel
-              </button>
+              <div className={styles.editButtons}>
+                <button className={styles.saveBtn} onClick={handleAvatarSave}>
+                  Save
+                </button>
+                <button
+                  className={styles.cancelBtn}
+                  onClick={handleAvatarCancel}
+                >
+                  Cancel
+                </button>
+              </div>
+              {errorMessage && (
+                <div className={styles.errorMessage}>{errorMessage}</div>
+              )}
             </div>
-            {errorMessage && (
-              <div className={styles.errorMessage}>{errorMessage}</div>
-            )}
-          </div>
-        )}
+          )}
 
-        <button className={styles.logoutBtn} onClick={handleLogout}>
-          Logout
-        </button>
+          {!isInfoEditing && !isAvatarEditing && (
+            <>
+              <p>
+                <strong>Username:</strong> {user.userName}
+              </p>
+              <p>
+                <strong>Email:</strong> {user.email}
+              </p>
+              <button
+                className={styles.editBtn}
+                onClick={() => setIsInfoEditing(true)}
+              >
+                Edit Info
+              </button>
+            </>
+          )}
+
+          {isInfoEditing && (
+            <div className={styles.infoForm}>
+              <label>
+                Username:
+                <input
+                  className={styles.editInput}
+                  value={name}
+                  placeholder="Enter username"
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </label>
+              <div className={styles.editButtons}>
+                <button className={styles.saveBtn} onClick={handleInfoSave}>
+                  Save
+                </button>
+                <button className={styles.cancelBtn} onClick={handleInfoCancel}>
+                  Cancel
+                </button>
+              </div>
+              {errorMessage && (
+                <div className={styles.errorMessage}>{errorMessage}</div>
+              )}
+            </div>
+          )}
+
+          <button className={styles.logoutBtn} onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </div>
     </MobileFrame>
   );

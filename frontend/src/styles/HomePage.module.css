@@ -1,13 +1,16 @@
 .container {
-  background-color: #1c1829;
-  min-height: 100vh;
-  padding: 2rem 1rem;
+  background-color: #1c1b22;
+  height: 100%;
+  padding: 2rem 1rem 5rem;
   color: white;
   position: relative;
-  max-width: 390px;
+  max-width: 375px;
   margin: 0 auto;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); 
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .profile {
@@ -51,8 +54,8 @@
 }
 
 .fab {
-  position: fixed;
-  bottom: 30px;
+  position: absolute;
+  bottom: 24px; /* ✅ 离底部一点，不会被裁切 */
   left: 50%;
   transform: translateX(-50%);
   background-color: #ffca28;
@@ -64,11 +67,12 @@
   height: 64px;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
 }
 
 .options {
-  position: fixed;
-  bottom: 110px;
+  position: absolute;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   background: #fff;
@@ -79,6 +83,7 @@
   flex-direction: column;
   gap: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 90;
 }
 
 .profile {
