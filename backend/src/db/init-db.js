@@ -1,8 +1,7 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { Avatar, Balance, Bill, Group, Icon, Label } from "./schema.js";
-import User from "../models/userModel.js";
+import { User, Avatar, Balance, Bill, Group, Icon, Label } from "./schema.js";
 
 // 引入数据
 import avatars from "../data/avatars.js";
