@@ -43,9 +43,9 @@
 .membersListContainer {
   max-height: 300px;     
   overflow-y: auto; 
-  margin: 0; 
   width: 300px;
   margin: 0 auto 1.5rem auto;
+  border-radius: 5%;
 }
 
 .membersList {
