@@ -69,8 +69,11 @@ async function importData() {
 
     const groupMap = {};
     const groupDocs = groups.map((g) => {
+      const _id = new Types.ObjectId();
+      groupMap[g.id] = _id;
+
       return {
-        _id: new Types.ObjectId(),
+        _id,
         groupName: g.groupName,
         note: g.note || "",
         iconId: g.iconId || 0,
