@@ -1,6 +1,7 @@
 import { Group } from "../db/schema.js";
 import { User } from "../db/schema.js";
 import { Icon } from "../db/schema.js";
+import mongoose from "mongoose";
 
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
@@ -110,62 +111,38 @@ export const validateJoinCode = async (req, res) => {
 
 export const createGroupMember = async (req, res) => {
   const groupId = req.params.id;
-  const { userName } = req.body;
-
   const currentUserId = req.user._id;
+  const currentUserName = req.user.username;
 
-  // 1. validate userName
-  if (!userName || typeof userName !== 'string' || userName.trim().length === 0) {
-    return res.status(400).json({ message: "Member userName is required." });
-  }
-
-  // validate groupId
   if (!mongoose.Types.ObjectId.isValid(groupId)) {
     return res.status(400).json({ message: "Invalid group ID format." });
   }
 
   try {
-    // 2. search group by groupId
     const group = await Group.findById(groupId);
 
     if (!group) {
       return res.status(404).json({ message: "Group not found." });
     }
 
-    // 3. check if user is already a member of the group
     const isUserAlreadyLinked = group.members.some(member =>
-      member.userId && member.userId.equals(currentUserId) // 使用 .equals() 比较 ObjectId
+      member.userId && member.userId.equals(currentUserId)
     );
 
     if (isUserAlreadyLinked) {
       return res.status(409).json({ message: "You are already a member of this group." });
     }
 
-    // 4. create new member object
     const newMember = {
-      memberId: null, 
-      userName: userName.trim(), 
-      userId: null,
+      memberId: group.members.length + 1,
+      userName: currentUserName,
+      userId: currentUserId,
     };
 
-    // 5. add new member to group members array
     group.members.push(newMember);
-
-    // 6. save group
     await group.save();
 
-    const createdMember = group.members.find(member =>
-      member.userName === newMember.userName && member.userId === null // 找到那个匹配用户名且 userId 仍为 null 的新成员
-    );
-
-    if (!createdMember) {
-      console.error("Failed to find the newly created member after save.");
-      return res.status(500).json({ message: "Error creating member." });
-    }
-
-
-    // 7. return the new member's _id
-    res.status(201).json({ _id: createdMember._id });
+    res.status(201).json({ message: "Joined group successfully", memberId: newMember.memberId });
 
   } catch (error) {
     console.error("Error creating group member:", error);
@@ -177,19 +154,29 @@ export const joinGroup = async (req, res) => {
   const groupId = req.params.id;
   const { memberId } = req.body;
 
+  if (!mongoose.Types.ObjectId.isValid(groupId)) {
+    return res.status(400).json({ message: "Invalid group ID" });
+  }
+
   try {
     const group = await Group.findById(groupId);
     if (!group) return res.status(404).json({ message: "Group not found" });
 
-    const member = group.members.id(memberId);
+    const member = group.members.find((m) => m.memberId === memberId);
     if (!member) return res.status(404).json({ message: "Member not found" });
 
     if (member.user) {
       return res.status(400).json({ message: "This member is already claimed" });
     }
 
-    member.user = userId;
+    member.userName = req.user.userName;
+    member.userId = req.user.id;
+
     await group.save();
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { groupId: group._id },
+    });
 
     res.json({ message: "Joined group successfully", group });
   } catch (err) {
