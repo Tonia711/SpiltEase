@@ -12,6 +12,6 @@ const router = express.Router();
 router.get("/", protect, getUserGroups);
 router.delete("/:id", protect, deleteGroup);
 router.post("/", protect, createGroup);
-router.get("/:groupId", protect, getGroupById);
+router.get("/:id", protect, getGroupById);
 
 export default router;

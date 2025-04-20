@@ -1,5 +1,6 @@
 import { Group } from "../db/schema.js";
 import { User } from "../db/schema.js";
+import { Icon } from "../db/schema.js";
 
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
@@ -61,12 +62,36 @@ export const deleteGroup = async (req, res) => {
   }
 };
 
+// Get a specific group
+export const getGroupById = async (req, res) => {
+  const groupId = req.params.id;
+
+  try {
+    const group = await Group.findById(groupId);
+
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    let iconUrl = null;
+    if (group.iconId) {
+      const icon = await Icon.findById(group.iconId).select('iconUrl');
+      iconUrl = icon ? icon.iconUrl : "groups/testIcon1.jpg";
+    }
+
+    res.status(200).json({
+      ...group.toObject(),
+      iconUrl,
+    });
+  } catch (error) {
+    console.error('Error fetching group:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Create group
 export const createGroup = (req, res) => {
   res.send("Create group API");
 };
 
-// Get a specific group
-export const getGroupById = (req, res) => {
-  res.send("Get specific group API");
-};
+

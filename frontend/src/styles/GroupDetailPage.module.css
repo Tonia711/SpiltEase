@@ -1,30 +1,89 @@
 .container {
+  background-color: #1c1b22;
+  height: 100%;
+  color: white;
   padding: 2rem;
-  background-color: #f4f4f4;
   min-height: 100vh;
 }
 
-.title {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-}
-
-.description {
+.inviteCode {
   font-size: 1rem;
-  color: #555;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+  text-align: center ;
 }
 
-.list {
+.codeValue{
+  color:#ffca28;
+  font-weight: bold;
+}
+
+.groupIcon {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 1.5rem auto 0.3rem;
+  display: block;
+}
+
+.infoSection {
+  width: 300px;
+  margin: 0 auto 1.5rem auto;
+}
+
+.label {
+  color: white;
+  margin-bottom: 3px;
+}
+
+.membersTitle{
+  margin-bottom: 0;
+}
+
+.membersListContainer {
+  max-height: 300px;     
+  overflow-y: auto; 
+  margin: 0; 
+  width: 300px;
+  margin: 0 auto 1.5rem auto;
+}
+
+.membersList {
   list-style: none;
   padding-left: 0;
   margin-bottom: 2rem;
 }
 
-.list li {
-  background: #fff;
-  border-radius: 8px;
+.membersList li {
+  background: #5b566a;
   padding: 0.8rem 1rem;
-  margin-bottom: 0.8rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.inputField {
+  padding: 0.8rem;
+  border-radius: 6px;
+  font-size: 1.3rem;
+  font-weight: 540;
+  width: 90%;
+  background-color: #5b566acf;
+}
+
+.inputField.readOnly {
+  color: #ffca28; 
+  background-color: #5b566a;
+  pointer-events: none;
+}
+
+.editButton{
+  background-color: #ffca28;
+  text-align: center;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin: 1.5rem auto 3rem auto;
+  display: block;
+  width: 300px;
 }
