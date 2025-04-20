@@ -41,7 +41,7 @@ export default function HomePage() {
             <button onClick={() => navigate("/create-group")}>
               ➕ Create Group
             </button>
-            <button onClick={() => alert("Join feature coming soon!")}>
+            <button onClick={() => navigate("/groups/join")}>
               🔍 Join Group
             </button>
           </div>
