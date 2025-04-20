@@ -21,7 +21,7 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: #ff4d4f;
+  background: #e74c3c;
   border: none;
   color: white;
   border-radius: 50%;
@@ -35,6 +35,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+.delete-btn:active {
+  background-color: #a93226;
 }
 
 .group-item:hover .delete-btn {

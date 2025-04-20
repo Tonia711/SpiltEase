@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
-  const { token } = useContext(AuthContext);
 
   const [group, setGroup] = useState(null);
   const [groupIconUrl, setGroupIconUrl] = useState(null);

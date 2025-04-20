@@ -7,7 +7,7 @@
 }
 
 .section {
-    margin: 0 auto; 
+    margin: 0 auto;
     padding: 15px 0;
     border-radius: 8px;
 }
@@ -26,7 +26,28 @@
 
 .label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin: 0;
+}
+
+.labelRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inlineError {
+    color: #e74c3c;
+    font-size: 0.9em;
+    margin: 0;
+    padding: 0;
+    font-weight: bold;
+    line-height: 3;
+}
+
+.inputError {
+    border-color: #ff4d4f !important;
+    box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.9);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .inputField {
@@ -40,6 +61,36 @@
     display: block;
     width: 300px;
     box-sizing: border-box;
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-5px);
+    }
+
+    40% {
+        transform: translateX(5px);
+    }
+
+    60% {
+        transform: translateX(-5px);
+    }
+
+    80% {
+        transform: translateX(5px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.shake {
+    animation: shake 0.4s ease;
 }
 
 .joinButton {
@@ -66,7 +117,7 @@
     overflow-y: scroll;
     border-radius: 4px;
     border: 1px solid #ccc;
-    margin:auto;
+    margin: auto;
 }
 
 .membersList {
@@ -109,11 +160,11 @@
 }
 
 .joinAsNewButton {
-    display: block; 
-    width: 100%; 
+    display: block;
+    width: 100%;
     box-sizing: border-box;
     padding: 12px 20px;
-    background-color: #5b566a; 
+    background-color: #5b566a;
     color: white;
     border: none;
     border-radius: 4px;
@@ -124,7 +175,8 @@
 }
 
 .joinAsNewButton:hover:not(:disabled) {
-    background-color: #ffca28; /* 鼠标悬停颜色 */
+    background-color: #ffca28;
+    /* 鼠标悬停颜色 */
 }
 
 .joinAsNewButton:disabled {
@@ -133,9 +185,9 @@
 }
 
 .memberItemSelected.joinAsNewButton {
-   background-color: #ffca28; 
-   color: white;
-   font-weight: bold;
+    background-color: #ffca28;
+    color: white;
+    font-weight: bold;
 }
 
 .backButton {
@@ -146,8 +198,8 @@
     color: #fff;
     cursor: pointer;
     padding: 0 1rem;
-  }
-  
-  .backButton:hover {
-    color: #f2c94c; 
-  }
+}
+
+.backButton:hover {
+    color: #f2c94c;
+}

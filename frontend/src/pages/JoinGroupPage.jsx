@@ -14,6 +14,7 @@ export default function GroupJoinPage() {
   const [hasValidCode, setHasValidCode] = useState(false);
   const [group, setGroup] = useState(null);
   const [error, setError] = useState("");
+  const [showInputError, setShowInputError] = useState(false);
 
   const [selectedMember, setSelectedMember] = useState(null);
   const [isJoining, setIsJoining] = useState(false);
@@ -22,27 +23,31 @@ export default function GroupJoinPage() {
   const handleCodeSubmit = async () => {
     if (!inviteCode.trim()) {
       setError("Please enter a 5-digit code.");
+      setShowInputError(true);
+      setTimeout(() => setShowInputError(false), 2000);
       return;
     }
     setError("");
     setIsValidating(true);
+    setShowInputError(false);
 
     try {
       const { data } = await api.post("/groups/validate", {
         joinCode: inviteCode.trim(),
       });
 
-      // data = { _id, groupName, members: [ { _id, name }, ... ] }
       setGroup(data);
       setHasValidCode(true);
       setSelectedMember(null);
     } catch (e) {
       console.error(e);
       if (e.response && e.response.status === 404) {
-        setError("Invalid invite code. Please try again.");
+        setError("Wrong Code!");
       } else {
         setError("An error occurred during validation. Please try again later.");
       }
+      setShowInputError(true);
+      setTimeout(() => setShowInputError(false), 2000);
     } finally {
       setIsValidating(false);
     }
@@ -113,15 +118,22 @@ export default function GroupJoinPage() {
               <h2 className={styles.title}>Join Group</h2>
             </div>
 
-            <label className={styles.label}>Invite Code</label>
-            <input
-              type="text"
-              maxLength={5}
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value)}
-              className={styles.inputField}
-              placeholder="5 digits"
-            />
+            <div className={styles.inputGroup}>
+              <div className={styles.labelRow}>
+                <label className={styles.label}>Invite Code</label>
+                {error && !hasValidCode && <span className={styles.inlineError}>{error}</span>}
+              </div>
+              <input
+                key={showInputError ? 'shake' : 'normal'}
+                type="text"
+                maxLength={5}
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                className={`${styles.inputField} ${showInputError ? `${styles.inputError} ${styles.shake}` : ""}`}
+                placeholder="5 digits"
+              />
+
+            </div>
             <button
               onClick={handleCodeSubmit}
               className={styles.joinButton}
@@ -129,7 +141,7 @@ export default function GroupJoinPage() {
             >
               {isValidating ? "Validating..." : "Join"}
             </button>
-            {error && <p className={styles.error}>{error}</p>}
+            {error && hasValidCode && <p className={styles.error}>{error}</p>}
           </>
         )}
 
