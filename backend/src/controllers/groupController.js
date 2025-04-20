@@ -1,10 +1,9 @@
 import { Group } from "../db/schema.js";
 import { User } from "../db/schema.js";
-import mongoose from "mongoose";
 
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
-  
+
   try {
     const user = await User.findById(req.user.id).select('groupId');
     if (!user) {
@@ -29,20 +28,29 @@ export const getUserGroups = async (req, res) => {
 // Delete a group
 export const deleteGroup = async (req, res) => {
   try {
-    const groupId = req.params.id;
+    const groupIdToRemove = req.params.id;
 
-    if (!req.user.groupId.some(id => id == groupId)) {
+    const user = await User.findById(req.user.id).select('groupId');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.groupId || !Array.isArray(user.groupId)) {
+      return res.status(400).json({ message: 'User group list not found or invalid' });
+    }
+
+    const hasGroup = user.groupId.some(
+      id => id.toString() === groupIdToRemove
+    );
+
+    if (!hasGroup) {
       return res.status(403).json({ message: 'User is not a member of this group.' });
     }
 
-    const group = await Group.findById(groupId);
-    if (!group) {
-      return res.status(404).json({ message: 'Group not found' });
-    }
+    await User.findByIdAndUpdate(req.user.id, { $pull: { groupId: groupIdToRemove } });
 
-    await User.findByIdAndUpdate(req.user._id, { $pull: { groupId: groupId } });
-
-    res.json({ message: 'Group removed successfully' });
+    res.json({ message: 'Group removed from user successfully' });
 
   } catch (err) {
     console.error('Error deleting group:', err);
