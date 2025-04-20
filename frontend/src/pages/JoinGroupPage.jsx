@@ -28,9 +28,8 @@ export default function GroupJoinPage() {
     setIsValidating(true);
 
     try {
-      // 假设后端提供：GET /groups/join?code=xxxx
-      const { data } = await api.get("/groups/join", {
-        params: { code: inviteCode.trim() },
+      const { data } = await api.post("/groups/validate", {
+        joinCode: inviteCode.trim(),
       });
 
       // data = { _id, groupName, members: [ { _id, name }, ... ] }
@@ -145,7 +144,7 @@ export default function GroupJoinPage() {
                     }
                     onClick={() => handleSelectMember(m)}
                   >
-                    {m.name}
+                    {m.userName}
                   </li>
                 ))}
               </ul>
