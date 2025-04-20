@@ -96,8 +96,13 @@ export const createGroup = (req, res) => {
 
 export const validateJoinCode = async (req, res) => {
   const { joinCode } = req.body;
+
+  if (!joinCode || typeof joinCode !== 'string') {
+    return res.status(400).json({ message: "Valid join code is required" });
+  }
+
   try {
-    const group = await Group.findOne({ joinCode }).select("_id groupName members");
+    const group = await Group.findOne({ joinCode: joinCode.trim() }).select("_id groupName members");
     if (!group) {
       return res.status(404).json({ message: "Invalid code" });
     }
@@ -133,3 +138,32 @@ export const joinGroup = async (req, res) => {
   }
 };
 
+export const updateGroupInfo = async (req, res) => {
+  const groupId = req.params.id;
+  const { groupName, note, iconId, budget, startDate, endDate } = req.body;
+
+  try {
+    const group = await Group 
+      .findByIdAndUpdate(
+        groupId,
+        {
+          groupName,
+          note,
+          iconId,
+          budget,
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+        },
+        { new: true }
+      )
+      .select("-__v");
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    res.status(200).json(group);    
+  }
+  catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}

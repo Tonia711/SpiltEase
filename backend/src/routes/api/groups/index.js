@@ -17,7 +17,7 @@ router.delete("/:id", protect, deleteGroup);
 router.post("/", protect, createGroup);
 router.get("/:id", protect, getGroupById);
 
-router.post("/validate-code", protect, validateJoinCode );
+router.post("/validate", protect, validateJoinCode );
 router.post("/:id/join", protect, joinGroup);
 router.patch("/:id/update", protect, updateGroupInfo);
 
