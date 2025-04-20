@@ -1,0 +1,103 @@
+/* File: src/styles/GroupJoinPage.module.css */
+.container {
+    padding: 2rem;
+    color: #fff;
+    background: #1c1b22;
+    min-height: 100vh;
+}
+
+.title {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #aaa;
+}
+
+.inputField {
+    max-width: 300px;
+    margin: 0 auto 1.5rem auto;
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: none;
+    background: #5b566a;
+    color: #fff;
+    font-size: 1.1rem;
+    display: block;
+}
+
+.joinButton {
+    width: 300px;
+    margin: 1rem auto 2rem auto;
+    padding: 0.8rem;
+    background: #ffca28;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: block;
+}
+
+.error {
+    color: #f66;
+    text-align: center;
+}
+
+.membersListContainer {
+    width: 325px;
+    margin: 0 auto 1.5rem auto;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #2e2b3a;
+    border-radius: 6px;
+    padding: 0.5rem;
+}
+
+.membersList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.memberItem,
+.memberItemSelected {
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.3rem;
+    border-radius: 4px;
+    background: #5b566a;
+    cursor: pointer;
+}
+
+.memberItemSelected {
+    background: #ffca28;
+    color: #000;
+}
+
+.newMemberRow {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.newMemberInput {
+    flex: 1;
+    padding: 0.6rem;
+    border-radius: 4px;
+    border: none;
+    background: #5b566a;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.addButton {
+    margin-left: 0.5rem;
+    background: none;
+    border: none;
+    color: #ffca28;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
