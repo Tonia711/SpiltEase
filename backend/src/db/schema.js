@@ -12,7 +12,6 @@ const Label = mongoose.models.Label || mongoose.model("Label", labelSchema);
 
 // 组
 const groupSchema = new mongoose.Schema({
-  _id: Number,
   groupName: String,
   note: String,
   iconId: Number,
@@ -22,7 +21,7 @@ const groupSchema = new mongoose.Schema({
   startDate: Date,
   endDate: Date,
   joinCode: String,
-  members: [{ memberId: Number, userName: String }],
+  members: [{ memberId: Number, userId: mongoose.Schema.Types.ObjectId, userName: String }],
 });
 const Group = mongoose.models.Group || mongoose.model("Group", groupSchema);
 

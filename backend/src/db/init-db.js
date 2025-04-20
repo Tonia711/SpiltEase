@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { User, Avatar, Balance, Bill, Group, Icon, Label } from "./schema.js";
+const { Types } = mongoose;
 
 // 引入数据
 import avatars from "../data/avatars.js";
@@ -62,9 +63,33 @@ async function importData() {
     const avatarMap = {};
     avatars.forEach((a) => {
       avatarMap[a.id] =
-        a._id ||
-        insertedAvatars.find((doc) => doc.avatarUrl === a.avatarUrl)._id;
+        insertedAvatars.find((doc) => doc.avatarUrl === a.avatarUrl)._id
+        || a._id;
     });
+
+    const groupMap = {};
+    const groupDocs = groups.map((g) => {
+      return {
+        _id: new Types.ObjectId(),
+        groupName: g.groupName,
+        note: g.note || "",
+        iconId: g.iconId || 0,
+        budget: g.budget || 0,
+        totalExpenses: g.totalExpenses || 0,
+        totalRefunds: g.totalRefunds || 0,
+        startDate: g.startDate ? new Date(g.startDate) : null,
+        endDate: g.endDate ? new Date(g.endDate) : null,
+        joinCode: g.joinCode || "",
+        members: (g.members || []).map((m, i) => ({
+          memberId: m.memberId || i,
+          userId: m.userId ? new mongoose.Types.ObjectId(m.userId) : new mongoose.Types.ObjectId(),
+          userName: m.userName || `user${i}`,
+        })),
+      };
+    });
+
+    await Group.insertMany(groupDocs);
+    console.log("✅ Groups inserted");
 
     // 处理并插入 User，使用映射后的 ObjectId
     const userDocs = await Promise.all(
@@ -72,10 +97,11 @@ async function importData() {
         userName: u.userName,
         email: u.email,
         password: await bcrypt.hash(u.password, 10),
-        avatarId: avatarMap[u.avatarId], // ← ObjectId
-        groupId: u.groupId,
+        avatarId: avatarMap[u.avatarId],
+        groupId: u.groupId.map((id) => groupMap[id]),
       }))
     );
+
     await User.insertMany(userDocs);
     console.log("✅ Users inserted");
 
@@ -84,7 +110,6 @@ async function importData() {
       // Avatar.insertMany(avatarData),
       Balance.insertMany(calculatedBalances),
       Bill.insertMany(bills),
-      Group.insertMany(groups),
       Icon.insertMany(icons),
       Label.insertMany(labels),
       // User.insertMany(hashedUsers),

@@ -2,7 +2,7 @@ import { Group } from "../db/schema.js";
 import { User } from "../db/schema.js";
 import mongoose from "mongoose";
 
-const ObjectId = mongoose.Types.ObjectId;
+// const ObjectId = mongoose.Types.ObjectId;
 
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
@@ -17,10 +17,7 @@ export const getUserGroups = async (req, res) => {
       return res.status(400).json({ message: 'User group information not found or invalid.' });
     }
 
-    const userGroupIds = user.groupId.map(id => new mongoose.Types.ObjectId(id));
-    if (userGroupIds.length === 0) return res.json([]);
-
-    const groups = await Group.find({ _id: { $in: userGroupIds } }).sort({ startDate: -1 });
+    const groups = await Group.find({ _id: { $in: user.groupId } }).sort({ startDate: -1 });
     res.json(groups);
   } catch (err) {
     console.error("Error fetching user's groups:", err);
