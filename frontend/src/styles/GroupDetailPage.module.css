@@ -37,7 +37,7 @@
 }
 
 .membersTitle{
-  margin-bottom: 0;
+  margin-bottom: 5px;
 }
 
 .membersListContainer {
@@ -50,20 +50,20 @@
 
 .membersList {
   list-style: none;
-  padding-left: 0;
-  margin-bottom: 2rem;
+  margin: 0;
+  padding:0;
 }
 
 .membersList li {
   background: #5b566a;
-  padding: 0.8rem 1rem;
+  padding: 0.6rem 1rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .inputField {
-  padding: 0.8rem;
+  padding: 0.6rem;
   border-radius: 6px;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 540;
   width: 90%;
   background-color: #5b566acf;
@@ -79,7 +79,7 @@
   background-color: #ffca28;
   text-align: center;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1rem;
   border-radius: 6px;
   cursor: pointer;
   font-size: 1rem;
