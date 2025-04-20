@@ -94,4 +94,42 @@ export const createGroup = (req, res) => {
   res.send("Create group API");
 };
 
+export const validateJoinCode = async (req, res) => {
+  const { joinCode } = req.body;
+  try {
+    const group = await Group.findOne({ joinCode }).select("_id groupName members");
+    if (!group) {
+      return res.status(404).json({ message: "Invalid code" });
+    }
+    res.json(group);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const joinGroup = async (req, res) => {
+  const groupId = req.params.id;
+  const { memberId } = req.body;
+
+  try {
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    const member = group.members.id(memberId); 
+    if (!member) return res.status(404).json({ message: "Member not found" });
+
+    if (member.user) {
+      return res.status(400).json({ message: "This member is already claimed" });
+    }
+
+    member.user = userId;
+    await group.save();
+
+    res.json({ message: "Joined group successfully", group });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
