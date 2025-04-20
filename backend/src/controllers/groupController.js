@@ -174,7 +174,9 @@ export const joinGroup = async (req, res) => {
 
     await group.save();
 
-    await User.findByIdAndUpdate(req.user._id, {
+    console.log("user", req.user.id);
+
+    await User.findByIdAndUpdate(req.user.id, {
       $addToSet: { groupId: group._id },
     });
 
