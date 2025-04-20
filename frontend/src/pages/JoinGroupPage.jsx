@@ -60,16 +60,12 @@ export default function GroupJoinPage() {
       return;
     }
     setError("");
-    // 创建一个临时对象表示当前用户作为新成员加入
-    // name 字段用于界面显示，isNew 标记用于 handleJoin 判断
-    // userId 字段可以传递给后端，便于后端关联用户到新的 member 子文档
     const tempNewMember = {
-      _id: null, // 新成员在前端没有 _id
-      name: user.userName, // 使用当前用户的 userName
-      isNew: true, // 标记为新成员
-      userId: user._id // 可以包含用户 ID
+      memberId: null,
+      userName: user.userName,
+      isNew: true
     };
-    setSelectedMember(tempNewMember); // 设置为选中状态
+    setSelectedMember(tempNewMember); 
   };
 
   // Step 4： join group
@@ -83,18 +79,14 @@ export default function GroupJoinPage() {
     setIsJoining(true);
 
     try {
-      let memberIdToJoin = selectedMember._id;
+      let memberIdToJoin;
       if (selectedMember.isNew) {
         const { data: createdMember } = await api.post(
-          `/groups/${group._id}/members`,
-          { userName: selectedMember.name }
+          `/groups/${group._id}/members`
         );
-        memberIdToJoin = createdMember._id; // 假设后端返回新创建 member 的 _id
-        // ✅ ADDED: 可选: 如果创建成功，更新前端的 selectedMember 状态，使其包含后端返回的 _id
-        // setSelectedMember({...selectedMember, _id: memberIdToJoin });
+        memberIdToJoin = createdMember.memberId;
       }
 
-      // 再把 memberId 加入 group
       await api.post(`/groups/${group._id}/join`, {
         memberId: memberIdToJoin,
       });
@@ -156,7 +148,6 @@ export default function GroupJoinPage() {
                     <li
                       key={m._id || m.memberId || `existing-${m.userName}`}
                       className={
-                        // 选中状态判断: 如果 selectedMember 存在且不是新成员，且 _id 匹配
                         selectedMember && !selectedMember.isNew && selectedMember._id === m._id
                           ? styles.memberItemSelected
                           : styles.memberItem
@@ -174,12 +165,12 @@ export default function GroupJoinPage() {
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Can't find your name? </h3>
               <button
-                onClick={handleJoinAsNewUser} 
+                onClick={handleJoinAsNewUser}
                 className={`${styles.joinAsNewButton} ${selectedMember && selectedMember.isNew ? styles.memberItemSelected : ''
                   }`}
                 disabled={!user || !user.userName}
               >
-                Join as "{user?.userName || '...'}" {/* 显示当前用户名 */}
+                Join as "{user?.userName || '...'}"
               </button>
             </div>
 
