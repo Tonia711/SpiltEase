@@ -4,6 +4,7 @@ import styles from "../styles/GroupDetailPage.module.css";
 import { AuthContext } from "../contexts/AuthContext";
 import MobileFrame from "../components/MobileFrame";
 import api from "../utils/api";
+import { useNavigate } from "react-router-dom";
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
@@ -16,7 +17,7 @@ export default function GroupDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedGroupName, setEditedGroupName] = useState("");
   const [editedStartDate, setEditedStartDate] = useState("");
-
+  const navigate = useNavigate();
 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
@@ -63,6 +64,9 @@ export default function GroupDetailPage() {
     <MobileFrame>
       <div className={styles.container}>
         <div className={styles.header}>
+          <button className={styles.backButton} onClick={() => navigate("/")}>
+            {"<"}
+          </button>
           <img
             src={groupIconUrl}
             alt="Group Icon"

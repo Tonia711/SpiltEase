@@ -65,7 +65,7 @@ export default function GroupJoinPage() {
       userName: user.userName,
       isNew: true
     };
-    setSelectedMember(tempNewMember); 
+    setSelectedMember(tempNewMember);
   };
 
   // Step 4： join group
@@ -106,7 +106,13 @@ export default function GroupJoinPage() {
         {/* ——— input invite code ——— */}
         {!hasValidCode && (
           <>
-            <h2 className={styles.title}>Join Group</h2>
+            <div className={styles.titleRow}>
+              <button className={styles.backButton} onClick={() => navigate("/")}>
+                {"<"}
+              </button>
+              <h2 className={styles.title}>Join Group</h2>
+            </div>
+
             <label className={styles.label}>Invite Code</label>
             <input
               type="text"
@@ -130,8 +136,12 @@ export default function GroupJoinPage() {
         {/* ——— validate scuccess ——— */}
         {hasValidCode && group && (
           <>
-            <h2 className={styles.title}>{group.groupName}</h2>
-
+            <div className={styles.titleRow}>
+              <button className={styles.backButton} onClick={() => navigate("/")}>
+                {"<"}
+              </button>
+              <h2 className={styles.title}>{group.groupName}</h2>
+            </div>
             <label className={styles.label}>Invite Code</label>
             <input
               type="text"

@@ -87,3 +87,17 @@
   display: block;
   width: 300px;
 }
+
+.backButton {
+  position: absolute;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+  padding: 0 1rem;
+}
+
+.backButton:hover {
+  color: #f2c94c; 
+}
