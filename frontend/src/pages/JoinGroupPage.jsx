@@ -18,6 +18,7 @@ export default function GroupJoinPage() {
 
   const [selectedMember, setSelectedMember] = useState(null);
   const [isJoining, setIsJoining] = useState(false);
+  const [showRejoinOption, setShowRejoinOption] = useState(false);
 
   // Step 1： input invite code and validate
   const handleCodeSubmit = async () => {
@@ -27,6 +28,7 @@ export default function GroupJoinPage() {
       setTimeout(() => setShowInputError(false), 2000);
       return;
     }
+
     setError("");
     setIsValidating(true);
     setShowInputError(false);
@@ -35,19 +37,43 @@ export default function GroupJoinPage() {
       const { data } = await api.post("/groups/validate", {
         joinCode: inviteCode.trim(),
       });
-      if (data.isAlreadyMember) {
+
+      if (data.isAlreadyMember && data.canRejoin) {
+        setError("");
+        setShowInputError(false);
+        setShowRejoinOption(true);
+        setHasValidCode(false);
+        if (user && data.group && data.group.members) {
+          const existingMember = data.group.members.find(
+            (m) => m.userId === user._id
+          );
+
+          if (existingMember) {
+            setSelectedMember({ ...existingMember, isNew: false });
+            setGroup(data.group);
+          } else {
+            setError("Could not find your existing profile in this group.");
+            setShowRejoinOption(false);
+            setGroup(null);
+            setSelectedMember(null);
+          }
+        }
+      } else if (data.isAlreadyMember && !data.canRejoin) {
         setError("Already a member");
         setHasValidCode(false);
+        setShowRejoinOption(false);
         setGroup(null);
         setShowInputError(true);
-        setTimeout(() => setShowInputError(false), 2000); // 如果需要自动移除样式
+        setTimeout(() => setShowInputError(false), 2000);
       } else {
         setError("");
         setShowInputError(false);
+        setShowRejoinOption(false);
         setGroup(data.group);
         setHasValidCode(true);
         setSelectedMember(null);
       }
+
     } catch (e) {
       console.error(e);
       if (e.response && e.response.status === 404) {
@@ -109,7 +135,7 @@ export default function GroupJoinPage() {
       navigate(`/groups/${group._id}`);
     } catch (e) {
       console.error(e);
-      setError("Failed to join group. Please try again.");
+      setError("Failed to join. Please try again.");
     } finally {
       setIsJoining(false);
     }
@@ -173,6 +199,19 @@ export default function GroupJoinPage() {
           </>
         )}
 
+        {showRejoinOption && group && (
+          <div className={styles.rejoinContainer}>
+            <p>You've been part of this group before. Would you like to rejoin?</p>
+            <button
+              onClick={handleJoin}
+              className={styles.joinButton}
+              disabled={isJoining}
+            >
+              {isJoining ? "Rejoining..." : "Rejoin Group"}
+            </button>
+          </div>
+        )}
+
         {/* ——— validate scuccess ——— */}
         {hasValidCode && group && (
           <>
@@ -203,10 +242,10 @@ export default function GroupJoinPage() {
                         key={m.memberId || m._id}
                         className={
                           isRealMember
-                            ? styles.memberItemReal // 真实用户样式 (不可选)
+                            ? styles.memberItemReal
                             : (isSelectedVirtual
-                              ? styles.memberItemSelected // 选中的虚拟成员样式
-                              : styles.memberItem) // 普通虚拟成员样式 (可选)
+                              ? styles.memberItemSelected
+                              : styles.memberItem)
                         }
                         onClick={isRealMember ? undefined : () => handleSelectMember(m)}
                       >

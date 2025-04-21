@@ -104,22 +104,40 @@ export const validateJoinCode = async (req, res) => {
       return res.status(404).json({ message: "Invalid code" });
     }
 
-    const alreadyMember = group.members.some(member =>
+    const user = await User.findById(currentUserId).select("_id groupId");
+
+    const isInGroupMembers = group.members.some(member =>
       member.userId && member.userId.equals(currentUserId)
     );
 
-    if (alreadyMember) {
+    const isInUserGroupList = user.groupId.some(aGroupId =>
+      aGroupId.equals(group._id)
+    );
+
+    if (isInGroupMembers && isInUserGroupList) {
       return res.status(200).json({
-        message: "You are already a member of this group.", // Your desired message
+        message: "You are already a member of this group.",
         isAlreadyMember: true,
-        groupId: group._id,
-        groupName: group.groupName,
-      });
-    } else {
-      return res.status(200).json({
-        message: "Validate code!", isAlreadyMember: false, group
+        canRejoin: false,
+        group,
       });
     }
+
+    if (isInGroupMembers && !isInUserGroupList) {
+      return res.status(200).json({
+        message: "You have been in this group, would you like to rejoin?",
+        isAlreadyMember: true,
+        canRejoin: true,
+        group,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Validate code!",
+      isAlreadyMember: false,
+      group,
+    });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -158,8 +176,21 @@ export const joinGroupByCode = async (req, res) => {
     const alreadyMember = group.members.some(member =>
       member.userId && member.userId.equals(currentUserId)
     );
+
     if (alreadyMember) {
-      return res.status(409).json({ message: "You are already a member of this group." });
+      if (!user.groupId || !user.groupId.includes(group._id.toString())) {
+        await User.findByIdAndUpdate(currentUserId, {
+          $addToSet: { groupId: group._id },
+        });
+
+        return res.status(200).json({
+          message: "You were previously a member of this group. Your membership has been restored.",
+          groupId: group._id,
+          groupName: group.groupName,
+        });
+      } else {
+        return res.status(409).json({ message: "You are already a member of this group." });
+      }
     }
 
     const nameConflictMember = group.members.find(
@@ -191,13 +222,13 @@ export const joinGroupByCode = async (req, res) => {
       await User.findByIdAndUpdate(currentUserId, {
         $addToSet: { groupId: group._id },
       });
-  
+
       res.status(201).json({
         message: "Claimed virtual member successfully",
         groupId: group._id,
         groupName: group.groupName,
         memberId: virtualMember.memberId,
-      });  
+      });
 
     } else {
 
@@ -214,13 +245,13 @@ export const joinGroupByCode = async (req, res) => {
       await User.findByIdAndUpdate(currentUserId, {
         $addToSet: { groupId: group._id },
       });
-  
+
       res.status(201).json({
         message: "Joined group as a new member successfully",
         groupId: group._id,
         groupName: group.groupName,
         memberId: newMember.memberId,
-      });  
+      });
     }
 
   } catch (error) {
