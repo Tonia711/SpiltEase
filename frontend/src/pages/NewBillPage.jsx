@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../styles/NewBillPage.module.css";
 import api from "../utils/api";
 import MobileFrame from "../components/MobileFrame";
+import { set } from "mongoose";
 
 
 
@@ -11,30 +12,52 @@ export default function NewBillPage() {
   const navigate = useNavigate();
 
   const [group, setGroup] = useState(null);
-  const [members, setMembers] = useState([]);
-
   const [note, setNote] = useState("");
   const [paid, setPaid] = useState("");
   const [refund, setRefund] = useState("");
   const [paidBy, setPaidBy] = useState("");
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-  const [splitMethod, setSplitMethod] = useState("equally"); // "equally" 或 "amounts"
+
+  const [selectedLabelId, setSelectedLabelId] = useState("");
+
+
 
   const [labels, setLabels] = useState([]);
-  const [selectedLabelId, setSelectedLabelId] = useState("");
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "";
-  
+  const [members, setMembers] = useState(""); 
+  const [category, setCategory] = useState(""); 
+
+
+  const [splitMethod, setSplitMethod] = useState("equally"); // "equally" 或 "amounts"
+
+
 
   // get all labels
   useEffect(() => {
     api.get("/bills/allLabels").then(({ data }) => {
       setLabels(data);
-      if (data.length > 0) setSelectedLabelId(data[0]._id);
     }).catch(err => {
       console.error("Failed to fetch labels:", err);
     });
   }, []);
   
+
+  // get group members
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  useEffect(() => {
+    api
+      .get(`/groups/${groupId}`)
+      .then(({ data }) => {
+        setGroup(data);
+        setMembers(data.members);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch group data:", err);
+      });
+  }, [groupId, BASE_URL]);
+
+  console.log("group", group);
+  console.log("members", members);
 
 
   // submit bill
@@ -74,14 +97,18 @@ export default function NewBillPage() {
         </div>
 
         <div className={styles.row1}>
-          
-        <select className={styles.select}>
-          {labels.map(label => (
+
+        <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={styles.select}
+          >
+            {labels.map(label => (
             <option key={label._id} value={label.name}>
               {label.type}
             </option>
           ))}
-        </select>
+          </select>
 
           <span></span>
           <input
@@ -125,11 +152,11 @@ export default function NewBillPage() {
             onChange={(e) => setPaidBy(e.target.value)}
             className={styles.select}
           >
-            {/* {members.map((m) => (
-              <option key={m._id} value={m.name || m.userName}>
-                {m.name || m.userName}
+            {(members || []).map((m) => (
+              <option key={m._id} value={m.userName}>
+                {m.userName}
               </option>
-            ))} */}
+            ))}
           </select>
           <span></span>
           <input
@@ -155,12 +182,11 @@ export default function NewBillPage() {
 
         <div className={styles.splitBox}>
           <ul className={styles.memberList}>
-            {/* {members.map((m, i) => (
+            {(members || []).map((m, i) => (
               <li key={i} className={styles.memberItem}>
-                <span className={styles.memberIcon}>➕</span>
                 {m.name || m.userName}
               </li>
-            ))} */}
+            ))}
           </ul>
         </div>
 
