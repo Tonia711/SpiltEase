@@ -110,11 +110,11 @@ const GroupList = () => {
 
                     return (
                         <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}`)}>
-                            <div className={`group-icon ${iconColorClass}`}>
+                            <div>
                                 <img
                                     src= {DEFAULT_ICON} // Use the group-specific icon URL
                                     alt=""
-                                    className="groupIcon"
+                                    className="group-icon"
                                 />
                             </div>
                             
