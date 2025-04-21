@@ -185,13 +185,14 @@ export default function GroupJoinPage() {
                 onChange={(e) => setInviteCode(e.target.value)}
                 className={`${styles.inputField} ${showInputError ? `${styles.inputError} ${styles.shake}` : ""}`}
                 placeholder="5 digits"
+                readOnly={showRejoinOption} 
               />
 
             </div>
             <button
               onClick={handleCodeSubmit}
               className={styles.joinButton}
-              disabled={isValidating}
+              disabled={isValidating || showRejoinOption} 
             >
               {isValidating ? "Validating..." : "Join"}
             </button>
