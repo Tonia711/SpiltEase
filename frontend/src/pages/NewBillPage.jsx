@@ -4,7 +4,6 @@ import styles from "../styles/NewBillPage.module.css";
 import api from "../utils/api";
 import MobileFrame from "../components/MobileFrame";
 
-const BILL_URL = 'http://localhost:3000/api/bills';
 
 
 export default function NewBillPage() {
@@ -13,7 +12,7 @@ export default function NewBillPage() {
 
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
-  const [category, setCategory] = useState("");
+
   const [note, setNote] = useState("");
   const [paid, setPaid] = useState("");
   const [refund, setRefund] = useState("");
@@ -21,15 +20,24 @@ export default function NewBillPage() {
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
   const [splitMethod, setSplitMethod] = useState("equally"); // "equally" 或 "amounts"
 
+  const [labels, setLabels] = useState([]);
+  const [selectedLabelId, setSelectedLabelId] = useState("");
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "";
   
-  useEffect(() => {
-    api.get(`/groups/${groupId}`).then(({ data }) => {
-      setGroup(data);
-      setMembers(data.members || []);
-      setPaidBy(data.members?.[0]?.name || "");
-    });
-  }, [groupId]);
 
+  // get all labels
+  useEffect(() => {
+    api.get("/bills/allLabels").then(({ data }) => {
+      setLabels(data);
+      if (data.length > 0) setSelectedLabelId(data[0]._id);
+    }).catch(err => {
+      console.error("Failed to fetch labels:", err);
+    });
+  }, []);
+  
+
+
+  // submit bill
   const handleSubmit = (e) => {
     e.preventDefault();
     const newBill = {
@@ -66,13 +74,15 @@ export default function NewBillPage() {
         </div>
 
         <div className={styles.row1}>
-          <input
-            type="text"
-            placeholder="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className={styles.inputHalf}
-          />
+          
+        <select className={styles.select}>
+          {labels.map(label => (
+            <option key={label._id} value={label.name}>
+              {label.type}
+            </option>
+          ))}
+        </select>
+
           <span></span>
           <input
             type="text"
@@ -115,11 +125,11 @@ export default function NewBillPage() {
             onChange={(e) => setPaidBy(e.target.value)}
             className={styles.select}
           >
-            {members.map((m) => (
+            {/* {members.map((m) => (
               <option key={m._id} value={m.name || m.userName}>
                 {m.name || m.userName}
               </option>
-            ))}
+            ))} */}
           </select>
           <span></span>
           <input

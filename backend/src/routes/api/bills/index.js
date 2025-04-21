@@ -13,8 +13,8 @@ router.get("/", (req, res) => {
   res.send("Get all bills API11");
 });
 
-// Get all labels
-router.get("/labels", getAllLabels);
+// Get all labels 这个在新建账单的时候用
+router.get("/allLabels", getAllLabels);
 
 
 
