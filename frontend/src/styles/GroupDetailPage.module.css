@@ -13,7 +13,7 @@
 }
 
 .codeValue{
-  color:#ffca28;
+  color:#FBC609;
   font-weight: bold;
 }
 
@@ -55,7 +55,7 @@
 }
 
 .membersList li {
-  background: #5b566a;
+  background: #9e9e9e;
   padding: 0.6rem 1rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
@@ -66,12 +66,12 @@
   font-size: 1.2rem;
   font-weight: 540;
   width: 90%;
-  background-color: #5b566acf;
+  background-color: #9e9e9e;
 }
 
 .inputField.readOnly {
   color: #ffca28; 
-  background-color: #5b566a;
+  background-color: #5B566a;
   pointer-events: none;
 }
 
@@ -99,5 +99,5 @@
 }
 
 .backButton:hover {
-  color: #f2c94c; 
+  color: #ffca28; 
 }
