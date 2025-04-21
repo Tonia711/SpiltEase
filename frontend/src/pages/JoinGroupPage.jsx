@@ -36,16 +36,16 @@ export default function GroupJoinPage() {
         joinCode: inviteCode.trim(),
       });
       if (data.isAlreadyMember) {
-        setError("Already a member"); 
-        setHasValidCode(false); 
-        setGroup(null); 
-        setShowInputError(true); 
+        setError("Already a member");
+        setHasValidCode(false);
+        setGroup(null);
+        setShowInputError(true);
         setTimeout(() => setShowInputError(false), 2000); // 如果需要自动移除样式
       } else {
-        setError(""); 
+        setError("");
         setShowInputError(false);
-        setGroup(data.group); 
-        setHasValidCode(true); 
+        setGroup(data.group);
+        setHasValidCode(true);
         setSelectedMember(null);
       }
     } catch (e) {
@@ -64,7 +64,10 @@ export default function GroupJoinPage() {
 
   // Step 2： select member or add new member
   const handleSelectMember = (member) => {
-    setSelectedMember(member);
+    if (!member.userId) {
+      setSelectedMember({ ...member, isNew: false });
+      setError("");
+    }
   };
 
   // Step 3： add new member
@@ -76,7 +79,8 @@ export default function GroupJoinPage() {
     setError("");
     const tempNewMember = {
       memberId: null,
-      userName: user.userName
+      userName: user.userName,
+      isNew: true
     };
     setSelectedMember(tempNewMember);
   };
@@ -106,6 +110,24 @@ export default function GroupJoinPage() {
       setIsJoining(false);
     }
   };
+
+  const sortedMembers = React.useMemo(() => {
+    if (!group || !group.members) return [];
+
+    const membersCopy = [...group.members];
+
+    membersCopy.sort((a, b) => {
+      const aIsReal = !!a.userId;
+      const bIsReal = !!b.userId;
+
+      if (aIsReal && !bIsReal) return -1;
+      if (!aIsReal && bIsReal) return 1;
+
+      return 0;
+    });
+
+    return membersCopy;
+  }, [group]);
 
   return (
     <MobileFrame>
@@ -168,19 +190,26 @@ export default function GroupJoinPage() {
               <h3 className={styles.sectionTitle}>Select your name from the list:</h3>
               <div className={styles.membersListContainer}>
                 <ul className={styles.membersList}>
-                  {group.members.map((m) => (
-                    <li
-                      key={m._id || m.memberId || `existing-${m.userName}`}
-                      className={
-                        selectedMember && !selectedMember.isNew && selectedMember._id === m._id
-                          ? styles.memberItemSelected
-                          : styles.memberItem
-                      }
-                      onClick={() => handleSelectMember(m)}
-                    >
-                      {m.userName}
-                    </li>
-                  ))}
+                  {sortedMembers.map((m) => {
+                    const isRealMember = !!m.userId;
+                    const isSelectedVirtual = selectedMember && !selectedMember.isNew && selectedMember.memberId === m.memberId;
+
+                    return (
+                      <li
+                        key={m.memberId || m._id}
+                        className={
+                          isRealMember
+                            ? styles.memberItemReal // 真实用户样式 (不可选)
+                            : (isSelectedVirtual
+                              ? styles.memberItemSelected // 选中的虚拟成员样式
+                              : styles.memberItem) // 普通虚拟成员样式 (可选)
+                        }
+                        onClick={isRealMember ? undefined : () => handleSelectMember(m)}
+                      >
+                        {m.userName}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
