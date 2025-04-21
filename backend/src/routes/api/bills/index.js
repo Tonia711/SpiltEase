@@ -1,4 +1,5 @@
 import express from "express";
+import { getAllLabels } from "../../../controllers/billController.js";
 
 const router = express.Router();
 
@@ -9,7 +10,12 @@ router.post("/", (req, res) => {
 
 // Get all bills
 router.get("/", (req, res) => {
-  res.send("Get all bills API");
+  res.send("Get all bills API11");
 });
+
+// Get all labels
+router.get("/labels", getAllLabels);
+
+
 
 export default router;
