@@ -58,7 +58,7 @@ export default function GroupDetailPage() {
       return "Invalid Date";
     }
   };
-
+  console.log("Group data:", group);
   return (
     <MobileFrame>
       <div className={styles.container}>

@@ -96,7 +96,10 @@ export default function GroupJoinPage() {
     setIsJoining(true);
 
     try {
-      let memberIdToJoin;
+      let memberIdToJoin = null;
+      if (!selectedMember.isNew && selectedMember.memberId !== null) {
+        memberIdToJoin = selectedMember.memberId;
+      }
 
       await api.post(`/groups/join`, {
         selectedMemberId: memberIdToJoin,
