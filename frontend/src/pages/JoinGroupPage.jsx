@@ -35,10 +35,19 @@ export default function GroupJoinPage() {
       const { data } = await api.post("/groups/validate", {
         joinCode: inviteCode.trim(),
       });
-
-      setGroup(data);
-      setHasValidCode(true);
-      setSelectedMember(null);
+      if (data.isAlreadyMember) {
+        setError("Already a member"); 
+        setHasValidCode(false); 
+        setGroup(null); 
+        setShowInputError(true); 
+        setTimeout(() => setShowInputError(false), 2000); // 如果需要自动移除样式
+      } else {
+        setError(""); 
+        setShowInputError(false);
+        setGroup(data.group); 
+        setHasValidCode(true); 
+        setSelectedMember(null);
+      }
     } catch (e) {
       console.error(e);
       if (e.response && e.response.status === 404) {
@@ -84,12 +93,6 @@ export default function GroupJoinPage() {
 
     try {
       let memberIdToJoin;
-      // if (selectedMember.isNew) {
-      //   const { data: createdMember } = await api.post(
-      //     `/groups/${group._id}/members`
-      //   );
-      //   memberIdToJoin = createdMember.memberId;
-      // }
 
       await api.post(`/groups/${group._id}/join`, {
         memberId: memberIdToJoin,

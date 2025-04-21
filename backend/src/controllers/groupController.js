@@ -92,6 +92,7 @@ export const getGroupById = async (req, res) => {
 
 export const validateJoinCode = async (req, res) => {
   const { joinCode } = req.body;
+  const currentUserId = req.user.id;
 
   if (!joinCode || typeof joinCode !== 'string') {
     return res.status(400).json({ message: "Valid join code is required" });
@@ -102,7 +103,23 @@ export const validateJoinCode = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: "Invalid code" });
     }
-    res.json(group);
+
+    const alreadyMember = group.members.some(member =>
+      member.userId && member.userId.equals(currentUserId)
+    );
+
+    if (alreadyMember) {
+      return res.status(200).json({
+        message: "You are already a member of this group.", // Your desired message
+        isAlreadyMember: true,
+        groupId: group._id,
+        groupName: group.groupName,
+      });
+    } else {
+      return res.status(200).json({
+        message: "Validate code!", isAlreadyMember: false, group
+      });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -124,9 +141,6 @@ export const joinGroupByCode = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    console.log("Group found:", group._id, group.groupName);
-    console.log("Group members:", group.members);
-    console.log("Current user ID:", currentUserId);
     const alreadyMember = group.members.some(member =>
       member.userId && member.userId.equals(currentUserId)
     );
