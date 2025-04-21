@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { format } from 'date-fns';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/GroupList.css';
+import { useNavigate } from 'react-router-dom';
 
 const GROUP_URL = 'http://localhost:3000/api/groups';
 
@@ -14,6 +15,7 @@ const GroupList = () => {
     const [success, setSuccess] = useState(null);
 
     const { token } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchGroups = async () => {
@@ -36,7 +38,7 @@ const GroupList = () => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const data = await response.json();                
+                const data = await response.json();
                 setGroups(data);
             } catch (e) {
                 setError('Failed to delete group.');
@@ -56,11 +58,20 @@ const GroupList = () => {
 
     const confirmDelete = async () => {
         try {
-            const res = await fetch(`${GROUP_URL}/${groupToDelete}`, { method: 'DELETE' });
+            const res = await fetch(`${GROUP_URL}/${groupToDelete}`,
+                {
+                    method: 'DELETE',
+                    headers:
+                    {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
             if (!res.ok) throw new Error('Failed to delete');
             setGroups(groups.filter(group => group._id !== groupToDelete));
             setSuccess('Group deleted successfully.');
-        
+
             setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
             setError('Failed to delete group.');
@@ -76,7 +87,7 @@ const GroupList = () => {
 
     return (
         <div className="group-list">
-            
+
             {success && (
                 <div className="toast-success">
                     {success}
@@ -94,7 +105,7 @@ const GroupList = () => {
                     const iconColorClass = group.iconId === 1 ? 'yellow' : 'white';
 
                     return (
-                        <div key={group._id} className="group-item">
+                        <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}`)}>
                             <div className={`group-icon ${iconColorClass}`}></div>
                             <div className="group-info">
                                 <div className="group-name">{group.groupName}</div>
@@ -109,7 +120,7 @@ const GroupList = () => {
             ) : (
                 <div>No groups found.</div>
             )}
-            
+
             {showConfirm && (
                 <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
                     <div className="modal" onClick={e => e.stopPropagation()}>

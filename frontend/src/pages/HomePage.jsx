@@ -2,7 +2,6 @@ import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/HomePage.module.css";
 import { AuthContext } from "../contexts/AuthContext";
-import api from "../utils/api";
 import GroupList from "../components/GroupList";
 import MobileFrame from "../components/MobileFrame";
 
