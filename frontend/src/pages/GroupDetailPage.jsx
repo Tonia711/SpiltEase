@@ -77,6 +77,10 @@ export default function GroupDetailPage() {
           </div>
         </div>
 
+        <button onClick={() => navigate(`/groups/${groupId}/creatBill`)}>
+          create bill
+        </button>
+        
         <section className={styles.infoSection}>
           <label htmlFor="groupName" className={styles.label}>Group Name</label>
           <input
