@@ -21,7 +21,7 @@ export default function GroupDetailPage() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
-  const DEFAULT_ICON = `${BASE_URL}/groups/testIcon1.jpg`;
+  const DEFAULT_ICON = `${BASE_URL}/groups/defaultIcon.jpg`;
 
   useEffect(() => {
     api

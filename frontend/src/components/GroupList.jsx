@@ -5,6 +5,10 @@ import '../styles/GroupList.css';
 import { useNavigate } from 'react-router-dom';
 
 const GROUP_URL = 'http://localhost:3000/api/groups';
+const GROUP_BASE = import.meta.env.VITE_API_BASE_URL
+? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
+: "";
+const DEFAULT_ICON = `${GROUP_BASE}/groups/defaultIcon.jpg`;
 
 const GroupList = () => {
     const [groups, setGroups] = useState([]);
@@ -106,7 +110,14 @@ const GroupList = () => {
 
                     return (
                         <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}`)}>
-                            <div className={`group-icon ${iconColorClass}`}></div>
+                            <div className={`group-icon ${iconColorClass}`}>
+                                <img
+                                    src= {DEFAULT_ICON} // Use the group-specific icon URL
+                                    alt=""
+                                    className="groupIcon"
+                                />
+                            </div>
+                            
                             <div className="group-info">
                                 <div className="group-name">{group.groupName}</div>
                                 <div className="group-date">
