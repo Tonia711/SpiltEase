@@ -119,8 +119,7 @@ const GroupList = () => {
                                     event.stopPropagation();
                                     handleDeleteClick(group._id)
                                 }}
-                            >
-                                X
+                            > X
                             </button>
                         </div>
                     );
