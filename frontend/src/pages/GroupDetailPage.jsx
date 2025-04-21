@@ -59,6 +59,7 @@ export default function GroupDetailPage() {
     }
   };
   console.log("Group data:", group);
+  
   return (
     <MobileFrame>
       <div className={styles.container}>

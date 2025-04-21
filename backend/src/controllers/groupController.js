@@ -126,6 +126,16 @@ export const validateJoinCode = async (req, res) => {
   }
 };
 
+function getUniqueName(baseName, existingMembers) {
+  let name = baseName;
+  let count = 1;
+  const existingNames = new Set(existingMembers.map((m) => m.userName));
+  while (existingNames.has(name)) {
+    name = `${baseName}-${count++}`;
+  }
+  return name;
+}
+
 export const joinGroupByCode = async (req, res) => {
   const { joinCode, selectedMemberId } = req.body;
   const currentUserId = req.user.id;
@@ -140,7 +150,7 @@ export const joinGroupByCode = async (req, res) => {
   }
 
   try {
-    const group = await Group.findOne({ joinCode: joinCode.trim() });
+    const group = await Group.findOne({ joinCode: joinCode.trim() }).populate("members");
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
@@ -150,6 +160,18 @@ export const joinGroupByCode = async (req, res) => {
     );
     if (alreadyMember) {
       return res.status(409).json({ message: "You are already a member of this group." });
+    }
+
+    const nameConflictMember = group.members.find(
+      (m) =>
+        !m.userId &&
+        m.userName.toLowerCase() === user.userName.toLowerCase() &&
+        (!selectedMemberId || m._id.toString() !== selectedMemberId)
+    );
+
+    if (nameConflictMember) {
+      const newName = getUniqueName(`${nameConflictMember.userName}-old`, group.members);
+      nameConflictMember.userName = newName;
     }
 
     if (selectedMemberId !== undefined && selectedMemberId !== null) {
