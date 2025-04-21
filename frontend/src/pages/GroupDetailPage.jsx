@@ -23,6 +23,7 @@ export default function GroupDetailPage() {
     : "";
   const DEFAULT_ICON = `${BASE_URL}/groups/testIcon1.jpg`;
 
+  
   useEffect(() => {
     api
       .get(`/groups/${groupId}`)
