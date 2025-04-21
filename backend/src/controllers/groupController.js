@@ -129,7 +129,11 @@ export const validateJoinCode = async (req, res) => {
 export const joinGroupByCode = async (req, res) => {
   const { joinCode, selectedMemberId } = req.body;
   const currentUserId = req.user.id;
-  const currentUserName = req.user.username;
+  const user = await User.findById(currentUserId).select('userName');
+
+  if (!user) {
+    return res.status(404).json({ message: 'Authenticated user not found' });
+  }
 
   if (!joinCode || typeof joinCode !== 'string') {
     return res.status(400).json({ message: "Join code is required" });
@@ -148,12 +152,9 @@ export const joinGroupByCode = async (req, res) => {
       return res.status(409).json({ message: "You are already a member of this group." });
     }
 
-    let actionMessage = "Joined group successfully";
-    let finalMemberId = null;
-
     if (selectedMemberId !== undefined && selectedMemberId !== null) {
       const virtualMember = group.members.find(
-        m => m.memberId === selectedMemberId && !m.userId
+        m => String(m.memberId) === String(selectedMemberId) && !m.userId
       );
 
       if (!virtualMember) {
@@ -161,37 +162,44 @@ export const joinGroupByCode = async (req, res) => {
       }
 
       virtualMember.userId = currentUserId;
-      virtualMember.userName = currentUserName;
-      finalMemberId = virtualMember.memberId;
-      actionMessage = "Claimed virtual member successfully";
+      virtualMember.userName = user.userName;
 
       await group.save();
+
+      await User.findByIdAndUpdate(currentUserId, {
+        $addToSet: { groupId: group._id },
+      });
+  
+      res.status(201).json({
+        message: "Claimed virtual member successfully",
+        groupId: group._id,
+        groupName: group.groupName,
+        memberId: virtualMember.memberId,
+      });  
 
     } else {
 
       const newMember = {
         memberId: group.members.length > 0 ? Math.max(...group.members.map(m => m.memberId)) + 1 : 1,
-        userName: currentUserName,
+        userName: user.userName,
         userId: currentUserId,
       };
 
       group.members.push(newMember);
-      finalMemberId = newMember.memberId;
-      actionMessage = "Joined group as a new member successfully";
 
       await group.save();
+
+      await User.findByIdAndUpdate(currentUserId, {
+        $addToSet: { groupId: group._id },
+      });
+  
+      res.status(201).json({
+        message: "Joined group as a new member successfully",
+        groupId: group._id,
+        groupName: group.groupName,
+        memberId: newMember.memberId,
+      });  
     }
-
-    await User.findByIdAndUpdate(currentUserId, {
-      $addToSet: { groupId: group._id },
-    });
-
-    res.status(201).json({
-      message: actionMessage,
-      groupId: group._id,
-      groupName: group.groupName,
-      memberId: finalMemberId,
-    });
 
   } catch (error) {
     console.error("Error joining group by code:", error);

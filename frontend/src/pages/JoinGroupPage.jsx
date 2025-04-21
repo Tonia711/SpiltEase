@@ -99,7 +99,7 @@ export default function GroupJoinPage() {
       let memberIdToJoin;
 
       await api.post(`/groups/join`, {
-        memberId: memberIdToJoin,
+        selectedMemberId: memberIdToJoin,
         joinCode: inviteCode.trim()
       });
 
