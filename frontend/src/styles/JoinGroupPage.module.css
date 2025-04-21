@@ -51,7 +51,7 @@
 }
 
 .inputField {
-  margin: 0 auto 1rem auto;
+  margin: 0.5rem auto 1rem auto;
   padding: 0.8rem;
   border-radius: 6px;
   border: none;
@@ -104,6 +104,11 @@
   font-size: 1.1rem;
   cursor: pointer;
   display: block;
+}
+
+.joinButton:disabled {
+  background: #5b566a;
+  cursor: not-allowed;
 }
 
 .error {
