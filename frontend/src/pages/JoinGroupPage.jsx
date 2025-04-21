@@ -98,8 +98,9 @@ export default function GroupJoinPage() {
     try {
       let memberIdToJoin;
 
-      await api.post(`/groups/${group._id}/join`, {
+      await api.post(`/groups/join`, {
         memberId: memberIdToJoin,
+        joinCode: inviteCode.trim()
       });
 
       navigate(`/groups/${group._id}`);
