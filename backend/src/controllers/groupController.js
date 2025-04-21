@@ -109,80 +109,78 @@ export const validateJoinCode = async (req, res) => {
   }
 };
 
-export const createGroupMember = async (req, res) => {
-  const groupId = req.params.id;
-  const currentUserId = req.user._id;
+export const joinGroupByCode = async (req, res) => {
+  const { joinCode, selectedMemberId } = req.body;
+  const currentUserId = req.user.id;
   const currentUserName = req.user.username;
 
-  if (!mongoose.Types.ObjectId.isValid(groupId)) {
-    return res.status(400).json({ message: "Invalid group ID format." });
+  if (!joinCode || typeof joinCode !== 'string') {
+    return res.status(400).json({ message: "Join code is required" });
   }
 
   try {
-    const group = await Group.findById(groupId);
-
+    const group = await Group.findOne({ joinCode: joinCode.trim() });
     if (!group) {
-      return res.status(404).json({ message: "Group not found." });
+      return res.status(404).json({ message: "Group not found" });
     }
 
-    const isUserAlreadyLinked = group.members.some(member =>
+    console.log("Group found:", group._id, group.groupName);
+    console.log("Group members:", group.members);
+    console.log("Current user ID:", currentUserId);
+    const alreadyMember = group.members.some(member =>
       member.userId && member.userId.equals(currentUserId)
     );
-
-    if (isUserAlreadyLinked) {
+    if (alreadyMember) {
       return res.status(409).json({ message: "You are already a member of this group." });
     }
 
-    const newMember = {
-      memberId: group.members.length + 1,
-      userName: currentUserName,
-      userId: currentUserId,
-    };
+    let actionMessage = "Joined group successfully";
+    let finalMemberId = null;
 
-    group.members.push(newMember);
-    await group.save();
+    if (selectedMemberId !== undefined && selectedMemberId !== null) {
+      const virtualMember = group.members.find(
+        m => m.memberId === selectedMemberId && !m.userId
+      );
 
-    res.status(201).json({ message: "Joined group successfully", memberId: newMember.memberId });
+      if (!virtualMember) {
+        return res.status(400).json({ message: "Invalid or already claimed memberId" });
+      }
 
-  } catch (error) {
-    console.error("Error creating group member:", error);
-    res.status(500).json({ message: "Server error creating group member." });
-  }
-};
+      virtualMember.userId = currentUserId;
+      virtualMember.userName = currentUserName;
+      finalMemberId = virtualMember.memberId;
+      actionMessage = "Claimed virtual member successfully";
 
-export const joinGroup = async (req, res) => {
-  const groupId = req.params.id;
-  const { memberId } = req.body;
+      await group.save();
 
-  if (!mongoose.Types.ObjectId.isValid(groupId)) {
-    return res.status(400).json({ message: "Invalid group ID" });
-  }
+    } else {
 
-  try {
-    const group = await Group.findById(groupId);
-    if (!group) return res.status(404).json({ message: "Group not found" });
+      const newMember = {
+        memberId: group.members.length > 0 ? Math.max(...group.members.map(m => m.memberId)) + 1 : 1,
+        userName: currentUserName,
+        userId: currentUserId,
+      };
 
-    const member = group.members.find((m) => m.memberId === memberId);
-    if (!member) return res.status(404).json({ message: "Member not found" });
+      group.members.push(newMember);
+      finalMemberId = newMember.memberId;
+      actionMessage = "Joined group as a new member successfully";
 
-    if (member.user) {
-      return res.status(400).json({ message: "This member is already claimed" });
+      await group.save();
     }
 
-    member.userName = req.user.userName;
-    member.userId = req.user.id;
-
-    await group.save();
-
-    console.log("user", req.user.id);
-
-    await User.findByIdAndUpdate(req.user.id, {
+    await User.findByIdAndUpdate(currentUserId, {
       $addToSet: { groupId: group._id },
     });
 
-    res.json({ message: "Joined group successfully", group });
-  } catch (err) {
-    console.error(err);
+    res.status(201).json({
+      message: actionMessage,
+      groupId: group._id,
+      groupName: group.groupName,
+      memberId: finalMemberId,
+    });
+
+  } catch (error) {
+    console.error("Error joining group by code:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

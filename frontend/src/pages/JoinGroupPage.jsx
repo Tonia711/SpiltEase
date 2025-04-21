@@ -67,8 +67,7 @@ export default function GroupJoinPage() {
     setError("");
     const tempNewMember = {
       memberId: null,
-      userName: user.userName,
-      isNew: true
+      userName: user.userName
     };
     setSelectedMember(tempNewMember);
   };
@@ -85,12 +84,12 @@ export default function GroupJoinPage() {
 
     try {
       let memberIdToJoin;
-      if (selectedMember.isNew) {
-        const { data: createdMember } = await api.post(
-          `/groups/${group._id}/members`
-        );
-        memberIdToJoin = createdMember.memberId;
-      }
+      // if (selectedMember.isNew) {
+      //   const { data: createdMember } = await api.post(
+      //     `/groups/${group._id}/members`
+      //   );
+      //   memberIdToJoin = createdMember.memberId;
+      // }
 
       await api.post(`/groups/${group._id}/join`, {
         memberId: memberIdToJoin,
