@@ -1,6 +1,7 @@
 import { Group } from "../db/schema.js";
 import { User } from "../db/schema.js";
 import { Icon } from "../db/schema.js";
+import mongoose from "mongoose";
 
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
@@ -89,9 +90,154 @@ export const getGroupById = async (req, res) => {
   }
 };
 
+export const validateJoinCode = async (req, res) => {
+  const { joinCode } = req.body;
+  const currentUserId = req.user.id;
+
+  if (!joinCode || typeof joinCode !== 'string') {
+    return res.status(400).json({ message: "Valid join code is required" });
+  }
+
+  try {
+    const group = await Group.findOne({ joinCode: joinCode.trim() }).select("_id groupName members");
+    if (!group) {
+      return res.status(404).json({ message: "Invalid code" });
+    }
+
+    const alreadyMember = group.members.some(member =>
+      member.userId && member.userId.equals(currentUserId)
+    );
+
+    if (alreadyMember) {
+      return res.status(200).json({
+        message: "You are already a member of this group.", // Your desired message
+        isAlreadyMember: true,
+        groupId: group._id,
+        groupName: group.groupName,
+      });
+    } else {
+      return res.status(200).json({
+        message: "Validate code!", isAlreadyMember: false, group
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const joinGroupByCode = async (req, res) => {
+  const { joinCode, selectedMemberId } = req.body;
+  const currentUserId = req.user.id;
+  const user = await User.findById(currentUserId).select('userName');
+
+  if (!user) {
+    return res.status(404).json({ message: 'Authenticated user not found' });
+  }
+
+  if (!joinCode || typeof joinCode !== 'string') {
+    return res.status(400).json({ message: "Join code is required" });
+  }
+
+  try {
+    const group = await Group.findOne({ joinCode: joinCode.trim() });
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const alreadyMember = group.members.some(member =>
+      member.userId && member.userId.equals(currentUserId)
+    );
+    if (alreadyMember) {
+      return res.status(409).json({ message: "You are already a member of this group." });
+    }
+
+    if (selectedMemberId !== undefined && selectedMemberId !== null) {
+      const virtualMember = group.members.find(
+        m => String(m.memberId) === String(selectedMemberId) && !m.userId
+      );
+
+      if (!virtualMember) {
+        return res.status(400).json({ message: "Invalid or already claimed memberId" });
+      }
+
+      virtualMember.userId = currentUserId;
+      virtualMember.userName = user.userName;
+
+      await group.save();
+
+      await User.findByIdAndUpdate(currentUserId, {
+        $addToSet: { groupId: group._id },
+      });
+  
+      res.status(201).json({
+        message: "Claimed virtual member successfully",
+        groupId: group._id,
+        groupName: group.groupName,
+        memberId: virtualMember.memberId,
+      });  
+
+    } else {
+
+      const newMember = {
+        memberId: group.members.length > 0 ? Math.max(...group.members.map(m => m.memberId)) + 1 : 1,
+        userName: user.userName,
+        userId: currentUserId,
+      };
+
+      group.members.push(newMember);
+
+      await group.save();
+
+      await User.findByIdAndUpdate(currentUserId, {
+        $addToSet: { groupId: group._id },
+      });
+  
+      res.status(201).json({
+        message: "Joined group as a new member successfully",
+        groupId: group._id,
+        groupName: group.groupName,
+        memberId: newMember.memberId,
+      });  
+    }
+
+  } catch (error) {
+    console.error("Error joining group by code:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updateGroupInfo = async (req, res) => {
+  const groupId = req.params.id;
+  const { groupName, note, iconId, budget, startDate, endDate } = req.body;
+
+  try {
+    const group = await Group
+      .findByIdAndUpdate(
+        groupId,
+        {
+          groupName,
+          note,
+          iconId,
+          budget,
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+        },
+        { new: true }
+      )
+      .select("-__v");
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    res.status(200).json(group);
+  }
+  catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
 // Create group
 export const createGroup = (req, res) => {
   res.send("Create group API");
 };
-
-

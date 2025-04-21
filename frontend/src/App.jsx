@@ -11,6 +11,7 @@ import NewGroupPage from "./pages/NewGroupPage";
 import GroupDetailPage from "./pages/GroupDetailPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import JoinGroupPage from "./pages/JoinGroupPage";
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
@@ -50,6 +51,14 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/groups/join"
+        element={
+          <ProtectedRoute>
+            <JoinGroupPage />
           </ProtectedRoute>
         }
       />

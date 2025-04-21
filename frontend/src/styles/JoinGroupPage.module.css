@@ -1,0 +1,228 @@
+/* File: src/styles/GroupJoinPage.module.css */
+.container {
+  padding: 2rem;
+  color: white;
+  background: #1c1b22;
+  min-height: 100vh;
+}
+
+.section {
+  margin: 0 auto;
+  padding: 15px 0;
+  border-radius: 8px;
+}
+
+.sectionTitle {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1em;
+}
+
+.title {
+  text-align: center;
+  width: 300px;
+  margin: 3rem auto 2rem auto;
+}
+
+.label {
+  display: block;
+  margin: 0;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inlineError {
+  color: #e74c3c;
+  font-size: 0.9em;
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  line-height: 3;
+}
+
+.inputError {
+  border-color: #ff4d4f !important;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.9);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.inputField {
+  margin: 0 auto 1rem auto;
+  padding: 0.8rem;
+  border-radius: 6px;
+  border: none;
+  background: #5b566a;
+  color: #fff;
+  font-size: 1.1rem;
+  display: block;
+  width: 300px;
+  box-sizing: border-box;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-5px);
+  }
+
+  40% {
+    transform: translateX(5px);
+  }
+
+  60% {
+    transform: translateX(-5px);
+  }
+
+  80% {
+    transform: translateX(5px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.shake {
+  animation: shake 0.4s ease;
+}
+
+.joinButton {
+  width: 300px;
+  margin: 1rem auto 2rem auto;
+  padding: 0.8rem;
+  background: #ffca28;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: block;
+}
+
+.error {
+  color: #f66;
+  text-align: center;
+}
+
+.membersListContainer {
+  width: 300px;
+  max-height: 300px;
+  overflow-y: scroll;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin: auto;
+}
+
+.membersList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.memberItem,
+.memberItemSelected,
+.memberItemReal {
+  padding: 0.8rem 1rem;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  background: #5b566a;
+  transition: background-color 0.2s ease;
+}
+
+.memberItem {
+  cursor: pointer;
+}
+
+.memberItem:hover {
+  background-color: #f0f0f0;
+}
+
+.memberItem:last-child,
+.memberItemSelected:last-child,
+.memberItemReal:last-child {
+  border-bottom: none;
+}
+
+.memberItem:hover {
+  background-color: #ffca28;
+}
+
+.memberItemSelected {
+  background: #ffca28;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.memberItemReal {
+  color: #ffffff;
+  cursor: default;
+  opacity: 0.7;
+  background-color: transparent;
+}
+
+.addButton {
+  margin-left: 0.5rem;
+  background: none;
+  border: none;
+  color: #ffca28;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.joinAsNewButton {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 20px;
+  background-color: #5b566a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.joinAsNewButton:hover {
+  background-color: #ffca28;
+}
+
+.joinAsNewButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.memberItemSelected.joinAsNewButton {
+  background-color: #ffca28;
+  font-weight: bold;
+}
+
+.backButton {
+  position: absolute;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+  padding: 0 1rem;
+}
+
+.backButton:hover {
+  color: #f2c94c;
+}
+
+.inputErrorBelow {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  margin-bottom: 0;
+  text-align: left;
+}

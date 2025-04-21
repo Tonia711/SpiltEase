@@ -9,7 +9,10 @@ const groupSchema = new mongoose.Schema({
   totalRefunds: Number,
   startDate: Date,
   endDate: Date,
-  joinCode: String,
+  joinCode:{
+        type: String,
+        unique: true
+      },
   members: [
     {
       memberId: {

@@ -113,7 +113,15 @@ const GroupList = () => {
                                     {group.startDate ? format(new Date(group.startDate), 'd MMM yyyy') : 'No date'}
                                 </div>
                             </div>
-                            <button className="delete-btn" onClick={() => handleDeleteClick(group._id)}>X</button>
+                            <button
+                                className="delete-btn"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleDeleteClick(group._id)
+                                }}
+                            >
+                                X
+                            </button>
                         </div>
                     );
                 })
