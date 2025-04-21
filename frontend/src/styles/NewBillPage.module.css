@@ -3,7 +3,10 @@ padding: 20px;
 background-color: #1f1c2c;
 color: white;
 min-height: 100vh;
+/* overflow-y: auto; */
 }
+
+
 
 .inputHalf {
     padding: 12px;
@@ -41,8 +44,8 @@ color: #f2c94c;
 
 
 .row1 {
-display: grid;
-grid-template-columns: 10% 5% 72%;
+display: flex;
+justify-content: space-between;
 margin-bottom: 16px;
 gap: 10px;
 }
