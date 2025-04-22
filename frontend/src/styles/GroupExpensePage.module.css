@@ -1,0 +1,74 @@
+.container {
+    background-color: #1c1b22;
+    height: 100%;
+    color: white;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.groupName {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    text-align: center ;
+}
+
+.groupIcon {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 1.5rem auto 0.3rem;
+    display: block;
+}
+
+.groupIcon:hover {
+    cursor: pointer;
+}
+
+.backButton {
+    position: absolute;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #fff;
+    cursor: pointer;
+    padding: 0 1rem;
+}
+
+.backButton:hover {
+    color: #ffca28; 
+}
+
+.fab {
+    position: absolute;
+    bottom: 24px; /* ✅ 离底部一点，不会被裁切 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffca28;
+    color: #000;
+    font-size: 2rem;
+    border: none;
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+}
+
+.fabContainer {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  
+  .fabLabel {
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: #ccc;
+  }
+  
+
+  

@@ -81,7 +81,7 @@ async function importData() {
           avatarId: avatarMap[u.avatarId], // 使用 avatarMap
           // groupId 稍后更新，因为它依赖于 groupMap
       });
-      userIdMap[u.id] = userObjectId; 映射
+      userIdMap[u.id] = userObjectId;
   }
 
   await User.insertMany(userDocs);
@@ -136,10 +136,26 @@ async function importData() {
        console.log("✅ Users updated with groupIds");
     }
 
+
+// 插入新数据
+console.log("📦 正在准备插入 Bills，打印一下处理后的 bills：");
+console.log(
+  bills.map(b => ({
+    ...b,
+    groupId: groupMap[b.groupId],
+  })));
+
     // 插入新数据
     await Promise.all([
       Balance.insertMany(calculatedBalances),
-      Bill.insertMany(bills),
+
+      Bill.insertMany(
+        bills.map(b => ({
+          ...b,
+          groupId: groupMap[b.groupId],
+        }))
+      ),
+      
       Icon.insertMany(icons),
       Label.insertMany(labels),
       // User.insertMany(hashedUsers),
