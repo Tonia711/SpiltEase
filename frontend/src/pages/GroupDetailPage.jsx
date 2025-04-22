@@ -64,7 +64,7 @@ export default function GroupDetailPage() {
     <MobileFrame>
       <div className={styles.container}>
         <div className={styles.header}>
-          <button className={styles.backButton} onClick={() => navigate("/")}>
+          <button className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
             {"<"}
           </button>
           <img
