@@ -136,28 +136,43 @@ async function importData() {
        console.log("✅ Users updated with groupIds");
     }
 
+// 插入 Label，拿到真正的 label ObjectId
+const insertedLabels = await Label.insertMany(labels);
+console.log("✅ Labels inserted");
+
+// 建 labelMap
+const labelMap = {};
+labels.forEach((l) => {
+  labelMap[l.type] = l._id;
+});
 
 // 插入新数据
-console.log("📦 正在准备插入 Bills，打印一下处理后的 bills：");
+console.log("📦 正在准备插入 Bills");
 console.log(
   bills.map(b => ({
     ...b,
     groupId: groupMap[b.groupId],
   })));
 
+
+
+  // ✅💥 在插入 Bills 之前，把每条账单的 labelId 从数字变成 ObjectId
+  const fixedBills = bills.map(b => ({
+    groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
+    groupBills: (b.groupBills || []).map(gb => ({
+      ...gb,
+      labelId: labelMap[labels.find(l => l.id === gb.labelId)?.type],
+    })),
+  }));
+
     // 插入新数据
     await Promise.all([
       Balance.insertMany(calculatedBalances),
 
-      Bill.insertMany(
-        bills.map(b => ({
-          ...b,
-          groupId: groupMap[b.groupId],
-        }))
-      ),
+      Bill.insertMany(fixedBills),
       
       Icon.insertMany(icons),
-      Label.insertMany(labels),
+      // Label.insertMany(labels),
       // User.insertMany(hashedUsers),
     ]);
     console.log("✅ All data inserted successfully!");
