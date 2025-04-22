@@ -7,7 +7,8 @@ import {
   getGroupById,
   validateJoinCode,
   updateGroupInfo,
-  joinGroupByCode
+  joinGroupByCode,
+  getGroupSummary
 } from "../../../controllers/groupController.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get("/", protect, getUserGroups);
 router.delete("/:id", protect, deleteGroup);
 router.get("/:id", protect, getGroupById);
+router.get("/:id/summary", protect, getGroupSummary);
 
 router.post("/validate", protect, validateJoinCode );
 router.post("/join", protect, joinGroupByCode);
