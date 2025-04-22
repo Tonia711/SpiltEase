@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import JoinGroupPage from "./pages/JoinGroupPage";
 import NewBillPage from "./pages/NewBillPage.jsx";
+import GroupExpensePage from "./pages/GroupExpensePage.jsx";
 
 
 function App() {
@@ -41,14 +42,6 @@ function App() {
         }
       />
       <Route
-        path="/groups/:groupId"
-        element={
-          <ProtectedRoute>
-            <GroupDetailPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/profile"
         element={
           <ProtectedRoute>
@@ -72,6 +65,24 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/groups/:groupId/expenses"
+        element={
+          <ProtectedRoute>
+            <GroupExpensePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/groups/:groupId"
+        element={
+          <ProtectedRoute>
+            <GroupDetailPage />
+          </ProtectedRoute>
+        }
+      />
+
+
 
       {/* 其他未匹配时跳回首页或 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
