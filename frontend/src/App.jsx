@@ -59,7 +59,7 @@ function App() {
         }
       />
       <Route
-        path="/groups/:groupId/bills/new"
+        path="/groups/:groupId/creatBill"
         element={
           <ProtectedRoute>
             <NewBillPage />
@@ -75,14 +75,6 @@ function App() {
         }
       />
       <Route
-        path="/groups/:groupId/summary"
-        element={
-          <ProtectedRoute>
-            <GroupSummaryPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/groups/:groupId"
         element={
           <ProtectedRoute>
@@ -90,6 +82,17 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/groups/:groupId/summary"
+        element={
+          <ProtectedRoute>
+            <GroupSummaryPage />
+          </ProtectedRoute>
+        }
+      />
+
+
 
       {/* 其他未匹配时跳回首页或 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
