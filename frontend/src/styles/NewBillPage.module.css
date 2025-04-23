@@ -86,6 +86,8 @@ background-color: #2a273a;
 padding: 12px;
 border-radius: 12px;
 margin-bottom: 20px;
+height: 220px;
+overflow-y: auto;
 }
 
 .splitHeader {
