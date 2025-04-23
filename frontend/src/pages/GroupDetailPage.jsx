@@ -301,7 +301,7 @@ export default function GroupDetailPage() {
             ) : summaryError ? (
               <p className={styles.error}>{summaryError}</p>
             ) : summaryData ? (
-              <>
+              <div className={styles.summaryScrollContent}>
                 {/* Group Summary Section */}
                 <div className={styles.summaryHeader}>
                   <h3 className={styles.summaryTitle}>Group Summary</h3>
@@ -363,7 +363,7 @@ export default function GroupDetailPage() {
                     </li>
                   ))}
                 </ul>
-              </>
+              </div>
             ) : (
               <p>No summary data available.</p>
             )}
