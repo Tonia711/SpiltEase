@@ -20,7 +20,15 @@ export default function GroupExpenseComponent({ groupId }) {
         const { data: billsData } = await api.get(`/bills/group/${groupId}`);
         console.log("Fetched bills:", billsData);
         console.log("Current groupId:", groupId);
-        setBills(billsData);
+        
+        // Sort bills by date (most recent first)
+        const sortedBills = [...billsData].sort((a, b) => {
+          const dateA = new Date(a.date || 0);
+          const dateB = new Date(b.date || 0);
+          return dateB - dateA; // Descending order (newest first)
+        });
+        
+        setBills(sortedBills);
       } catch (err) {
         console.error("Failed to fetch bills:", err);
         setError("Failed to load expenses.");
