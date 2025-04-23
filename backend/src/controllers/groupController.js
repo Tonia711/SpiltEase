@@ -4,6 +4,7 @@ import { Icon } from "../db/schema.js";
 import { Label } from "../db/schema.js";
 import { Bill } from "../db/schema.js";
 import mongoose from "mongoose";
+import { calculateExpenseSummary } from "../data/summaryCalculate.js";
 
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
@@ -35,184 +36,25 @@ export const getGroupSummary = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 1. Find the group to get user's memberId within this group
+    // 1. Find the group
     const group = await Group.findById(groupId);
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
     
-    // Find the user's memberId in this group
-    const userMember = group.members.find(member => 
-      member.userId && member.userId.toString() === userId.toString()
-    );
-    
-    if (!userMember) {
-      return res.status(403).json({ message: 'You are not a member of this group' });
-    }
-    
-    const userMemberId = userMember.memberId;
-    
     // 2. Get all bills associated with this group
     const billsData = await Bill.findOne({ groupId: group._id });
     
-    if (!billsData || !billsData.groupBills || billsData.groupBills.length === 0) {
-      return res.status(200).json({
-        groupSummary: [],
-        userSummary: [],
-        groupTotal: 0,
-        userTotal: 0
-      });
-    }
+    // 3. Calculate group expense summary
+    const summaryData = await calculateExpenseSummary(group, userId, billsData);
     
-    // 3. Get all available labels for mapping
-    const allLabels = await Label.find().lean();
-    
-    // Create a numeric-based mapping for label types
-    // This is the key fix - we map 1 -> transport, 2 -> accommodation, etc.
-    const labelTypeByNumber = {};
-    allLabels.forEach(label => {
-      // Extract the numeric ID from the ObjectId's last byte(s)
-      const idHex = label._id.toString();
-      const numericId = parseInt(idHex.slice(-2), 16); // Extract from last 2 hex chars
-      
-      if (numericId >= 1 && numericId <= 7) {
-        labelTypeByNumber[numericId] = {
-          name: label.type,
-          id: label._id
-        };
-      }
-    });
-    
-    console.log('Label mapping by numeric ID:', Object.entries(labelTypeByNumber).map(
-      ([id, info]) => `${id} -> ${info.name}`
-    ));
-    
-    // Debug the bills and their labelIds
-    const billsDebugInfo = billsData.groupBills.map(bill => {
-      // For each bill, extract numeric ID from ObjectId
-      const labelIdStr = bill.labelId ? bill.labelId.toString() : null;
-      const labelNumericId = labelIdStr ? parseInt(labelIdStr.slice(-2), 16) : null;
-      
-      return {
-        billId: bill.id,
-        labelId: labelIdStr,
-        numericId: labelNumericId,
-        labelType: labelNumericId && labelTypeByNumber[labelNumericId] 
-          ? labelTypeByNumber[labelNumericId].name 
-          : 'unknown',
-        expenses: bill.expenses,
-        refunds: bill.refunds
-      };
-    });
-    
-    console.log('Bills with numeric IDs:', billsDebugInfo);
-    
-    // 4. Process bill data to calculate expenses by label
-    const groupSummaryMap = {};
-    const userSummaryMap = {};
-    let groupTotal = 0;
-    let userTotal = 0;
-    
-    // Process all bills in the group
-    for (const bill of billsData.groupBills) {
-      if (!bill.labelId) {
-        console.log(`Skipping bill ${bill.id} with no labelId`);
-        continue;
-      }
-      
-      // Extract numeric ID from the labelId ObjectId
-      const labelIdStr = bill.labelId.toString();
-      const labelNumericId = parseInt(labelIdStr.slice(-2), 16);
-      
-      // Use the numeric ID to get the label type
-      const labelInfo = labelTypeByNumber[labelNumericId];
-      
-      if (!labelInfo) {
-        console.log(`No label info found for numeric ID ${labelNumericId} (from ${labelIdStr}) on bill ${bill.id}`);
-        continue;
-      }
-      
-      const labelKey = labelNumericId.toString();
-      
-      // Initialize label entries in the summary maps if they don't exist
-      if (!groupSummaryMap[labelKey]) {
-        groupSummaryMap[labelKey] = {
-          labelId: labelInfo.id,
-          labelName: labelInfo.name,
-          totalExpense: 0,
-          totalRefund: 0,
-          netExpense: 0
-        };
-      }
-      
-      if (!userSummaryMap[labelKey]) {
-        userSummaryMap[labelKey] = {
-          labelId: labelInfo.id,
-          labelName: labelInfo.name,
-          userExpense: 0,
-          userRefund: 0,
-          netExpense: 0
-        };
-      }
-      
-      // Get the total expense and refund for this bill
-      const billExpense = parseFloat(bill.expenses) || 0;
-      const billRefund = parseFloat(bill.refunds) || 0;
-      const netBillExpense = billExpense - billRefund;
-      
-      // Add to group totals
-      groupTotal += netBillExpense;
-      groupSummaryMap[labelKey].totalExpense += billExpense;
-      groupSummaryMap[labelKey].totalRefund += billRefund;
-      groupSummaryMap[labelKey].netExpense += netBillExpense;
-      
-      // Calculate user's expense and refund for this bill
-      const userEntry = bill.members.find(m => m.memberId === userMemberId);
-      if (userEntry) {
-        const userExpense = parseFloat(userEntry.expense) || 0;
-        const userRefund = parseFloat(userEntry.refund) || 0;
-        const netUserExpense = userExpense - userRefund;
-        
-        userTotal += netUserExpense;
-        userSummaryMap[labelKey].userExpense += userExpense;
-        userSummaryMap[labelKey].userRefund += userRefund;
-        userSummaryMap[labelKey].netExpense += netUserExpense;
-      }
-    }
-    
-    console.log("Group summary before formatting:", Object.entries(groupSummaryMap).map(
-      ([labelKey, data]) => `${labelKey} (${data.labelName}): ${data.totalExpense} - ${data.totalRefund} = ${data.netExpense}`
-    ));
-    
-    // 5. Format the data for the frontend with proper capitalization
-    const groupSummary = Object.entries(groupSummaryMap)
-      .map(([labelKey, item]) => ({
-        labelId: item.labelId,
-        // Capitalize first letter of label name for display
-        labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
-        totalExpense: parseFloat(item.netExpense.toFixed(2)),
-        percentage: groupTotal > 0 ? parseFloat(((item.netExpense / groupTotal) * 100).toFixed(2)) : 0
-      }))
-      .filter(item => item.totalExpense > 0);
-    
-    const userSummary = Object.entries(userSummaryMap)
-      .map(([labelKey, item]) => ({
-        labelId: item.labelId,
-        // Capitalize first letter of label name for display
-        labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
-        userExpense: parseFloat(item.netExpense.toFixed(2)),
-        percentage: userTotal > 0 ? parseFloat(((item.netExpense / userTotal) * 100).toFixed(2)) : 0
-      }))
-      .filter(item => item.userExpense > 0);
-    
-    res.status(200).json({
-      groupSummary,
-      userSummary,
-      groupTotal: parseFloat(groupTotal.toFixed(2)),
-      userTotal: parseFloat(userTotal.toFixed(2))
-    });
+    // 4. Return the formatted summary data
+    res.status(200).json(summaryData);
   } catch (error) {
     console.error('Error fetching group summary:', error);
+    if (error.message === 'User is not a member of this group') {
+      return res.status(403).json({ message: 'You are not a member of this group' });
+    }
     res.status(500).json({ message: 'Server error' });
   }
 };
