@@ -23,6 +23,27 @@ const CHART_COLORS = [
   "#3F51B5", // Indigo
 ];
 
+// Mock data for development until backend endpoint provides correct data
+const DEFAULT_SUMMARY_DATA = {
+  totalExpenses: 0,
+  billCount: 0,
+  memberCount: 0,
+  groupSummary: [
+    { labelName: "No Data", totalExpense: 1 }
+  ],
+  userSummary: [
+    { labelName: "No Data", userExpense: 1 }
+  ],
+  categoryBreakdown: {
+    "No Data": 1
+  },
+  memberContributions: {
+    "No Members": 1
+  },
+  balances: {},
+  settleUpSuggestions: []
+};
+
 export default function GroupSummaryPage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -34,6 +55,9 @@ export default function GroupSummaryPage() {
   const [summaryData, setSummaryData] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
+  const [groupTotal, setGroupTotal] = useState(0);
+  const [userTotal, setUserTotal] = useState(0);
 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
@@ -67,52 +91,75 @@ export default function GroupSummaryPage() {
     if (groupId) {
       setSummaryLoading(true);
       setSummaryError(null);
-      
+
       api.get(`/groups/${groupId}/summary`)
         .then(({ data }) => {
-          setSummaryData(data);
+          console.log("Received summary data:", data);
+          setDebugInfo(JSON.stringify(data, null, 2));
+
+          setSummaryData(data || DEFAULT_SUMMARY_DATA);
+          setGroupTotal(parseFloat(data?.groupTotal || 0));
+          setUserTotal(parseFloat(data?.userTotal || 0));
           setSummaryLoading(false);
         })
         .catch((err) => {
           console.error("Failed to fetch summary data:", err);
           setSummaryError("Failed to load expense summary data.");
           setSummaryLoading(false);
+
+          setSummaryData(DEFAULT_SUMMARY_DATA);
+          setGroupTotal(0);
+          setUserTotal(0);
         });
     }
   }, [groupId]);
 
   // Prepare pie chart data for group summary
   const prepareCategoryChartData = () => {
-    if (!summaryData || !summaryData.categoryBreakdown) {
+    if (summaryData?.groupSummary && summaryData.groupSummary.length > 0) {
       return {
-        labels: [],
+        labels: summaryData.groupSummary.map(item => item.labelName),
         datasets: [
           {
-            data: [],
-            backgroundColor: [],
-            borderWidth: 1,
+            data: summaryData.groupSummary.map(item => item.totalExpense),
+            backgroundColor: summaryData.groupSummary.map((_, index) =>
+              CHART_COLORS[index % CHART_COLORS.length]),
+            borderWidth: 0,
+          }
+        ]
+      };
+    }
+
+    if (summaryData?.categoryBreakdown && Object.keys(summaryData.categoryBreakdown).length > 0) {
+      const labels = [];
+      const data = [];
+      const backgroundColors = [];
+
+      Object.entries(summaryData.categoryBreakdown).forEach(([category, amount], index) => {
+        labels.push(category);
+        data.push(amount);
+        backgroundColors.push(CHART_COLORS[index % CHART_COLORS.length]);
+      });
+
+      return {
+        labels,
+        datasets: [
+          {
+            data,
+            backgroundColor: backgroundColors,
+            borderWidth: 0,
           },
         ],
       };
     }
 
-    const labels = [];
-    const data = [];
-    const backgroundColors = [];
-
-    Object.entries(summaryData.categoryBreakdown).forEach(([category, amount], index) => {
-      labels.push(category);
-      data.push(amount);
-      backgroundColors.push(CHART_COLORS[index % CHART_COLORS.length]);
-    });
-
     return {
-      labels,
+      labels: ['No Categories'],
       datasets: [
         {
-          data,
-          backgroundColor: backgroundColors,
-          borderWidth: 1,
+          data: [1],
+          backgroundColor: ['#808080'],
+          borderWidth: 0,
         },
       ],
     };
@@ -120,36 +167,50 @@ export default function GroupSummaryPage() {
 
   // Prepare member contribution chart data
   const prepareMemberChartData = () => {
-    if (!summaryData || !summaryData.memberContributions) {
+    if (summaryData?.userSummary && summaryData.userSummary.length > 0) {
       return {
-        labels: [],
+        labels: summaryData.userSummary.map(item => item.labelName),
         datasets: [
           {
-            data: [],
-            backgroundColor: [],
-            borderWidth: 1,
+            data: summaryData.userSummary.map(item => item.userExpense),
+            backgroundColor: summaryData.userSummary.map((_, index) =>
+              CHART_COLORS[index % CHART_COLORS.length]),
+            borderWidth: 0,
+          }
+        ]
+      };
+    }
+
+    if (summaryData?.memberContributions && Object.keys(summaryData.memberContributions).length > 0) {
+      const labels = [];
+      const data = [];
+      const backgroundColors = [];
+
+      Object.entries(summaryData.memberContributions).forEach(([member, amount], index) => {
+        labels.push(member);
+        data.push(amount);
+        backgroundColors.push(CHART_COLORS[index % CHART_COLORS.length]);
+      });
+
+      return {
+        labels,
+        datasets: [
+          {
+            data,
+            backgroundColor: backgroundColors,
+            borderWidth: 0,
           },
         ],
       };
     }
 
-    const labels = [];
-    const data = [];
-    const backgroundColors = [];
-
-    Object.entries(summaryData.memberContributions).forEach(([member, amount], index) => {
-      labels.push(member);
-      data.push(amount);
-      backgroundColors.push(CHART_COLORS[index % CHART_COLORS.length]);
-    });
-
     return {
-      labels,
+      labels: ['No Data'],
       datasets: [
         {
-          data,
-          backgroundColor: backgroundColors,
-          borderWidth: 1,
+          data: [1],
+          backgroundColor: ['#808080'],
+          borderWidth: 0,
         },
       ],
     };
@@ -166,27 +227,36 @@ export default function GroupSummaryPage() {
           padding: 15,
           font: {
             size: 12
-          }
+          },
+          color: '#fff'
         }
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const label = context.label || '';
             const value = context.raw || 0;
-            return `${label}: $${value.toFixed(2)}`;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: $${value.toFixed(2)} (${percentage}%)`;
           }
         }
       }
-    }
+    },
+    cutout: '60%',
+    elements: {
+      arc: {
+        borderWidth: 0,
+      },
+    },
   };
 
   const handleBackClick = () => {
     navigate(`/groups/${groupId}/expenses`);
   };
-  
+
   const handleGroupIconClick = () => {
-    navigate(`/groups/${groupId}`); // 点头像跳 GroupDetailPage
+    navigate(`/groups/${groupId}`);
   };
 
   if (loading) {
@@ -212,6 +282,22 @@ export default function GroupSummaryPage() {
     );
   }
 
+  const categoryChartData = prepareCategoryChartData();
+  const memberChartData = prepareMemberChartData();
+
+  const calculateTotal = (data) => {
+    if (!data || !data.datasets || !data.datasets[0] || !data.datasets[0].data) {
+      return 0;
+    }
+    return data.datasets[0].data.reduce((sum, val) => sum + (val || 0), 0);
+  };
+
+  const calculatedGroupTotal = calculateTotal(categoryChartData);
+  const calculatedUserTotal = calculateTotal(memberChartData);
+
+  const displayGroupTotal = groupTotal || calculatedGroupTotal;
+  const displayUserTotal = userTotal || calculatedUserTotal;
+
   return (
     <MobileFrame>
       <div className={styles.container}>
@@ -221,10 +307,10 @@ export default function GroupSummaryPage() {
           </button>
           <div className={styles.groupInfo}>
             {groupIconUrl && (
-              <img 
-                src={groupIconUrl} 
-                alt="Group Icon" 
-                className={styles.groupIcon} 
+              <img
+                src={groupIconUrl}
+                alt="Group Icon"
+                className={styles.groupIcon}
                 onClick={handleGroupIconClick}
               />
             )}
@@ -237,55 +323,139 @@ export default function GroupSummaryPage() {
             <p>Loading summary data...</p>
           ) : summaryError ? (
             <p className={styles.error}>{summaryError}</p>
-          ) : summaryData ? (
+          ) : (
             <>
-              <div className={styles.overviewSection}>
-                <h3>Group Overview</h3>
-                <div className={styles.overviewStats}>
-                  <div className={styles.stat}>
-                    <span className={styles.statLabel}>Total Expenses</span>
-                    <span className={styles.statValue}>${summaryData.totalExpenses.toFixed(2)}</span>
-                  </div>
-                  <div className={styles.stat}>
-                    <span className={styles.statLabel}>Bill Count</span>
-                    <span className={styles.statValue}>{summaryData.billCount}</span>
-                  </div>
-                  <div className={styles.stat}>
-                    <span className={styles.statLabel}>Members</span>
-                    <span className={styles.statValue}>{summaryData.memberCount}</span>
-                  </div>
+              <div className={styles.chartSection}>
+                <h3>Group Summary</h3>
+                <div className={styles.summaryHeader}>
+                  <span className={styles.summaryTitle}>Total</span>
+                  <span className={styles.summaryAmount}>
+                    ${displayGroupTotal.toFixed(2)}
+                  </span>
                 </div>
+                <div className={styles.chartContainer}>
+                  <Pie data={categoryChartData} options={chartOptions} />
+                </div>
+
+                {summaryData?.groupSummary && summaryData.groupSummary.length > 0 && (
+                  <ul className={styles.labelList}>
+                    {summaryData.groupSummary.map((item, index) => (
+                      <li key={index} className={styles.labelItem}>
+                        <div className={styles.labelName}>
+                          <div
+                            className={styles.labelColor}
+                            style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                          ></div>
+                          {item.labelName}
+                        </div>
+                        <div className={styles.labelAmount}>
+                          ${item.totalExpense.toFixed(2)}
+                          <span className={styles.labelPercentage}>
+                            {displayGroupTotal > 0 ? `(${Math.round((item.totalExpense / displayGroupTotal) * 100)}%)` : '(0%)'}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {summaryData?.categoryBreakdown && Object.keys(summaryData.categoryBreakdown).length > 0 && !summaryData.groupSummary && (
+                  <ul className={styles.labelList}>
+                    {Object.entries(summaryData.categoryBreakdown).map(([category, amount], index) => (
+                      <li key={index} className={styles.labelItem}>
+                        <div className={styles.labelName}>
+                          <div
+                            className={styles.labelColor}
+                            style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                          ></div>
+                          {category}
+                        </div>
+                        <div className={styles.labelAmount}>
+                          ${amount.toFixed(2)}
+                          <span className={styles.labelPercentage}>
+                            {displayGroupTotal > 0 ? `(${Math.round((amount / displayGroupTotal) * 100)}%)` : '(0%)'}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className={styles.chartSection}>
-                <h3>Expenses by Category</h3>
+                <h3>My Summary</h3>
+                <div className={styles.summaryHeader}>
+                  <span className={styles.summaryTitle}>Total Contributions</span>
+                  <span className={styles.summaryAmount}>
+                    ${displayUserTotal.toFixed(2)}
+                  </span>
+                </div>
                 <div className={styles.chartContainer}>
-                  <Pie data={prepareCategoryChartData()} options={chartOptions} />
+                  <Pie data={memberChartData} options={chartOptions} />
                 </div>
+
+                {summaryData?.userSummary && summaryData.userSummary.length > 0 && (
+                  <ul className={styles.labelList}>
+                    {summaryData.userSummary.map((item, index) => (
+                      <li key={index} className={styles.labelItem}>
+                        <div className={styles.labelName}>
+                          <div
+                            className={styles.labelColor}
+                            style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                          ></div>
+                          {item.labelName}
+                        </div>
+                        <div className={styles.labelAmount}>
+                          ${item.userExpense.toFixed(2)}
+                          <span className={styles.labelPercentage}>
+                            {displayUserTotal > 0 ? `(${Math.round((item.userExpense / displayUserTotal) * 100)}%)` : '(0%)'}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {summaryData?.memberContributions && Object.keys(summaryData.memberContributions).length > 0 && !summaryData.userSummary && (
+                  <ul className={styles.labelList}>
+                    {Object.entries(summaryData.memberContributions).map(([member, amount], index) => (
+                      <li key={index} className={styles.labelItem}>
+                        <div className={styles.labelName}>
+                          <div
+                            className={styles.labelColor}
+                            style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                          ></div>
+                          {member}
+                        </div>
+                        <div className={styles.labelAmount}>
+                          ${amount.toFixed(2)}
+                          <span className={styles.labelPercentage}>
+                            {displayUserTotal > 0 ? `(${Math.round((amount / displayUserTotal) * 100)}%)` : '(0%)'}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
-              <div className={styles.chartSection}>
-                <h3>Member Contributions</h3>
-                <div className={styles.chartContainer}>
-                  <Pie data={prepareMemberChartData()} options={chartOptions} />
+              {summaryData?.balances && Object.keys(summaryData.balances).length > 0 && (
+                <div className={styles.balancesSection}>
+                  <h3>Current Balances</h3>
+                  <div className={styles.balancesList}>
+                    {Object.entries(summaryData.balances).map(([member, balance], index) => (
+                      <div key={index} className={styles.balanceItem}>
+                        <span className={styles.memberName}>{member}</span>
+                        <span className={`${styles.balanceAmount} ${balance >= 0 ? styles.positive : styles.negative}`}>
+                          {balance >= 0 ? `+$${balance.toFixed(2)}` : `-$${Math.abs(balance).toFixed(2)}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className={styles.balancesSection}>
-                <h3>Current Balances</h3>
-                <div className={styles.balancesList}>
-                  {summaryData.balances && Object.entries(summaryData.balances).map(([member, balance], index) => (
-                    <div key={index} className={styles.balanceItem}>
-                      <span className={styles.memberName}>{member}</span>
-                      <span className={`${styles.balanceAmount} ${balance >= 0 ? styles.positive : styles.negative}`}>
-                        {balance >= 0 ? `+$${balance.toFixed(2)}` : `-$${Math.abs(balance).toFixed(2)}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {summaryData.settleUpSuggestions && summaryData.settleUpSuggestions.length > 0 && (
+              {summaryData?.settleUpSuggestions && summaryData.settleUpSuggestions.length > 0 && (
                 <div className={styles.settleUpSection}>
                   <h3>Settle Up Suggestions</h3>
                   <div className={styles.suggestionsList}>
@@ -294,7 +464,9 @@ export default function GroupSummaryPage() {
                         <p>
                           <span className={styles.fromMember}>{suggestion.from}</span> should pay{" "}
                           <span className={styles.toMember}>{suggestion.to}</span>{" "}
-                          <span className={styles.paymentAmount}>${suggestion.amount.toFixed(2)}</span>
+                          <span className={styles.paymentAmount}>
+                            ${(suggestion.amount || 0).toFixed(2)}
+                          </span>
                         </p>
                       </div>
                     ))}
@@ -302,8 +474,6 @@ export default function GroupSummaryPage() {
                 </div>
               )}
             </>
-          ) : (
-            <p className={styles.noDataMessage}>No summary data available.</p>
           )}
         </div>
       </div>
