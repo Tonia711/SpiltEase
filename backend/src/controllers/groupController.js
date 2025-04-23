@@ -1,6 +1,8 @@
 import { Group } from "../db/schema.js";
 import { User } from "../db/schema.js";
 import { Icon } from "../db/schema.js";
+import { Label } from "../db/schema.js";
+import { Bill } from "../db/schema.js";
 import mongoose from "mongoose";
 
 // Get all groups for a user
@@ -24,6 +26,106 @@ export const getUserGroups = async (req, res) => {
   } catch (err) {
     console.error("Error fetching user's groups:", err);
     res.status(500).json({ message: "Server error while fetching user's groups" });
+  }
+};
+
+// Get group expense summary data
+export const getGroupSummary = async (req, res) => {
+  const groupId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    // 1. Find the group to get user's memberId within this group
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+    
+    // Find the user's memberId in this group
+    const userMember = group.members.find(member => 
+      member.userId && member.userId.toString() === userId.toString()
+    );
+    
+    if (!userMember) {
+      return res.status(403).json({ message: 'You are not a member of this group' });
+    }
+    
+    const userMemberId = userMember.memberId;
+    
+    // 2. Get all bills associated with this group
+    const billsData = await Bill.findOne({ groupId: Number(group.id) });
+    
+    if (!billsData || !billsData.groupBills || billsData.groupBills.length === 0) {
+      return res.status(200).json({
+        groupSummary: [],
+        userSummary: [],
+        groupTotal: 0,
+        userTotal: 0
+      });
+    }
+    
+    // 3. Get all available labels
+    const labels = await Label.find();
+    
+    // 4. Process bill data to calculate expenses by label
+    const groupSummaryMap = {};
+    const userSummaryMap = {};
+    let groupTotal = 0;
+    let userTotal = 0;
+    
+    billsData.groupBills.forEach(bill => {
+      const labelId = bill.labelId;
+      
+      // Initialize label if not exists
+      if (!groupSummaryMap[labelId]) {
+        groupSummaryMap[labelId] = 0;
+      }
+      if (!userSummaryMap[labelId]) {
+        userSummaryMap[labelId] = 0;
+      }
+      
+      // Calculate total expenses for group and user
+      bill.members.forEach(member => {
+        const expense = parseFloat(member.expense) || 0;
+        groupTotal += expense;
+        groupSummaryMap[labelId] += expense;
+        
+        if (member.memberId === userMemberId) {
+          userTotal += expense;
+          userSummaryMap[labelId] += expense;
+        }
+      });
+    });
+    
+    // 5. Format the data for the frontend
+    const labelMap = labels.reduce((acc, label) => {
+      acc[label._id] = label.type;
+      return acc;
+    }, {});
+    
+    const groupSummary = Object.entries(groupSummaryMap).map(([labelId, totalExpense]) => ({
+      labelId: parseInt(labelId),
+      labelName: labelMap[parseInt(labelId)] || "Unknown",
+      totalExpense: parseFloat(totalExpense.toFixed(2)),
+      percentage: parseFloat(((totalExpense / groupTotal) * 100).toFixed(2))
+    })).filter(item => item.totalExpense > 0);
+    
+    const userSummary = Object.entries(userSummaryMap).map(([labelId, userExpense]) => ({
+      labelId: parseInt(labelId),
+      labelName: labelMap[parseInt(labelId)] || "Unknown",
+      userExpense: parseFloat(userExpense.toFixed(2)),
+      percentage: parseFloat(((userExpense / userTotal) * 100).toFixed(2))
+    })).filter(item => item.userExpense > 0);
+    
+    res.status(200).json({
+      groupSummary: groupSummary,
+      userSummary: userSummary,
+      groupTotal: parseFloat(groupTotal.toFixed(2)),
+      userTotal: parseFloat(userTotal.toFixed(2))
+    });
+  } catch (error) {
+    console.error('Error fetching group summary:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

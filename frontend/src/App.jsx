@@ -13,8 +13,8 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import JoinGroupPage from "./pages/JoinGroupPage";
 import NewBillPage from "./pages/NewBillPage.jsx";
+import AnnualSummary from "./components/AnnualSummary";
 import GroupExpensePage from "./pages/GroupExpensePage.jsx";
-
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
@@ -42,10 +42,26 @@ function App() {
         }
       />
       <Route
+        path="/groups/:groupId"
+        element={
+          <ProtectedRoute>
+            <GroupDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/annual-summary"
+        element={
+          <ProtectedRoute>
+            <AnnualSummary />
           </ProtectedRoute>
         }
       />
@@ -73,16 +89,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/groups/:groupId"
-        element={
-          <ProtectedRoute>
-            <GroupDetailPage />
-          </ProtectedRoute>
-        }
-      />
-
-
 
       {/* 其他未匹配时跳回首页或 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
