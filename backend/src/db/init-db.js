@@ -81,17 +81,16 @@ async function importData() {
           avatarId: avatarMap[u.avatarId], // 使用 avatarMap
           // groupId 稍后更新，因为它依赖于 groupMap
       });
-      userIdMap[u.id] = userObjectId; // 存储原始ID到新ObjectId的映射
+      userIdMap[u.id] = userObjectId;
   }
 
   await User.insertMany(userDocs);
     console.log("✅ Users inserted and userIdMap created");
 
-    // ✅ Step 2: 插入 Group 并使用 userIdMap
-    const groupMap = {}; // 映射原始群组ID (数字) 到新的 Mongoose ObjectId
-    const groupDocs = groups.map((g) => { // 使用你引入的原始 groups 数据
-        const groupObjectId = new Types.ObjectId(); // 为每个群组生成一个 ObjectId
-        groupMap[g.id] = groupObjectId; // 存储原始ID到新ObjectId的映射
+    const groupMap = {}; 
+    const groupDocs = groups.map((g) => { 
+        const groupObjectId = new Types.ObjectId();
+        groupMap[g.id] = groupObjectId; 
 
         return {
             _id: groupObjectId,
@@ -109,13 +108,9 @@ async function importData() {
                     memberId: m.memberId || i,
                     userName: m.userName || `user${i}`,
                 };
-                // ✅ 关键修改: 处理 userId
                 if (m.userId === "") {
-                    // 如果原始 userId 是空字符串，设置为 null
                     memberDoc.userId = null;
                 } else {
-                    // 如果原始 userId 是数字 (对应真实用户)，查找 userIdMap 获取其 ObjectId
-                    // 如果在 map 中找不到 (数据不一致)，也设为 null 或报错
                     memberDoc.userId = userIdMap[m.userId] || null;
                 }
                 return memberDoc;
@@ -126,76 +121,58 @@ async function importData() {
     await Group.insertMany(groupDocs);
     console.log("✅ Groups inserted and groupMap created");
 
-    // ✅ Step 3 (Optional but recommended): 更新 Users 的 groupId 字段
-    // 现在 groupMap 已经可用，可以更新 Users 文档来引用它们所属的 Group
-    // 这需要再次迭代原始 users 数据或查询刚刚插入的 Users
-    // 假设原始 users 数据有 groupId 字段 (数字数组)
     const userUpdates = users.map(u => {
         const groupObjectIds = (u.groupId || []).map(groupId => groupMap[groupId]).filter(id => id); // 映射原始groupId到ObjectId，过滤掉null
         return {
             updateOne: {
-                filter: { _id: userIdMap[u.id] }, // 找到对应的User文档
-                update: { $set: { groupId: groupObjectIds } } // 设置 groupId 数组
+                filter: { _id: userIdMap[u.id] }, 
+                update: { $set: { groupId: groupObjectIds } }
             }
         };
-    }).filter(update => update.updateOne.filter._id); // 确保有有效的 _id
+    }).filter(update => update.updateOne.filter._id); 
 
     if (userUpdates.length > 0) {
        await User.bulkWrite(userUpdates);
        console.log("✅ Users updated with groupIds");
     }
 
+// 插入 Label，拿到真正的 label ObjectId
+const insertedLabels = await Label.insertMany(labels);
+console.log("✅ Labels inserted");
 
-  
-// 1111
-    // const groupMap = {};
-    // const groupDocs = groups.map((g) => {
-    //   const _id = new Types.ObjectId();
-    //   groupMap[g.id] = _id;
+// 建 labelMap
+const labelMap = {};
+labels.forEach((l) => {
+  labelMap[l.type] = l._id;
+});
 
-    //   return {
-    //     _id,
-    //     groupName: g.groupName,
-    //     note: g.note || "",
-    //     iconId: g.iconId || 0,
-    //     budget: g.budget || 0,
-    //     totalExpenses: g.totalExpenses || 0,
-    //     totalRefunds: g.totalRefunds || 0,
-    //     startDate: g.startDate ? new Date(g.startDate) : null,
-    //     endDate: g.endDate ? new Date(g.endDate) : null,
-    //     joinCode: g.joinCode || "",
-    //     members: (g.members || []).map((m, i) => ({
-    //       memberId: m.memberId || i,
-    //       userId: m.userId ? new mongoose.Types.ObjectId(m.userId) : new mongoose.Types.ObjectId(),
-    //       userName: m.userName || `user${i}`,
-    //     })),
-    //   };
-    // });
+// 插入新数据
+console.log("📦 正在准备插入 Bills");
+console.log(
+  bills.map(b => ({
+    ...b,
+    groupId: groupMap[b.groupId],
+  })));
 
-    // await Group.insertMany(groupDocs);
-    // console.log("✅ Groups inserted");
 
-    // // 处理并插入 User，使用映射后的 ObjectId
-    // const userDocs = await Promise.all(
-    //   users.map(async (u) => ({
-    //     userName: u.userName,
-    //     email: u.email,
-    //     password: await bcrypt.hash(u.password, 10),
-    //     avatarId: avatarMap[u.avatarId],
-    //     groupId: u.groupId.map((id) => groupMap[id]),
-    //   }))
-    // );
 
-    // await User.insertMany(userDocs);
-    // console.log("✅ Users inserted");
+  // ✅💥 在插入 Bills 之前，把每条账单的 labelId 从数字变成 ObjectId
+  const fixedBills = bills.map(b => ({
+    groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
+    groupBills: (b.groupBills || []).map(gb => ({
+      ...gb,
+      labelId: labelMap[labels.find(l => l.id === gb.labelId)?.type],
+    })),
+  }));
 
     // 插入新数据
     await Promise.all([
-      // Avatar.insertMany(avatarData),
       Balance.insertMany(calculatedBalances),
-      Bill.insertMany(bills),
+
+      Bill.insertMany(fixedBills),
+      
       Icon.insertMany(icons),
-      Label.insertMany(labels),
+      // Label.insertMany(labels),
       // User.insertMany(hashedUsers),
     ]);
     console.log("✅ All data inserted successfully!");

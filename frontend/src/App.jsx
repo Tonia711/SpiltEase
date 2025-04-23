@@ -14,6 +14,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import JoinGroupPage from "./pages/JoinGroupPage";
 import NewBillPage from "./pages/NewBillPage.jsx";
 import AnnualSummary from "./components/AnnualSummary";
+import GroupExpensePage from "./pages/GroupExpensePage.jsx";
+
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
@@ -53,6 +55,14 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/annual-summary"
+        element={
+          <ProtectedRoute>
+            <AnnualSummary />
           </ProtectedRoute>
         }
       />

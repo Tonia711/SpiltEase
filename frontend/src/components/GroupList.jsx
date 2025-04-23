@@ -109,7 +109,7 @@ const GroupList = () => {
                     const iconColorClass = group.iconId === 1 ? 'yellow' : 'white';
 
                     return (
-                        <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}`)}>
+                        <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}/expenses`)}>
                             <div>
                                 <img
                                     src= {DEFAULT_ICON} // Use the group-specific icon URL

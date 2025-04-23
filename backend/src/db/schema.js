@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import Avatar from "../models/avatarModel.js";
+import Group from "../models/groupModel.js";
+import Bill from "../models/billModel.js";
 
 // 标签
 const labelSchema = new mongoose.Schema({
@@ -10,21 +12,6 @@ const labelSchema = new mongoose.Schema({
 });
 const Label = mongoose.models.Label || mongoose.model("Label", labelSchema);
 
-// 组
-const groupSchema = new mongoose.Schema({
-  groupName: String,
-  note: String,
-  iconId: Number,
-  budget: Number,
-  totalExpenses: Number,
-  totalRefunds: Number,
-  startDate: Date,
-  endDate: Date,
-  joinCode: String,
-  members: [{ memberId: Number, userId: mongoose.Schema.Types.ObjectId, userName: String }],
-});
-const Group = mongoose.models.Group || mongoose.model("Group", groupSchema);
-
 // 图标
 const iconSchema = new mongoose.Schema({
   _id: Number,
@@ -33,23 +20,23 @@ const iconSchema = new mongoose.Schema({
 const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
 
 // 账单
-const billSchema = new mongoose.Schema({
-  groupId: Number,
-  groupBills: [
-    {
-      id: Number,
-      labelId: Number,
-      date: Date,
-      note: String,
-      paidBy: Number,
-      expenses: Number,
-      refunds: Number,
-      splitWay: String,
-      members: [{ memberId: Number, expense: Number, refund: Number }],
-    },
-  ],
-});
-const Bill = mongoose.models.Bill || mongoose.model("Bill", billSchema);
+// const billSchema = new mongoose.Schema({
+//   groupId: Number,
+//   groupBills: [
+//     {
+//       id: Number,
+//       labelId: Number,
+//       date: Date,
+//       note: String,
+//       paidBy: Number,
+//       expenses: Number,
+//       refunds: Number,
+//       splitWay: String,
+//       members: [{ memberId: Number, expense: Number, refund: Number }],
+//     },
+//   ],
+// });
+// const Bill = mongoose.models.Bill || mongoose.model("Bill", billSchema);
 
 // 余额
 const balanceSchema = new mongoose.Schema({
