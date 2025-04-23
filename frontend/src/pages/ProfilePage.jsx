@@ -44,14 +44,8 @@ export default function ProfilePage() {
   }, [user, navigate, DEFAULT_AVATAR]);
 
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      logout();
-      navigate("/login");
-    }
-  };
-
-  const handleViewAnnualSummary = () => {
-    navigate("/annual-summary");
+    logout();
+    navigate("/login");
   };
 
   // 保存用户名
@@ -251,12 +245,6 @@ export default function ProfilePage() {
 
           <button className={styles.logoutBtn} onClick={handleLogout}>
             Logout
-          </button>
-          <button
-            className={styles.summaryButton}
-            onClick={handleViewAnnualSummary}
-          >
-            View Annual Summary
           </button>
         </div>
       </div>

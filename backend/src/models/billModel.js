@@ -10,7 +10,7 @@ const billSchema = new mongoose.Schema({
     {
       id: Number,
       labelId: {
-        type: mongoose.Schema.Types.ObjectId,  // Changed back to ObjectId to support future custom categories
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Label",
       },
       date: Date,
