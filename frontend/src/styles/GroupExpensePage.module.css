@@ -59,26 +59,32 @@
 }
 
 .fabContainer {
-    position: fixed;
+    position: absolute;
     bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
-  }
-  
-  .fabLabel {
+}
+
+.fabLabel {
     margin-top: 4px;
     font-size: 0.9rem;
     color: #ccc;
-  }
+}
 
-  .scrollArea {
+.expenseContainer {
+    position: relative;
+    padding: 1rem;
+    height: calc(100vh - 230px); /* Adjust based on your header and tabs height */
+    display: flex;
+    flex-direction: column;
+}
+
+.scrollContent {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 100px;
-    margin-bottom: 70px;
-  }
-  
-  
+    padding-bottom: 80px; /* Space for the FAB */
+    margin-bottom: 10px;
+}
 
-  
+

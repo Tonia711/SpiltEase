@@ -42,28 +42,31 @@ export default function GroupExpenseComponent({ groupId }) {
     <div className={styles.expenseContainer}>
       <h3>Expenses</h3>
 
-      {!bills || bills.length === 0 ? (
-        <p>No expenses found.</p>
-      ) : (
-        <ul className={styles.billsList}>
-          {bills.map((bill) => (
-            <li key={bill._id} className={styles.billItem}>
-              {bill.label?.iconUrl && (
-                <img
-                  src={`${BASE_URL}/${bill.label.iconUrl}`}
-                  alt={bill.label.type}
-                  className={styles.billIcon}
-                />
-              )}
-              <div className={styles.billDetails}>
-                <div className={styles.billName}>{bill.label?.type || "Unnamed Expense"}</div>
-                <div className={styles.billAmount}>💰 Amount: ${bill.expenses ?? "N/A"}</div>
-                <div className={styles.billDate}>📅 Date: {bill.date ? new Date(bill.date).toLocaleDateString() : "N/A"}</div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className={styles.scrollContent}>
+        {!bills || bills.length === 0 ? (
+          <p>No expenses found.</p>
+        ) : (
+          <ul className={styles.billsList}>
+            {bills.map((bill) => (
+              <li key={bill._id} className={styles.billItem}>
+                {bill.label?.iconUrl && (
+                  <img
+                    src={`${BASE_URL}/${bill.label.iconUrl}`}
+                    alt={bill.label.type}
+                    className={styles.billIcon}
+                  />
+                )}
+                <div className={styles.billDetails}>
+                  <div className={styles.billName}>{bill.label?.type || "Unnamed Expense"}</div>
+                  <div className={styles.billAmount}>💰 Amount: ${bill.expenses ?? "N/A"}</div>
+                  <div className={styles.billDate}>📅 Date: {bill.date ? new Date(bill.date).toLocaleDateString() : "N/A"}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      
       <div className={styles.fabContainer}>
         <button
           className={styles.fab}

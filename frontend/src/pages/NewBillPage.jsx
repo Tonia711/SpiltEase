@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../styles/NewBillPage.module.css";
 import api from "../utils/api";
 import MobileFrame from "../components/MobileFrame";
-import { set } from "mongoose";
 // import { set } from "mongoose";
 
 
