@@ -10,7 +10,7 @@ const billSchema = new mongoose.Schema({
     {
       id: Number,
       labelId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,  // Changed from ObjectId to Number
         ref: "Label",
       },
       date: Date,

@@ -137,14 +137,20 @@ async function importData() {
     }
 
 // 插入 Labels 并构建 labelMap
-const insertedLabels = await Label.insertMany(labels);
+const labelDocs = labels.map(label => ({
+  _id: label.id,  // Use numeric IDs from the source data
+  type: label.type,
+  iconUrl: label.iconUrl
+}));
+
+await Label.insertMany(labelDocs);
 console.log("✅ Labels inserted");
+
+// Create a simple labelMap that maps the original ID to the same numeric ID
+// This makes the code below more consistent without changing behavior
 const labelMap = {};
 labels.forEach((label) => {
-  const matched = insertedLabels.find((doc) => doc.name === label.name);
-  if (matched) {
-    labelMap[label.id] = new mongoose.Types.ObjectId(matched._id);
-  }
+  labelMap[label.id] = label.id; // Keep numeric IDs
 });
 
 console.log("🔍 labelMap content:", labelMap);
@@ -152,27 +158,19 @@ console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, 
 
 // 插入新数据
 console.log("📦 正在准备插入 Bills");
-// console.log(
-//   bills.map(b => ({
-//     ...b,
-//     groupId: groupMap[b.groupId],
-//   })));
 
-
-  // ✅💥 在插入 Bills 之前，把每条账单的 labelId 从数字变成 ObjectId
+  // When inserting bills, use the numeric labelId directly
   const fixedBills = bills.map(b => ({
     groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
     groupBills: (b.groupBills || []).map(gb => ({
       ...gb,
-      labelId: labelMap[gb.labelId],
+      labelId: labelMap[gb.labelId], // This will now be a number matching Label._id
     })),
   }));
 
-  // ✅ 验证 labelId 是否转换成 ObjectId
+  // ✅ 验证 labelId 是否保持为数字
   console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
     
-
-
     // 插入新数据
     await Promise.all([
       Balance.insertMany(calculatedBalances),
@@ -180,8 +178,6 @@ console.log("📦 正在准备插入 Bills");
       Bill.insertMany(fixedBills),
       
       Icon.insertMany(icons),
-      // Label.insertMany(labels),
-      // User.insertMany(hashedUsers),
     ]);
     console.log("✅ All data inserted successfully!");
   } catch (error) {
