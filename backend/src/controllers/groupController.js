@@ -53,7 +53,6 @@ export const getGroupSummary = async (req, res) => {
     const userMemberId = userMember.memberId;
     
     // 2. Get all bills associated with this group
-    // Use the group's ObjectId directly instead of converting to numeric ID
     const billsData = await Bill.findOne({ groupId: group._id });
     
     if (!billsData || !billsData.groupBills || billsData.groupBills.length === 0) {
@@ -65,16 +64,15 @@ export const getGroupSummary = async (req, res) => {
       });
     }
     
-    // 3. Get all available labels for reference
+    // 3. Get all available labels (pre-defined categories)
     const labels = await Label.find();
     
-    // Create a temporary map for easy access
-    const tempLabelsMap = {};
+    // Create a simple map for label lookup by ID
+    const labelMap = {};
     labels.forEach(label => {
-      tempLabelsMap[label._id] = {
+      labelMap[label._id] = {
         id: label._id,
-        name: label.type,
-        iconUrl: label.iconUrl
+        name: label.type
       };
     });
     
@@ -86,38 +84,30 @@ export const getGroupSummary = async (req, res) => {
     
     // Process all bills in the group
     for (const bill of billsData.groupBills) {
-      // Get the label for this bill - handle if the labelId is a Number or ObjectId
-      let labelId, labelName;
+      // Default to "other" category
+      let labelId = 6;
+      let labelName = "other";
       
-      if (!bill.labelId) {
-        // Default label if none exists
-        labelId = 0;
-        labelName = "Other";
-      } else {
-        try {
-          // Try to convert to string - works for both ObjectId and Number
-          const labelIdStr = bill.labelId.toString(); 
+      // Try to match the label directly if it's a number
+      if (bill.labelId && !isNaN(Number(bill.labelId))) {
+        const numId = Number(bill.labelId);
+        if (labelMap[numId]) {
+          labelId = numId;
+          labelName = labelMap[numId].name;
+        }
+      }
+      // If it's an ObjectId, fallback to the category based on the last digit
+      else if (bill.labelId && bill.labelId.toString) {
+        const idStr = bill.labelId.toString();
+        if (idStr.match(/^[0-9a-f]{24}$/i)) {
+          // Extract the last character and convert to a number between 1-7
+          const lastChar = idStr.slice(-1);
+          const extractedId = parseInt(lastChar, 16) % 7 + 1;
           
-          // For each bill, find its corresponding label
-          // Check if this is an ObjectId (has a numeric part to extract)
-          if (labelIdStr.match(/^[0-9a-f]{24}$/i)) {
-            // Get the last few digits as a number to match against the numeric label IDs
-            const numericLabelId = parseInt(labelIdStr.slice(-4), 16) % 10;
-            labelId = numericLabelId;
-            
-            // Find the corresponding label
-            const labelData = tempLabelsMap[numericLabelId];
-            labelName = labelData ? labelData.name : "Other";
-          } else {
-            // It's already a number
-            labelId = parseInt(labelIdStr);
-            const labelData = tempLabelsMap[labelId];
-            labelName = labelData ? labelData.name : "Other";
+          if (extractedId >= 1 && extractedId <= 7 && labelMap[extractedId]) {
+            labelId = extractedId;
+            labelName = labelMap[extractedId].name;
           }
-        } catch(e) {
-          console.error("Error processing labelId:", e);
-          labelId = 0;
-          labelName = "Other";
         }
       }
       
@@ -152,10 +142,12 @@ export const getGroupSummary = async (req, res) => {
       }
     }
     
-    // 5. Format the data for the frontend
+    // 5. Format the data for the frontend with proper capitalization
     const groupSummary = Object.values(groupSummaryMap)
       .map(item => ({
         ...item,
+        // Capitalize first letter of label name for display
+        labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
         totalExpense: parseFloat(item.totalExpense.toFixed(2)),
         percentage: groupTotal > 0 ? parseFloat(((item.totalExpense / groupTotal) * 100).toFixed(2)) : 0
       }))
@@ -164,6 +156,8 @@ export const getGroupSummary = async (req, res) => {
     const userSummary = Object.values(userSummaryMap)
       .map(item => ({
         ...item,
+        // Capitalize first letter of label name for display
+        labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
         userExpense: parseFloat(item.userExpense.toFixed(2)),
         percentage: userTotal > 0 ? parseFloat(((item.userExpense / userTotal) * 100).toFixed(2)) : 0
       }))
