@@ -59,6 +59,10 @@ export default function GroupExpensePage() {
   const handleAddExpenseClick = () => {
     
   };
+  
+  const handleSummaryClick = () => {
+    navigate(`/groups/${groupId}/summary`);
+  };
 
   const groupIconUrl = group?.iconUrl
     ? (group.iconUrl.startsWith("http") ? group.iconUrl : `${BASE_URL}/${group.iconUrl}`)
@@ -85,6 +89,14 @@ export default function GroupExpensePage() {
                 ID: {group._id}
               </div>
             </div>
+            
+            {/* Summary button */}
+            <button 
+              className={styles.summaryButton} 
+              onClick={handleSummaryClick}
+            >
+              Summary
+            </button>
           </div>
     
           <h3>Expenses</h3>

@@ -1,0 +1,189 @@
+.container {
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #1c1b22;
+  color: white;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  padding: 0 10px;
+  margin-right: 10px;
+}
+
+.backButton:hover {
+  color: #ffca28; 
+}
+
+.groupInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.groupIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.groupName {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  color: #ffca28;
+}
+
+.summaryContainer {
+  background-color: #2e273f;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 10px;
+}
+
+.overviewSection {
+  margin-bottom: 32px;
+}
+
+.overviewSection h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  text-align: center;
+  color: #ffca28;
+}
+
+.overviewStats {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 30%;
+  padding: 12px;
+  background-color: #3e3455;
+  border-radius: 10px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #d1d5db;
+  margin-bottom: 5px;
+}
+
+.statValue {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.chartSection {
+  margin-bottom: 32px;
+}
+
+.chartSection h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+  color: #ffca28;
+}
+
+.chartContainer {
+  position: relative;
+  height: 240px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.balancesSection, .settleUpSection {
+  margin-bottom: 32px;
+}
+
+.balancesSection h3, .settleUpSection h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+  color: #ffca28;
+}
+
+.balancesList, .suggestionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.balanceItem, .suggestionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #3e3455;
+  border-radius: 10px;
+}
+
+.memberName {
+  font-weight: 500;
+}
+
+.balanceAmount {
+  font-weight: bold;
+}
+
+.positive {
+  color: #4CAF50;
+}
+
+.negative {
+  color: #F44336;
+}
+
+.fromMember, .toMember {
+  font-weight: bold;
+}
+
+.paymentAmount {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.loadingContainer, .errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  text-align: center;
+}
+
+.loading, .error, .noDataMessage {
+  text-align: center;
+  padding: 16px;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.noDataMessage {
+  color: #888;
+  font-style: italic;
+}
