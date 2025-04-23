@@ -53,7 +53,8 @@ export const getGroupSummary = async (req, res) => {
     const userMemberId = userMember.memberId;
     
     // 2. Get all bills associated with this group
-    const billsData = await Bill.findOne({ groupId: Number(group.id) });
+    // Use the group's ObjectId directly instead of converting to numeric ID
+    const billsData = await Bill.findOne({ groupId: group._id });
     
     if (!billsData || !billsData.groupBills || billsData.groupBills.length === 0) {
       return res.status(200).json({
@@ -64,8 +65,18 @@ export const getGroupSummary = async (req, res) => {
       });
     }
     
-    // 3. Get all available labels
+    // 3. Get all available labels for reference
     const labels = await Label.find();
+    
+    // Create a temporary map for easy access
+    const tempLabelsMap = {};
+    labels.forEach(label => {
+      tempLabelsMap[label._id] = {
+        id: label._id,
+        name: label.type,
+        iconUrl: label.iconUrl
+      };
+    });
     
     // 4. Process bill data to calculate expenses by label
     const groupSummaryMap = {};
@@ -73,53 +84,94 @@ export const getGroupSummary = async (req, res) => {
     let groupTotal = 0;
     let userTotal = 0;
     
-    billsData.groupBills.forEach(bill => {
-      const labelId = bill.labelId;
+    // Process all bills in the group
+    for (const bill of billsData.groupBills) {
+      // Get the label for this bill - handle if the labelId is a Number or ObjectId
+      let labelId, labelName;
       
-      // Initialize label if not exists
-      if (!groupSummaryMap[labelId]) {
-        groupSummaryMap[labelId] = 0;
-      }
-      if (!userSummaryMap[labelId]) {
-        userSummaryMap[labelId] = 0;
-      }
-      
-      // Calculate total expenses for group and user
-      bill.members.forEach(member => {
-        const expense = parseFloat(member.expense) || 0;
-        groupTotal += expense;
-        groupSummaryMap[labelId] += expense;
-        
-        if (member.memberId === userMemberId) {
-          userTotal += expense;
-          userSummaryMap[labelId] += expense;
+      if (!bill.labelId) {
+        // Default label if none exists
+        labelId = 0;
+        labelName = "Other";
+      } else {
+        try {
+          // Try to convert to string - works for both ObjectId and Number
+          const labelIdStr = bill.labelId.toString(); 
+          
+          // For each bill, find its corresponding label
+          // Check if this is an ObjectId (has a numeric part to extract)
+          if (labelIdStr.match(/^[0-9a-f]{24}$/i)) {
+            // Get the last few digits as a number to match against the numeric label IDs
+            const numericLabelId = parseInt(labelIdStr.slice(-4), 16) % 10;
+            labelId = numericLabelId;
+            
+            // Find the corresponding label
+            const labelData = tempLabelsMap[numericLabelId];
+            labelName = labelData ? labelData.name : "Other";
+          } else {
+            // It's already a number
+            labelId = parseInt(labelIdStr);
+            const labelData = tempLabelsMap[labelId];
+            labelName = labelData ? labelData.name : "Other";
+          }
+        } catch(e) {
+          console.error("Error processing labelId:", e);
+          labelId = 0;
+          labelName = "Other";
         }
-      });
-    });
+      }
+      
+      // Initialize label entries in the summary maps if they don't exist
+      if (!groupSummaryMap[labelId]) {
+        groupSummaryMap[labelId] = {
+          labelId: labelId,
+          labelName: labelName,
+          totalExpense: 0,
+        };
+      }
+      
+      if (!userSummaryMap[labelId]) {
+        userSummaryMap[labelId] = {
+          labelId: labelId,
+          labelName: labelName,
+          userExpense: 0,
+        };
+      }
+      
+      // Get the total expense for this bill
+      const billExpense = parseFloat(bill.expenses) || 0;
+      groupTotal += billExpense;
+      groupSummaryMap[labelId].totalExpense += billExpense;
+      
+      // Calculate user's expense for this bill
+      const userEntry = bill.members.find(m => m.memberId === userMemberId);
+      if (userEntry) {
+        const userExpense = parseFloat(userEntry.expense) || 0;
+        userTotal += userExpense;
+        userSummaryMap[labelId].userExpense += userExpense;
+      }
+    }
     
     // 5. Format the data for the frontend
-    const labelMap = labels.reduce((acc, label) => {
-      acc[label._id] = label.type;
-      return acc;
-    }, {});
+    const groupSummary = Object.values(groupSummaryMap)
+      .map(item => ({
+        ...item,
+        totalExpense: parseFloat(item.totalExpense.toFixed(2)),
+        percentage: groupTotal > 0 ? parseFloat(((item.totalExpense / groupTotal) * 100).toFixed(2)) : 0
+      }))
+      .filter(item => item.totalExpense > 0);
     
-    const groupSummary = Object.entries(groupSummaryMap).map(([labelId, totalExpense]) => ({
-      labelId: parseInt(labelId),
-      labelName: labelMap[parseInt(labelId)] || "Unknown",
-      totalExpense: parseFloat(totalExpense.toFixed(2)),
-      percentage: parseFloat(((totalExpense / groupTotal) * 100).toFixed(2))
-    })).filter(item => item.totalExpense > 0);
-    
-    const userSummary = Object.entries(userSummaryMap).map(([labelId, userExpense]) => ({
-      labelId: parseInt(labelId),
-      labelName: labelMap[parseInt(labelId)] || "Unknown",
-      userExpense: parseFloat(userExpense.toFixed(2)),
-      percentage: parseFloat(((userExpense / userTotal) * 100).toFixed(2))
-    })).filter(item => item.userExpense > 0);
+    const userSummary = Object.values(userSummaryMap)
+      .map(item => ({
+        ...item,
+        userExpense: parseFloat(item.userExpense.toFixed(2)),
+        percentage: userTotal > 0 ? parseFloat(((item.userExpense / userTotal) * 100).toFixed(2)) : 0
+      }))
+      .filter(item => item.userExpense > 0);
     
     res.status(200).json({
-      groupSummary: groupSummary,
-      userSummary: userSummary,
+      groupSummary,
+      userSummary,
       groupTotal: parseFloat(groupTotal.toFixed(2)),
       userTotal: parseFloat(userTotal.toFixed(2))
     });
