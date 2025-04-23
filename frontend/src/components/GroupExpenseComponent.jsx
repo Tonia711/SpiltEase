@@ -40,8 +40,6 @@ export default function GroupExpenseComponent({ groupId }) {
 
   return (
     <div className={styles.expenseContainer}>
-      <h3>Expenses</h3>
-
       <div className={styles.scrollContent}>
         {!bills || bills.length === 0 ? (
           <p>No expenses found.</p>

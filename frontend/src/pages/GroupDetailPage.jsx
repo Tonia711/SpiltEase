@@ -265,13 +265,13 @@ export default function GroupDetailPage() {
             className={`${styles.tabButton} ${activeTab === "expense" ? styles.activeTab : ""}`}
             onClick={() => setActiveTab("expense")}
           >
-            Expense
+            Expenses
           </button>
           <button 
             className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
             onClick={() => setActiveTab("balance")}
           >
-            Balance
+            Balances
           </button>
           <button 
             className={`${styles.tabButton} ${activeTab === "summary" ? styles.activeTab : ""}`}
