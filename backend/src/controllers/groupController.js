@@ -64,16 +64,26 @@ export const getGroupSummary = async (req, res) => {
       });
     }
     
-    // 3. Get all available labels (pre-defined categories)
+    // 3. Get all available labels for mapping
     const labels = await Label.find();
     
-    // Create a simple map for label lookup by ID
+    // Create a map for easy lookup by ObjectId (for standard labels) or by ID value (for fallback)
     const labelMap = {};
     labels.forEach(label => {
-      labelMap[label._id] = {
+      // Map by both string representation and direct ObjectId reference
+      labelMap[label._id.toString()] = {
         id: label._id,
         name: label.type
       };
+      
+      // Also map by numeric ID for backward compatibility and fallbacks
+      if (label._id && !isNaN(parseInt(label._id.toString().slice(-1), 16))) {
+        const numericId = parseInt(label._id.toString().slice(-1), 16) % 7 + 1;
+        labelMap[numericId] = {
+          id: label._id,
+          name: label.type
+        };
+      }
     });
     
     // 4. Process bill data to calculate expenses by label
@@ -85,28 +95,27 @@ export const getGroupSummary = async (req, res) => {
     // Process all bills in the group
     for (const bill of billsData.groupBills) {
       // Default to "other" category
-      let labelId = 6;
+      let labelId = labels.find(l => l.type === "other")?._id || labels[5]._id;
       let labelName = "other";
       
-      // Try to match the label directly if it's a number
-      if (bill.labelId && !isNaN(Number(bill.labelId))) {
-        const numId = Number(bill.labelId);
-        if (labelMap[numId]) {
-          labelId = numId;
-          labelName = labelMap[numId].name;
+      // Try to match the label by ObjectId directly
+      if (bill.labelId) {
+        const labelIdStr = bill.labelId.toString();
+        if (labelMap[labelIdStr]) {
+          labelId = labelMap[labelIdStr].id;
+          labelName = labelMap[labelIdStr].name;
         }
-      }
-      // If it's an ObjectId, fallback to the category based on the last digit
-      else if (bill.labelId && bill.labelId.toString) {
-        const idStr = bill.labelId.toString();
-        if (idStr.match(/^[0-9a-f]{24}$/i)) {
+        // If not found by direct match, try to extract the numeric part for backward compatibility
+        else if (labelIdStr.match(/^[0-9a-f]{24}$/i)) {
           // Extract the last character and convert to a number between 1-7
-          const lastChar = idStr.slice(-1);
+          const lastChar = labelIdStr.slice(-1);
           const extractedId = parseInt(lastChar, 16) % 7 + 1;
           
-          if (extractedId >= 1 && extractedId <= 7 && labelMap[extractedId]) {
-            labelId = extractedId;
-            labelName = labelMap[extractedId].name;
+          // Look up in labels array to get the correct ObjectId
+          const matchingLabel = labels.find(l => l._id.toString().endsWith(extractedId.toString()));
+          if (matchingLabel) {
+            labelId = matchingLabel._id;
+            labelName = matchingLabel.type;
           }
         }
       }
@@ -117,6 +126,8 @@ export const getGroupSummary = async (req, res) => {
           labelId: labelId,
           labelName: labelName,
           totalExpense: 0,
+          totalRefund: 0,
+          netExpense: 0
         };
       }
       
@@ -125,41 +136,54 @@ export const getGroupSummary = async (req, res) => {
           labelId: labelId,
           labelName: labelName,
           userExpense: 0,
+          userRefund: 0,
+          netExpense: 0
         };
       }
       
-      // Get the total expense for this bill
+      // Get the total expense and refund for this bill
       const billExpense = parseFloat(bill.expenses) || 0;
-      groupTotal += billExpense;
-      groupSummaryMap[labelId].totalExpense += billExpense;
+      const billRefund = parseFloat(bill.refunds) || 0;
+      const netBillExpense = billExpense - billRefund;
       
-      // Calculate user's expense for this bill
+      // Add to group totals
+      groupTotal += netBillExpense;
+      groupSummaryMap[labelId].totalExpense += billExpense;
+      groupSummaryMap[labelId].totalRefund += billRefund;
+      groupSummaryMap[labelId].netExpense += netBillExpense;
+      
+      // Calculate user's expense and refund for this bill
       const userEntry = bill.members.find(m => m.memberId === userMemberId);
       if (userEntry) {
         const userExpense = parseFloat(userEntry.expense) || 0;
-        userTotal += userExpense;
+        const userRefund = parseFloat(userEntry.refund) || 0;
+        const netUserExpense = userExpense - userRefund;
+        
+        userTotal += netUserExpense;
         userSummaryMap[labelId].userExpense += userExpense;
+        userSummaryMap[labelId].userRefund += userRefund;
+        userSummaryMap[labelId].netExpense += netUserExpense;
       }
     }
     
     // 5. Format the data for the frontend with proper capitalization
     const groupSummary = Object.values(groupSummaryMap)
       .map(item => ({
-        ...item,
+        labelId: item.labelId,
         // Capitalize first letter of label name for display
         labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
-        totalExpense: parseFloat(item.totalExpense.toFixed(2)),
-        percentage: groupTotal > 0 ? parseFloat(((item.totalExpense / groupTotal) * 100).toFixed(2)) : 0
+        totalExpense: parseFloat(item.netExpense.toFixed(2)), // Use net expense (after refunds)
+        percentage: groupTotal > 0 ? parseFloat(((item.netExpense / groupTotal) * 100).toFixed(2)) : 0
       }))
       .filter(item => item.totalExpense > 0);
     
     const userSummary = Object.values(userSummaryMap)
       .map(item => ({
-        ...item,
+        labelId: item.labelId,
         // Capitalize first letter of label name for display
         labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
-        userExpense: parseFloat(item.userExpense.toFixed(2)),
-        percentage: userTotal > 0 ? parseFloat(((item.userExpense / userTotal) * 100).toFixed(2)) : 0
+        userExpense: parseFloat(item.netExpense.toFixed(2)), // Use net expense (after refunds)
+        percentage: userTotal > 0 ? parseFloat(((item.netExpense / userTotal) * 100).toFixed(2)) : 0
       }))
       .filter(item => item.userExpense > 0);
     

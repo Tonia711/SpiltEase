@@ -136,40 +136,39 @@ async function importData() {
        console.log("✅ Users updated with groupIds");
     }
 
-// 插入 Labels 并构建 labelMap
-const labelDocs = labels.map(label => ({
-  _id: label.id,  // Use numeric IDs from the source data
-  type: label.type,
-  iconUrl: label.iconUrl
-}));
+    // 插入 Labels 并构建 labelMap
+    const labelDocs = labels.map(label => ({
+      _id: new mongoose.Types.ObjectId(label.id.toString().padStart(24, '0')),  // Create stable ObjectIds from numeric IDs
+      type: label.type,
+      iconUrl: label.iconUrl
+    }));
 
-await Label.insertMany(labelDocs);
-console.log("✅ Labels inserted");
+    await Label.insertMany(labelDocs);
+    console.log("✅ Labels inserted");
 
-// Create a simple labelMap that maps the original ID to the same numeric ID
-// This makes the code below more consistent without changing behavior
-const labelMap = {};
-labels.forEach((label) => {
-  labelMap[label.id] = label.id; // Keep numeric IDs
-});
+    // Create a mapping from numeric ID to ObjectId
+    const labelMap = {};
+    labelDocs.forEach((doc, i) => {
+      labelMap[labels[i].id] = doc._id;
+    });
 
-console.log("🔍 labelMap content:", labelMap);
-console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v]));
+    console.log("🔍 labelMap content:", labelMap);
+    console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v, v.constructor.name]));
 
-// 插入新数据
-console.log("📦 正在准备插入 Bills");
+    // 插入新数据
+    console.log("📦 正在准备插入 Bills");
 
-  // When inserting bills, use the numeric labelId directly
-  const fixedBills = bills.map(b => ({
-    groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
-    groupBills: (b.groupBills || []).map(gb => ({
-      ...gb,
-      labelId: labelMap[gb.labelId], // This will now be a number matching Label._id
-    })),
-  }));
+    // When inserting bills, convert labelId to ObjectId using the mapping
+    const fixedBills = bills.map(b => ({
+      groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
+      groupBills: (b.groupBills || []).map(gb => ({
+        ...gb,
+        labelId: labelMap[gb.labelId], // Convert numeric labelId to corresponding ObjectId
+      })),
+    }));
 
-  // ✅ 验证 labelId 是否保持为数字
-  console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
+    // ✅ 验证 labelId 是否正确转换为 ObjectId
+    console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => g.labelId.constructor.name));
     
     // 插入新数据
     await Promise.all([
