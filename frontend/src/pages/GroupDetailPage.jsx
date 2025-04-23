@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../styles/GroupDetailPage.module.css";
 import { AuthContext } from "../contexts/AuthContext";
 import MobileFrame from "../components/MobileFrame";
+import GroupExpenseComponent from "../components/GroupExpenseComponent";
 import api from "../utils/api";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -36,11 +37,12 @@ export default function GroupDetailPage() {
   const [editedGroupName, setEditedGroupName] = useState("");
   const [editedStartDate, setEditedStartDate] = useState("");
   
-  // New state variables for tabs and summary
+  // State variables for tabs, summary, and group info overlay
   const [activeTab, setActiveTab] = useState("expense");
   const [summaryData, setSummaryData] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
@@ -87,6 +89,10 @@ export default function GroupDetailPage() {
         });
     }
   }, [activeTab, groupId]);
+
+  const handleGroupIconClick = () => {
+    setShowGroupInfo(true);
+  };
 
   const formatStartDate = (dateString) => {
     if (!dateString) return "Not specified";
@@ -171,12 +177,87 @@ export default function GroupDetailPage() {
             src={groupIconUrl}
             alt="Group Icon"
             className={styles.groupIcon}
+            onClick={handleGroupIconClick}
+            style={{ cursor: 'pointer' }}
           />
 
           <div className={styles.inviteCode}>
             Invite Code <span className={styles.codeValue}>{group.joinCode}</span>
           </div>
         </div>
+        
+        {/* Group Info Overlay - shows when clicking on group icon */}
+        {showGroupInfo && (
+          <div className={styles.groupInfoOverlay} onClick={() => setShowGroupInfo(false)}>
+            <div className={styles.groupInfoContent} onClick={e => e.stopPropagation()}>
+              <div className={styles.groupInfoHeader}>
+                <h3>Group Information</h3>
+                <button 
+                  className={styles.closeButton} 
+                  onClick={() => setShowGroupInfo(false)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <section className={styles.infoSection}>
+                <label htmlFor="groupName" className={styles.label}>Group Name</label>
+                <input
+                  id="groupName"
+                  type="text"
+                  value={isEditing ? editedGroupName : group.groupName}
+                  onChange={(e) => setEditedGroupName(e.target.value)}
+                  readOnly={!isEditing}
+                  className={`${styles.inputField} ${!isEditing ? styles.readOnly : ""}`}
+                />
+              </section>
+
+              <section className={styles.infoSection}>
+                <label htmlFor="startDate" className={styles.label}>Start Date</label>
+                <input
+                  id="startDate"
+                  type="date"
+                  value={
+                    isEditing
+                      ? editedStartDate?.slice(0, 10)
+                      : group.startDate?.slice(0, 10) || ""
+                  }
+                  onChange={(e) => setEditedStartDate(e.target.value)}
+                  readOnly={!isEditing}
+                  className={`${styles.inputField} ${!isEditing ? styles.readOnly : ""}`}
+                />
+              </section>
+
+              <section className={styles.membersSection}>
+                <h4 className={styles.membersTitle}>Members</h4>
+                <div className={styles.membersListContainer}>
+                  <ul className={styles.membersList}>
+                    {(group.members || []).map((member) => (
+                      <li key={member._id || member.userId || member.memberId} className={styles.memberItem}>
+                        {member.userName || member.name || 'Unnamed'}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+
+              <button
+                className={styles.editButton}
+                onClick={() => {
+                  if (!isEditing) {
+                    setEditedGroupName(group.groupName || "");
+                    setEditedStartDate(group.startDate || "");
+                  } else {
+                    // api.put(`/groups/${groupId}`, { groupName: editedGroupName, startDate: editedStartDate })
+                  }
+                  setIsEditing(!isEditing);
+                }}
+              >
+                {isEditing ? "Save" : "Edit"}
+              </button>
+            </div>
+          </div>
+        )}
         
         {/* Tab navigation */}
         <div className={styles.tabNav}>
@@ -200,65 +281,9 @@ export default function GroupDetailPage() {
           </button>
         </div>
         
-        {/* Expense Tab (Default Content) */}
+        {/* Expense Tab - Now using GroupExpenseComponent */}
         {activeTab === "expense" && (
-          <>
-            <section className={styles.infoSection}>
-              <label htmlFor="groupName" className={styles.label}>Group Name</label>
-              <input
-                id="groupName"
-                type="text"
-                value={isEditing ? editedGroupName : group.groupName}
-                onChange={(e) => setEditedGroupName(e.target.value)}
-                readOnly={!isEditing}
-                className={`${styles.inputField} ${!isEditing ? styles.readOnly : ""}`}
-              />
-            </section>
-
-            <section className={styles.infoSection}>
-              <label htmlFor="startDate" className={styles.label}>Start Date</label>
-              <input
-                id="startDate"
-                type="date"
-                value={
-                  isEditing
-                    ? editedStartDate?.slice(0, 10)
-                    : group.startDate?.slice(0, 10) || ""
-                }
-                onChange={(e) => setEditedStartDate(e.target.value)}
-                readOnly={!isEditing}
-                className={`${styles.inputField} ${!isEditing ? styles.readOnly : ""}`}
-              />
-            </section>
-
-            <section className={styles.membersSection}>
-              <h4 className={styles.membersTitle}>Members</h4>
-              <div className={styles.membersListContainer}>
-                <ul className={styles.membersList}>
-                  {(group.members || []).map((member) => (
-                    <li key={member._id || member.userId || member.memberId} className={styles.memberItem}>
-                      {member.userName || member.name || 'Unnamed'}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
-
-            <button
-              className={styles.editButton}
-              onClick={() => {
-                if (!isEditing) {
-                  setEditedGroupName(group.groupName || "");
-                  setEditedStartDate(group.startDate || "");
-                } else {
-                  // api.put(`/groups/${groupId}`, { groupName: editedGroupName, startDate: editedStartDate })
-                }
-                setIsEditing(!isEditing);
-              }}
-            >
-              {isEditing ? "Save" : "Edit"}
-            </button>
-          </>
+          <GroupExpenseComponent groupId={groupId} />
         )}
         
         {/* Balance Tab */}

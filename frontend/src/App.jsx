@@ -16,7 +16,6 @@ import NewBillPage from "./pages/NewBillPage.jsx";
 import AnnualSummary from "./components/AnnualSummary";
 import GroupExpensePage from "./pages/GroupExpensePage.jsx";
 
-
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
 
@@ -83,10 +82,10 @@ function App() {
         }
       />
       <Route
-        path="/annual-summary"
+        path="/groups/:groupId/expenses"
         element={
           <ProtectedRoute>
-            <AnnualSummary />
+            <GroupExpensePage />
           </ProtectedRoute>
         }
       />
