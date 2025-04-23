@@ -88,11 +88,11 @@ export default function GroupExpensePage() {
           </div>
     
           <h3>Expenses</h3>
-    
+      
           {Object.keys(bills).length === 0 ? (
             <p>No expenses found.</p>
           ) : (
-            <div>
+            <div className={styles.scrollArea}>
               {Object.entries(bills).map(([date, billList]) => (
                 <div key={date} style={{ marginBottom: "20px" }}>
                   <h4>{dayjs(date).format("MMM D, YYYY")}</h4>
@@ -125,7 +125,7 @@ export default function GroupExpensePage() {
                           <div>
                             <strong>{bill.note}</strong>
                           </div>
-                          <div>💰 ${bill.expenses}</div>
+                          <div>${bill.expenses}</div>
                         </div>
                       </li>
                     ))}
@@ -134,6 +134,7 @@ export default function GroupExpensePage() {
               ))}
             </div>
           )}
+      
     
           <div className={styles.fabContainer}>
             <button className={styles.fab} onClick={handleAddExpenseClick}>
