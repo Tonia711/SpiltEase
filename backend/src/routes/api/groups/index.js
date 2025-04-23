@@ -7,7 +7,10 @@ import {
   getGroupById,
   validateJoinCode,
   updateGroupInfo,
-  joinGroupByCode
+  joinGroupByCode,
+  updateGroupIcon,
+  deleteGroupMember,
+  checkMemberdeletable
 } from "../../../controllers/groupController.js";
 
 const router = express.Router();
@@ -21,5 +24,8 @@ router.post("/join", protect, joinGroupByCode);
 
 router.post("/", protect, createGroup);
 router.patch("/:id/update", protect, updateGroupInfo);
+router.post("/:id/icon", protect, updateGroupIcon);
+router.delete("/:id/members/:memberId/check-deletable", protect, checkMemberdeletable);
+router.delete("/:id/members/:memberId", protect, deleteGroupMember);
 
 export default router;
