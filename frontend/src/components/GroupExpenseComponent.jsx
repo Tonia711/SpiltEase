@@ -55,7 +55,6 @@ export default function GroupExpenseComponent({ groupId }) {
                   />
                 )}
                 <div className={styles.billDetails}>
-                  {/* <div className={styles.billName}>{bill.label?.type || "Unnamed Expense"}</div> */}
                   <div className={styles.billName}>{bill.note || "Unnamed Expense"}</div>
                   <div className={styles.billAmount}>💰 Amount: ${bill.expenses ?? "N/A"}</div>
                   <div className={styles.billDate}>📅 Date: {bill.date ? new Date(bill.date).toLocaleDateString() : "N/A"}</div>
@@ -65,7 +64,7 @@ export default function GroupExpenseComponent({ groupId }) {
           </ul>
         )}
       </div>
-      
+
       <div className={styles.fabContainer}>
         <button
           className={styles.fab}
