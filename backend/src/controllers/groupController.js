@@ -65,26 +65,47 @@ export const getGroupSummary = async (req, res) => {
     }
     
     // 3. Get all available labels for mapping
-    const labels = await Label.find();
+    const allLabels = await Label.find().lean();
     
-    // Create a map for easy lookup by ObjectId (for standard labels) or by ID value (for fallback)
-    const labelMap = {};
-    labels.forEach(label => {
-      // Map by both string representation and direct ObjectId reference
-      labelMap[label._id.toString()] = {
-        id: label._id,
-        name: label.type
-      };
+    // Create a numeric-based mapping for label types
+    // This is the key fix - we map 1 -> transport, 2 -> accommodation, etc.
+    const labelTypeByNumber = {};
+    allLabels.forEach(label => {
+      // Extract the numeric ID from the ObjectId's last byte(s)
+      const idHex = label._id.toString();
+      const numericId = parseInt(idHex.slice(-2), 16); // Extract from last 2 hex chars
       
-      // Also map by numeric ID for backward compatibility and fallbacks
-      if (label._id && !isNaN(parseInt(label._id.toString().slice(-1), 16))) {
-        const numericId = parseInt(label._id.toString().slice(-1), 16) % 7 + 1;
-        labelMap[numericId] = {
-          id: label._id,
-          name: label.type
+      if (numericId >= 1 && numericId <= 7) {
+        labelTypeByNumber[numericId] = {
+          name: label.type,
+          id: label._id
         };
       }
     });
+    
+    console.log('Label mapping by numeric ID:', Object.entries(labelTypeByNumber).map(
+      ([id, info]) => `${id} -> ${info.name}`
+    ));
+    
+    // Debug the bills and their labelIds
+    const billsDebugInfo = billsData.groupBills.map(bill => {
+      // For each bill, extract numeric ID from ObjectId
+      const labelIdStr = bill.labelId ? bill.labelId.toString() : null;
+      const labelNumericId = labelIdStr ? parseInt(labelIdStr.slice(-2), 16) : null;
+      
+      return {
+        billId: bill.id,
+        labelId: labelIdStr,
+        numericId: labelNumericId,
+        labelType: labelNumericId && labelTypeByNumber[labelNumericId] 
+          ? labelTypeByNumber[labelNumericId].name 
+          : 'unknown',
+        expenses: bill.expenses,
+        refunds: bill.refunds
+      };
+    });
+    
+    console.log('Bills with numeric IDs:', billsDebugInfo);
     
     // 4. Process bill data to calculate expenses by label
     const groupSummaryMap = {};
@@ -94,47 +115,40 @@ export const getGroupSummary = async (req, res) => {
     
     // Process all bills in the group
     for (const bill of billsData.groupBills) {
-      // Default to "other" category
-      let labelId = labels.find(l => l.type === "other")?._id || labels[5]._id;
-      let labelName = "other";
-      
-      // Try to match the label by ObjectId directly
-      if (bill.labelId) {
-        const labelIdStr = bill.labelId.toString();
-        if (labelMap[labelIdStr]) {
-          labelId = labelMap[labelIdStr].id;
-          labelName = labelMap[labelIdStr].name;
-        }
-        // If not found by direct match, try to extract the numeric part for backward compatibility
-        else if (labelIdStr.match(/^[0-9a-f]{24}$/i)) {
-          // Extract the last character and convert to a number between 1-7
-          const lastChar = labelIdStr.slice(-1);
-          const extractedId = parseInt(lastChar, 16) % 7 + 1;
-          
-          // Look up in labels array to get the correct ObjectId
-          const matchingLabel = labels.find(l => l._id.toString().endsWith(extractedId.toString()));
-          if (matchingLabel) {
-            labelId = matchingLabel._id;
-            labelName = matchingLabel.type;
-          }
-        }
+      if (!bill.labelId) {
+        console.log(`Skipping bill ${bill.id} with no labelId`);
+        continue;
       }
       
+      // Extract numeric ID from the labelId ObjectId
+      const labelIdStr = bill.labelId.toString();
+      const labelNumericId = parseInt(labelIdStr.slice(-2), 16);
+      
+      // Use the numeric ID to get the label type
+      const labelInfo = labelTypeByNumber[labelNumericId];
+      
+      if (!labelInfo) {
+        console.log(`No label info found for numeric ID ${labelNumericId} (from ${labelIdStr}) on bill ${bill.id}`);
+        continue;
+      }
+      
+      const labelKey = labelNumericId.toString();
+      
       // Initialize label entries in the summary maps if they don't exist
-      if (!groupSummaryMap[labelId]) {
-        groupSummaryMap[labelId] = {
-          labelId: labelId,
-          labelName: labelName,
+      if (!groupSummaryMap[labelKey]) {
+        groupSummaryMap[labelKey] = {
+          labelId: labelInfo.id,
+          labelName: labelInfo.name,
           totalExpense: 0,
           totalRefund: 0,
           netExpense: 0
         };
       }
       
-      if (!userSummaryMap[labelId]) {
-        userSummaryMap[labelId] = {
-          labelId: labelId,
-          labelName: labelName,
+      if (!userSummaryMap[labelKey]) {
+        userSummaryMap[labelKey] = {
+          labelId: labelInfo.id,
+          labelName: labelInfo.name,
           userExpense: 0,
           userRefund: 0,
           netExpense: 0
@@ -148,9 +162,9 @@ export const getGroupSummary = async (req, res) => {
       
       // Add to group totals
       groupTotal += netBillExpense;
-      groupSummaryMap[labelId].totalExpense += billExpense;
-      groupSummaryMap[labelId].totalRefund += billRefund;
-      groupSummaryMap[labelId].netExpense += netBillExpense;
+      groupSummaryMap[labelKey].totalExpense += billExpense;
+      groupSummaryMap[labelKey].totalRefund += billRefund;
+      groupSummaryMap[labelKey].netExpense += netBillExpense;
       
       // Calculate user's expense and refund for this bill
       const userEntry = bill.members.find(m => m.memberId === userMemberId);
@@ -160,29 +174,33 @@ export const getGroupSummary = async (req, res) => {
         const netUserExpense = userExpense - userRefund;
         
         userTotal += netUserExpense;
-        userSummaryMap[labelId].userExpense += userExpense;
-        userSummaryMap[labelId].userRefund += userRefund;
-        userSummaryMap[labelId].netExpense += netUserExpense;
+        userSummaryMap[labelKey].userExpense += userExpense;
+        userSummaryMap[labelKey].userRefund += userRefund;
+        userSummaryMap[labelKey].netExpense += netUserExpense;
       }
     }
     
+    console.log("Group summary before formatting:", Object.entries(groupSummaryMap).map(
+      ([labelKey, data]) => `${labelKey} (${data.labelName}): ${data.totalExpense} - ${data.totalRefund} = ${data.netExpense}`
+    ));
+    
     // 5. Format the data for the frontend with proper capitalization
-    const groupSummary = Object.values(groupSummaryMap)
-      .map(item => ({
+    const groupSummary = Object.entries(groupSummaryMap)
+      .map(([labelKey, item]) => ({
         labelId: item.labelId,
         // Capitalize first letter of label name for display
         labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
-        totalExpense: parseFloat(item.netExpense.toFixed(2)), // Use net expense (after refunds)
+        totalExpense: parseFloat(item.netExpense.toFixed(2)),
         percentage: groupTotal > 0 ? parseFloat(((item.netExpense / groupTotal) * 100).toFixed(2)) : 0
       }))
       .filter(item => item.totalExpense > 0);
     
-    const userSummary = Object.values(userSummaryMap)
-      .map(item => ({
+    const userSummary = Object.entries(userSummaryMap)
+      .map(([labelKey, item]) => ({
         labelId: item.labelId,
         // Capitalize first letter of label name for display
         labelName: item.labelName.charAt(0).toUpperCase() + item.labelName.slice(1),
-        userExpense: parseFloat(item.netExpense.toFixed(2)), // Use net expense (after refunds)
+        userExpense: parseFloat(item.netExpense.toFixed(2)),
         percentage: userTotal > 0 ? parseFloat(((item.netExpense / userTotal) * 100).toFixed(2)) : 0
       }))
       .filter(item => item.userExpense > 0);

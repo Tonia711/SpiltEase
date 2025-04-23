@@ -137,11 +137,17 @@ async function importData() {
     }
 
     // 插入 Labels 并构建 labelMap
-    const labelDocs = labels.map(label => ({
-      _id: new mongoose.Types.ObjectId(label.id.toString().padStart(24, '0')),  // Create stable ObjectIds from numeric IDs
-      type: label.type,
-      iconUrl: label.iconUrl
-    }));
+    // Create a very specific ObjectId format where the last bytes exactly match the label ID
+    const labelDocs = labels.map(label => {
+      // Convert the label.id number to exactly 24 hex characters for consistent ObjectId
+      const idHex = label.id.toString(16).padStart(2, '0');
+      const hexId = idHex.padStart(24, '0'); // Ensure full 24 hex chars
+      return {
+        _id: new mongoose.Types.ObjectId(hexId),
+        type: label.type,
+        iconUrl: label.iconUrl
+      };
+    });
 
     await Label.insertMany(labelDocs);
     console.log("✅ Labels inserted");
@@ -150,10 +156,19 @@ async function importData() {
     const labelMap = {};
     labelDocs.forEach((doc, i) => {
       labelMap[labels[i].id] = doc._id;
+      // Also store the type for debugging
+      console.log(`Label ID ${labels[i].id} (${labels[i].type}) -> ObjectId: ${doc._id}`);
     });
 
     console.log("🔍 labelMap content:", labelMap);
-    console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v, v.constructor.name]));
+    console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v, v.toString()]));
+    
+    // Create a type map for easier debugging
+    const labelTypeMap = {};
+    labels.forEach(label => {
+      labelTypeMap[label.id] = label.type;
+    });
+    console.log("📋 Label types by ID:", labelTypeMap);
 
     // 插入新数据
     console.log("📦 正在准备插入 Bills");
