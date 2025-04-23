@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../styles/NewBillPage.module.css";
 import api from "../utils/api";
 import MobileFrame from "../components/MobileFrame";
+import { set } from "mongoose";
 // import { set } from "mongoose";
 
 
@@ -11,37 +12,40 @@ export default function NewBillPage() {
   const { groupId } = useParams(); // 获取 groupId
   const navigate = useNavigate();
 
-  const [group, setGroup] = useState(null);
-  const [note, setNote] = useState("");
-  const [paid, setPaid] = useState("");
-  const [refund, setRefund] = useState("");
-  const [paidBy, setPaidBy] = useState("");
+
+  // 界面展示的数据
+  const [labels, setLabels] = useState([]);  // labels
+  const [group, setGroup] = useState(null); //group 数据
+  const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
+  const [splitMethod, setSplitMethod] = useState("equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
+  const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
+
+
+
+  // 表单数据
+  const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
+  const [note, setNote] = useState("");  
+  const [expenses, setExpenses] = useState("");   //paid
+  const [refunds, setRefunds] = useState("");
+  const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-
-  const [selectedLabelId, setSelectedLabelId] = useState("");
-
-
-
-  const [labels, setLabels] = useState([]);
-  const [members, setMembers] = useState(""); 
-  const [category, setCategory] = useState(""); 
-
-
-  const [splitMethod, setSplitMethod] = useState("equally"); // "equally" 或 "amounts"
+  const [chancgedPaidAmount, setchancgedPaidAmount] = useState(0); // 修改后每个人应付的钱
 
 
 
-  // get all labels
+  // get all labels 获取所有labels，labcel下拉列表
   useEffect(() => {
     api.get("/bills/allLabels").then(({ data }) => {
       setLabels(data);
+      setSelectedLabelId(data[0]?._id || ""); // 设置默认的 selectedLabelId
     }).catch(err => {
       console.error("Failed to fetch labels:", err);
     });
   }, []);
   
 
-  // get group members
+  // get group members 通过获取group的数据来获取成员
+  // paidBy 下拉列表，成员列表
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -50,25 +54,47 @@ export default function NewBillPage() {
       .then(({ data }) => {
         setGroup(data);
         setMembers(data.members);
+        setPaidBy(data.members[0]?._id || ""); // 设置默认的 paidBy
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
       });
   }, [groupId, BASE_URL]);
 
-  console.log("group", group);
-  console.log("members", members);
+  // console.log("group", group);
+  // console.log("members", members);
+
+
+
+  // 通过获取bill的数据来获取每个人应付的钱
+  useEffect(() => {
+    api
+      .get(`/bills/groups/${groupId}`)
+      .then(({ data }) => {
+        setPaidAmount(data);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch group data:", err);
+      });
+  }, [groupId, BASE_URL]);
+
+  console.log("paidAmount", paidAmount);
+
+
+
+
+
 
 
   // submit bill
-  const handleSubmit = (e) => {
+  const handleAddBill = (e) => {
     e.preventDefault();
     const newBill = {
       groupId,
-      category,
+      selectedLabelId,
       note,
-      paid: parseFloat(paid),
-      refund: parseFloat(refund),
+      expenses: parseFloat(expenses),
+      refunds: parseFloat(refunds),
       paidBy,
       paidDate,
       members: members.map((m) => ({ name: m.name || m.userName }))
@@ -79,9 +105,18 @@ export default function NewBillPage() {
       .catch((err) => console.error("Failed to create bill:", err));
   };
 
+  console.log("selectedLabelId", selectedLabelId);
+  console.log("note", note);
+  console.log("expenses", expenses);    
+  console.log("refunds", refunds);
+  console.log("paidBy", paidBy);
+  console.log("paidDate", paidDate);
+  console.log("splitMethod", splitMethod);
+
+
   return (
     <MobileFrame>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.form} onSubmit={handleAddBill}>
         <h2 className={styles.header}>
         <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}`)}>
             {"<"}
@@ -99,12 +134,12 @@ export default function NewBillPage() {
         <div className={styles.row1}>
 
         <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            value={selectedLabelId}
+            onChange={(e) => setSelectedLabelId(e.target.value)}
             className={styles.select}
           >
             {labels.map(label => (
-            <option key={label._id} value={label.name}>
+            <option key={label._id} value={label._id}>
               {label.type}
             </option>
           ))}
@@ -128,16 +163,16 @@ export default function NewBillPage() {
           <input
             type="number"
             placeholder="$ 0.00"
-            value={paid}
-            onChange={(e) => setPaid(e.target.value)}
+            value={expenses}
+            onChange={(e) => setExpenses(e.target.value)}
             className={styles.inputHalf}
           />
          
           <input
             type="number"
             placeholder="$ 0.00"
-            value={refund}
-            onChange={(e) => setRefund(e.target.value)}
+            value={refunds}
+            onChange={(e) => setRefunds(e.target.value)}
             className={styles.inputHalf}
           />
         </div>
@@ -153,7 +188,7 @@ export default function NewBillPage() {
             className={styles.select}
           >
             {(members || []).map((m) => (
-              <option key={m._id} value={m.userName}>
+              <option key={m._id} value={m._id}>
                 {m.userName}
               </option>
             ))}
@@ -184,7 +219,8 @@ export default function NewBillPage() {
           <ul className={styles.memberList}>
             {(members || []).map((m, i) => (
               <li key={i} className={styles.memberItem}>
-                {m.name || m.userName}
+                {m.userName}
+
               </li>
             ))}
           </ul>
