@@ -1,6 +1,7 @@
 import express from "express";
 import { getAllLabels } from "../../../controllers/billController.js";
 import { getBillsByGroupId } from "../../../controllers/billController.js"; 
+import { getBillByGroupIdBillId } from "../../../controllers/billController.js";
 
 const router = express.Router();
 
@@ -19,6 +20,9 @@ router.get("/allLabels", getAllLabels);
 
 // 根据 groupId 获取账单
 router.get("/group/:groupId", getBillsByGroupId);
+
+// 根据 groupId和billId 获取某一条账单
+router.get("/:groupId/bill/:billId", getBillByGroupIdBillId);
 
 
 export default router;

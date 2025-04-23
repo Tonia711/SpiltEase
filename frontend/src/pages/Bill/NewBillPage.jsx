@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import styles from "../styles/NewBillPage.module.css";
-import api from "../utils/api";
-import MobileFrame from "../components/MobileFrame";
+import styles from "../../styles/Bill/NewBillPage.module.css";
+import api from "../../utils/api";
+import MobileFrame from "../../components/MobileFrame";
 import { set } from "mongoose";
 // import { set } from "mongoose";
 
@@ -118,7 +118,7 @@ export default function NewBillPage() {
     <MobileFrame>
       <form className={styles.form} onSubmit={handleAddBill}>
         <h2 className={styles.header}>
-        <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}`)}>
+        <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses`)}>
             {"<"}
         </span>
         <p >Add Expense</p>
