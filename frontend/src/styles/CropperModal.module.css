@@ -1,4 +1,4 @@
-.modal {
+.cropModal {
     position: fixed;
     top: 40%;
     left: 50%;
@@ -21,10 +21,10 @@
     width: 100%;
 }
 
-.save-btn,
-.cancel-btn {
-    padding: 1 rem;
-    color: white;
+.save,
+.cancel {
+    padding: 0.5rem 2rem;
+    color: black;
     border: none;
     border-radius: 6px;
     font-size: 16px;
@@ -32,10 +32,10 @@
     transition: background-color 0.2s ease-in-out;
 }
 
-.save-btn {
+.save {
     background-color: #ffca28;
 }
 
-.cancel-btn {
+.cancel {
     background-color: #ccc;
 }

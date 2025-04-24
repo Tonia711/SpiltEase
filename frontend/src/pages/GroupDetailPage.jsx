@@ -6,7 +6,6 @@ import MobileFrame from "../components/MobileFrame";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import CropperModal from "../components/CropperModal.jsx";
-import getCroppedImg from "../components/cropImage.js"; 
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
