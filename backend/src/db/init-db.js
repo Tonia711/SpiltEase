@@ -185,31 +185,6 @@ async function importData() {
         labelMap[label.id] = matched._id;
       }
     });
-
-
-    // console.log("🔍 labelMap content:", labelMap);
-    // console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v]));
-
-    // 插入新数据
-    // console.log("📦 正在准备插入 Bills");
-    // console.log(
-    //   bills.map(b => ({
-    //     ...b,
-    //     groupId: groupMap[b.groupId],
-    //   })));
-
-
-    // ✅💥 在插入 Bills 之前，把每条账单的 labelId 从数字变成 ObjectId
-    // const fixedBills = bills.map(b => ({
-    //   groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
-    //   groupBills: (b.groupBills || []).map(gb => ({
-    //     ...gb,
-    //     labelId: labelMap[gb.labelId],
-    //     paidBy: userIdMap[gb.paidBy],
-    //   })),
-    // }));
-
-
  
 // 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
 const allGroups = await Group.find();
@@ -244,19 +219,10 @@ const fixedBills = bills.map(b => {
 });
 
 
-
-    // ✅ 验证 labelId 是否转换成 ObjectId
-    // console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
-
-
-
     // 插入新数据
     await Promise.all([
       Balance.insertMany(calculatedBalances),
-
       Bill.insertMany(fixedBills),
-
-      // Label.insertMany(labels),
       // User.insertMany(hashedUsers),
     ]);
     console.log("✅ All data inserted successfully!");
