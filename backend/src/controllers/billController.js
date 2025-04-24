@@ -1,6 +1,5 @@
 import { Label } from "../db/schema.js";
 import { Bill } from "../db/schema.js";
-import  { User } from "../db/schema.js";
 import  { Group } from "../db/schema.js";
 import mongoose from "mongoose";
 
@@ -103,6 +102,52 @@ export const getBillByGroupIdBillId = async (req, res) => {
 };
 
 
+// 创建新bill
 export const createBill = async (req, res) => {
-  console.log("11");
+  try {
+    const {
+      groupId,
+      labelId,
+      date,
+      note,
+      paidBy,
+      expenses,
+      refunds,
+      splitWay,
+      members
+    } = req.body;
+
+    // 获取当前 group 下已有的账单数量用于 id 自增
+    const existing = await Bill.findOne({ groupId });
+    const currentId = existing?.groupBills?.length || 0;
+
+    const newGroupBill = {
+      id: currentId + 1, // 自增 id
+      labelId,
+      date: new Date(date),
+      note,
+      paidBy,
+      expenses,
+      refunds,
+      splitWay,
+      members
+    };
+
+    let billDoc = await Bill.findOne({ groupId });
+
+    if (billDoc) {
+      billDoc.groupBills.push(newGroupBill);
+      await billDoc.save();
+    } else {
+      billDoc = await Bill.create({
+        groupId,
+        groupBills: [newGroupBill]
+      });
+    }
+
+    res.status(201).json(billDoc);
+  } catch (err) {
+    console.error("❌ Failed to create bill:", err);
+    res.status(500).json({ error: "Failed to create bill" });
+  }
 };
