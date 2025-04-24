@@ -1,8 +1,9 @@
 import { Label } from "../db/schema.js";
 import { Bill } from "../db/schema.js";
+import  { User } from "../db/schema.js";
 import mongoose from "mongoose";
 
-// ✅ 获取所有标签
+//获取所有标签
 export const getAllLabels = async (req, res) => {
   try {
     const labels = await Label.find();
@@ -18,6 +19,8 @@ export const getBillsByGroupId = async (req, res) => {
   try {
     const { groupId } = req.params;
 
+    console.log("🔍 Matching groupId:", groupId, "→", new mongoose.Types.ObjectId(groupId));
+
     const bills = await Bill.aggregate([
         { $match: { groupId: new mongoose.Types.ObjectId(groupId) } },
         { $unwind: "$groupBills" },  // 拆开 groupBills
@@ -26,13 +29,23 @@ export const getBillsByGroupId = async (req, res) => {
             from: "labels",
             localField: "groupBills.labelId",
             foreignField: "_id",
-            as: "groupBills.label"
+            as: "label"
           }
         },
-        { $unwind: "$groupBills.label" }, // 把 label 也展开
+        { $unwind: { path: "$label", preserveNullAndEmptyArrays: true } },
         {
-          $replaceRoot: { newRoot: "$groupBills" }
-        }
+            $project: {
+              _id: "$groupBills._id", // 可以换成 "$_id" 保留原 Bill 文档的 id
+              label: "$label",
+              date: "$groupBills.date",
+              note: "$groupBills.note",
+              paidBy: "$groupBills.paidBy",
+              expenses: "$groupBills.expenses",
+              refunds: "$groupBills.refunds",
+              splitWay: "$groupBills.splitWay",
+              members: "$groupBills.members",
+            }
+        }          
     ]);
 
     res.status(200).json(bills);
@@ -41,3 +54,39 @@ export const getBillsByGroupId = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch bills." });
   }
 };
+
+
+// 根据 groupId 和 billId 获取单个bill
+export const getBillByGroupIdBillId = async (req, res) => {
+  const { groupId, billId } = req.params;
+  console.log("groupId", groupId);
+  console.log("billId", billId);
+
+  try {
+    const bills = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
+    
+    if (!bills) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const bill = bills.groupBills.find(b =>
+      b._id.toString() === billId
+    );
+
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found in group" });
+    }
+
+    const paidByUser = await User.findById(bill.paidBy).select("userName");
+
+    return res.status(200).json({
+      ...bill.toObject(),
+      paidBy: paidByUser?.userName || "Unknown"
+    });
+
+  } catch (error) {
+    console.error("Error fetching group bill:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

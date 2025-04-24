@@ -136,24 +136,43 @@ async function importData() {
        console.log("✅ Users updated with groupIds");
     }
 
-// 插入 Label，拿到真正的 label ObjectId
-const insertedLabels = await Label.insertMany(labels);
-console.log("✅ Labels inserted");
 
-// 建 labelMap
-const labelMap = {};
-labels.forEach((l) => {
-  labelMap[l.type] = l._id;
+
+// 将labelId转为object
+const labelsDocs = labels.map((a, index) => {
+  const doc = {
+    type: a.type,
+    iconUrl: a.iconUrl,
+  };
+
+  const hexId = a.id.toString(16).padStart(24, "0");
+  doc._id = new mongoose.Types.ObjectId(hexId);
+  return doc;
 });
 
-// 插入新数据
-console.log("📦 正在准备插入 Bills");
-console.log(
-  bills.map(b => ({
-    ...b,
-    groupId: groupMap[b.groupId],
-  })));
 
+// 插入 Labels 并构建 labelMap
+const insertedLabels = await Label.insertMany(labelsDocs);
+console.log("✅ Labels inserted");
+const labelMap = {};
+labels.forEach((label) => {
+  const matched = insertedLabels.find(doc => doc.type === label.type);
+  if (matched) {
+    labelMap[label.id] = matched._id;
+  }
+});
+
+
+// console.log("🔍 labelMap content:", labelMap);
+// console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v]));
+
+// 插入新数据
+// console.log("📦 正在准备插入 Bills");
+// console.log(
+//   bills.map(b => ({
+//     ...b,
+//     groupId: groupMap[b.groupId],
+//   })));
 
 
   // ✅💥 在插入 Bills 之前，把每条账单的 labelId 从数字变成 ObjectId
@@ -161,9 +180,16 @@ console.log(
     groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
     groupBills: (b.groupBills || []).map(gb => ({
       ...gb,
-      labelId: labelMap[labels.find(l => l.id === gb.labelId)?.type],
+      labelId: labelMap[gb.labelId],
+      paidBy: userIdMap[gb.paidBy],
     })),
   }));
+
+
+  // ✅ 验证 labelId 是否转换成 ObjectId
+  // console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
+    
+
 
     // 插入新数据
     await Promise.all([
