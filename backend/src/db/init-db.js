@@ -39,6 +39,32 @@ async function importData() {
     ]);
     console.log("✅ Old data cleared");
 
+    // Step 1: 插入 Icons 并生成 iconMap
+    const iconDocs = icons.map((i) => {
+      const doc = {
+        iconUrl: i.iconUrl,
+      };
+
+      if (i.id && i.id <= 100) {  
+        const hexId = i.id.toString(16).padStart(24, "0");
+        doc._id = new mongoose.Types.ObjectId(hexId);
+        i._id = doc._id;
+      }
+
+      return doc;
+    });
+
+    const insertedIcons = await Icon.insertMany(iconDocs);
+    console.log("✅ Icons inserted");
+
+    const iconMap = {};
+    icons.forEach((i) => {
+      const matched = insertedIcons.find(doc => doc.iconUrl === i.iconUrl);
+      if (matched) {
+        iconMap[i.id] = matched._id;
+      }
+    });
+
     // 插入 Avatar，让 Mongo 自动生成 ObjectId
     const avatarDocs = avatars.map((a, index) => {
       const doc = {
@@ -74,105 +100,114 @@ async function importData() {
       const hashedPassword = await bcrypt.hash(u.password, 10);
       const userObjectId = new Types.ObjectId(); // 为每个用户生成一个 ObjectId
       userDocs.push({
-          _id: userObjectId,
-          userName: u.userName,
-          email: u.email,
-          password: hashedPassword,
-          avatarId: avatarMap[u.avatarId], // 使用 avatarMap
-          // groupId 稍后更新，因为它依赖于 groupMap
+        _id: userObjectId,
+        userName: u.userName,
+        email: u.email,
+        password: hashedPassword,
+        avatarId: avatarMap[u.avatarId], // 使用 avatarMap
+        // groupId 稍后更新，因为它依赖于 groupMap
       });
       userIdMap[u.id] = userObjectId;
-  }
+    }
 
-  await User.insertMany(userDocs);
+    await User.insertMany(userDocs);
     console.log("✅ Users inserted and userIdMap created");
 
-    const groupMap = {}; 
-    const groupDocs = groups.map((g) => { 
-        const groupObjectId = new Types.ObjectId();
-        groupMap[g.id] = groupObjectId; 
+    const groupMap = {};
+    const groupDocs = groups.map((g) => {
+      const groupObjectId = new Types.ObjectId();
+      groupMap[g.id] = groupObjectId;
 
-        return {
-            _id: groupObjectId,
-            groupName: g.groupName,
-            note: g.note || "",
-            iconId: g.iconId || 0,
-            budget: g.budget || 0,
-            totalExpenses: g.totalExpenses || 0,
-            totalRefunds: g.totalRefunds || 0,
-            startDate: g.startDate ? new Date(g.startDate) : null,
-            endDate: g.endDate ? new Date(g.endDate) : null,
-            joinCode: g.joinCode || "",
-            members: (g.members || []).map((m, i) => {
-                const memberDoc = {
-                    memberId: m.memberId || i,
-                    userName: m.userName || `user${i}`,
-                };
-                if (m.userId === "") {
-                    memberDoc.userId = null;
-                } else {
-                    memberDoc.userId = userIdMap[m.userId] || null;
-                }
-                return memberDoc;
-            }),
-        };
+      return {
+        _id: groupObjectId,
+        groupName: g.groupName,
+        note: g.note || "",
+        iconId: iconMap[g.iconId] || 0,
+        budget: g.budget || 0,
+        totalExpenses: g.totalExpenses || 0,
+        totalRefunds: g.totalRefunds || 0,
+        startDate: g.startDate ? new Date(g.startDate) : null,
+        endDate: g.endDate ? new Date(g.endDate) : null,
+        joinCode: g.joinCode || "",
+        members: (g.members || []).map((m, i) => {
+          const memberDoc = {
+            memberId: m.memberId || i,
+            userName: m.userName || `user${i}`,
+          };
+          if (m.userId === "") {
+            memberDoc.userId = null;
+          } else {
+            memberDoc.userId = userIdMap[m.userId] || null;
+          }
+          return memberDoc;
+        }),
+      };
     });
 
     await Group.insertMany(groupDocs);
     console.log("✅ Groups inserted and groupMap created");
 
     const userUpdates = users.map(u => {
-        const groupObjectIds = (u.groupId || []).map(groupId => groupMap[groupId]).filter(id => id); // 映射原始groupId到ObjectId，过滤掉null
-        return {
-            updateOne: {
-                filter: { _id: userIdMap[u.id] }, 
-                update: { $set: { groupId: groupObjectIds } }
-            }
-        };
-    }).filter(update => update.updateOne.filter._id); 
+      const groupObjectIds = (u.groupId || []).map(groupId => groupMap[groupId]).filter(id => id); // 映射原始groupId到ObjectId，过滤掉null
+      return {
+        updateOne: {
+          filter: { _id: userIdMap[u.id] },
+          update: { $set: { groupId: groupObjectIds } }
+        }
+      };
+    }).filter(update => update.updateOne.filter._id);
 
     if (userUpdates.length > 0) {
-       await User.bulkWrite(userUpdates);
-       console.log("✅ Users updated with groupIds");
+      await User.bulkWrite(userUpdates);
+      console.log("✅ Users updated with groupIds");
     }
 
+    // 将labelId转为object
+    const labelsDocs = labels.map((a, index) => {
+      const doc = {
+        type: a.type,
+        iconUrl: a.iconUrl,
+      };
+
+      const hexId = a.id.toString(16).padStart(24, "0");
+      doc._id = new mongoose.Types.ObjectId(hexId);
+      return doc;
+    });
 
 
-// 将labelId转为object
-const labelsDocs = labels.map((a, index) => {
-  const doc = {
-    type: a.type,
-    iconUrl: a.iconUrl,
-  };
-
-  const hexId = a.id.toString(16).padStart(24, "0");
-  doc._id = new mongoose.Types.ObjectId(hexId);
-  return doc;
-});
-
-
-// 插入 Labels 并构建 labelMap
-const insertedLabels = await Label.insertMany(labelsDocs);
-console.log("✅ Labels inserted");
-const labelMap = {};
-labels.forEach((label) => {
-  const matched = insertedLabels.find(doc => doc.type === label.type);
-  if (matched) {
-    labelMap[label.id] = matched._id;
-  }
-});
+    // 插入 Labels 并构建 labelMap
+    const insertedLabels = await Label.insertMany(labelsDocs);
+    console.log("✅ Labels inserted");
+    const labelMap = {};
+    labels.forEach((label) => {
+      const matched = insertedLabels.find(doc => doc.type === label.type);
+      if (matched) {
+        labelMap[label.id] = matched._id;
+      }
+    });
 
 
-// console.log("🔍 labelMap content:", labelMap);
-// console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v]));
+    // console.log("🔍 labelMap content:", labelMap);
+    // console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v]));
 
-// 插入新数据
-// console.log("📦 正在准备插入 Bills");
-// console.log(
-//   bills.map(b => ({
-//     ...b,
-//     groupId: groupMap[b.groupId],
-//   })));
+    // 插入新数据
+    // console.log("📦 正在准备插入 Bills");
+    // console.log(
+    //   bills.map(b => ({
+    //     ...b,
+    //     groupId: groupMap[b.groupId],
+    //   })));
+
+
+    // ✅💥 在插入 Bills 之前，把每条账单的 labelId 从数字变成 ObjectId
+    const fixedBills = bills.map(b => ({
+      groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
+      groupBills: (b.groupBills || []).map(gb => ({
+        ...gb,
+        labelId: labelMap[gb.labelId],
+        paidBy: userIdMap[gb.paidBy],
+      })),
+    }));
 
 
  
@@ -210,9 +245,9 @@ const fixedBills = bills.map(b => {
 
 
 
-  // ✅ 验证 labelId 是否转换成 ObjectId
-  // console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
-    
+    // ✅ 验证 labelId 是否转换成 ObjectId
+    // console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
+
 
 
     // 插入新数据
@@ -220,8 +255,7 @@ const fixedBills = bills.map(b => {
       Balance.insertMany(calculatedBalances),
 
       Bill.insertMany(fixedBills),
-      
-      Icon.insertMany(icons),
+
       // Label.insertMany(labels),
       // User.insertMany(hashedUsers),
     ]);

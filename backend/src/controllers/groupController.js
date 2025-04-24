@@ -260,22 +260,128 @@ export const joinGroupByCode = async (req, res) => {
   }
 };
 
+export const checkMemberdeletable = async (req, res) => {
+  const groupId = req.params.id;
+  const memberId = parseInt(req.params.memberId, 10);
+
+  if (isNaN(memberId)) {
+    return res.status(400).json({ message: 'Invalid member ID' });
+  }
+
+  try {
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const member = group.members.find(m => m.memberId === memberId);
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    if (!memberToDelete) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    if (memberToDelete.balance > 0) {
+      return res.status(400).json({ message: "Member cannot be deleted due to non-zero balance." });
+    }
+
+    res.status(200).json({ message: "Member can be deleted." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const updateGroupInfo = async (req, res) => {
   const groupId = req.params.id;
-  const { groupName, note, iconId, budget, startDate, endDate } = req.body;
+  const { groupName, startDate, members } = req.body;
+
+  if (!groupName || !startDate || !Array.isArray(members)) {
+    return res.status(400).json({ message: "Invalid request data." });
+  }
+
+  let session;
+
+  try {
+    const group = await Group.findById(groupId).populate('members');
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    group.groupName = groupName;
+    group.startDate = new Date(startDate);
+
+    const existingMembers = group.members.map(m => m.userId);
+    const incomingMembers = members.map(m => m.userId).filter(userId => userId);
+    const newMembersData = members.filter(m => !m.userId);
+
+    const membersTodeleteIds = existingMembers.filter(userId => !incomingMembers.includes(userId));
+
+    const membersToDelete = [];
+    const undeletableMembers = [];
+
+    for (const memberId of membersTodeleteIds) {
+      const member = group.members.find(m => m.userId && m.userId.equals(memberId));
+      if (member) {
+        if (member.balance === 0) {
+          undeletableMembers.push(member.memberName || `ID: ${member.id}`);
+        } else {
+          membersToDelete.push(member);
+        }
+      }
+
+      if (undeletableMembers.length > 0) {
+        return res.status(400).json({ message: `Cannot delete members with non-zero balance: ${undeletableMembers.join(", ")}` });
+      }
+    }
+
+
+    res.status(200).json(group);
+  }
+  catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+export const updateGroupIcon = async (req, res) => {
+  try {
+    const { groupId } = req.body;
+    const filePath = `groups/${req.file.filename}`;
+
+    // Step 1: 存入 Icon 表
+    const newIcon = await Icon.create({
+      iconUrl: filePath,
+    });
+
+    // Step 2: 更新用户 iconId 为这个头像
+    await Group.findByIdAndUpdate(groupId, {
+      iconId: newIcon._id,
+    });
+
+    res.status(201).json({
+      message: "Icon uploaded",
+      iconId: newIcon._id,
+      iconUrl: filePath,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Upload failed" });
+  }
+};
+
+export const deleteGroupMember = async (req, res) => {
+  const groupId = req.params.id;
+  const memberId = req.params.memberId;
 
   try {
     const group = await Group
       .findByIdAndUpdate(
         groupId,
-        {
-          groupName,
-          note,
-          iconId,
-          budget,
-          startDate: new Date(startDate),
-          endDate: new Date(endDate),
-        },
+        { $pull: { members: { memberId } } },
         { new: true }
       )
       .select("-__v");
@@ -289,6 +395,7 @@ export const updateGroupInfo = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 }
+
 
 // Create group
 export const createGroup = (req, res) => {
