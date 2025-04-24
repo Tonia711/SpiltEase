@@ -2,7 +2,7 @@ import { Label } from "../db/schema.js";
 import { Bill } from "../db/schema.js";
 import mongoose from "mongoose";
 
-// ✅ 获取所有标签
+//获取所有标签
 export const getAllLabels = async (req, res) => {
   try {
     const labels = await Label.find();
@@ -53,3 +53,38 @@ export const getBillsByGroupId = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch bills." });
   }
 };
+
+
+// 根据 groupId 和 billId 获取单个bill
+export const getBillByGroupIdBillId = async (req, res) => {
+  const { groupId, billId } = req.params;
+  console.log("groupId", groupId);
+  console.log("billId", billId);
+
+  try {
+    const bills = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
+    
+        
+    console.log(bills);
+    
+    if (!bills) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+
+    const bill = bills.groupBills.find(b =>
+      b._id.toString() === billId
+    );
+
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found in group" });
+    }
+
+    res.status(200).json(bill);
+
+  } catch (error) {
+    console.error("Error fetching group bill:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

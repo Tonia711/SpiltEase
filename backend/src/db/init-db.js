@@ -136,8 +136,23 @@ async function importData() {
        console.log("✅ Users updated with groupIds");
     }
 
+
+
+// 将labelId转为object
+const labelsDocs = labels.map((a, index) => {
+  const doc = {
+    type: a.type,
+    iconUrl: a.iconUrl,
+  };
+
+  const hexId = a.id.toString(16).padStart(24, "0");
+  doc._id = new mongoose.Types.ObjectId(hexId);
+  return doc;
+});
+
+
 // 插入 Labels 并构建 labelMap
-const insertedLabels = await Label.insertMany(labels);
+const insertedLabels = await Label.insertMany(labelsDocs);
 console.log("✅ Labels inserted");
 const labelMap = {};
 labels.forEach((label) => {
