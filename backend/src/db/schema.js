@@ -5,15 +5,16 @@ import Group from "../models/groupModel.js";
 import Bill from "../models/billModel.js";
 import Label from "../models/labelModel.js";
 
-// 图标
 const iconSchema = new mongoose.Schema({
   iconUrl: String,
 });
 const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
 
-// 余额
 const balanceSchema = new mongoose.Schema({
-  groupId: Number,
+  groupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Group",
+  },
   groupBalances: [
     {
       fromMemberId: Number,

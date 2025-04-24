@@ -45,7 +45,7 @@ async function importData() {
         iconUrl: i.iconUrl,
       };
 
-      if (i.id && i.id <= 100) {  
+      if (i.id && i.id <= 100) {
         const hexId = i.id.toString(16).padStart(24, "0");
         doc._id = new mongoose.Types.ObjectId(hexId);
         i._id = doc._id;
@@ -185,43 +185,60 @@ async function importData() {
         labelMap[label.id] = matched._id;
       }
     });
- 
-// 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
-const allGroups = await Group.find();
-const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
 
-allGroups.forEach(group => {
-  const memberMap = {};
-  group.members.forEach(member => {
-    memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
-  });
-  groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
-});
+    // 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
+    const allGroups = await Group.find();
+    const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
 
-// 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
-const fixedBills = bills.map(b => {
-  const realGroupId = groupMap[b.groupId]; // 从 groupMap 中拿真实 group ObjectId
-  const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
+    allGroups.forEach(group => {
+      const memberMap = {};
+      group.members.forEach(member => {
+        memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
+      });
+      groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
+    });
 
-  return {
-    groupId: realGroupId,
-    groupBills: (b.groupBills || []).map(gb => ({
-      ...gb,
-      labelId: labelMap[gb.labelId],      // 替换为 labels _id
-      paidBy: memberIdMap[gb.paidBy],     
-      members: gb.members.map(m => ({
-        memberId: memberIdMap[m.memberId], // 替换为 groups members _id
-        expense: m.expense,
-        refund: m.refund
-      }))
-    }))
-  };
-});
+    // 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
+    const fixedBills = bills.map(b => {
+      const realGroupId = groupMap[b.groupId]; // 从 groupMap 中拿真实 group ObjectId
+      const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
+
+      return {
+        groupId: realGroupId,
+        groupBills: (b.groupBills || []).map(gb => ({
+          ...gb,
+          labelId: labelMap[gb.labelId],      // 替换为 labels _id
+          paidBy: memberIdMap[gb.paidBy],
+          members: gb.members.map(m => ({
+            memberId: memberIdMap[m.memberId], // 替换为 groups members _id
+            expense: m.expense,
+            refund: m.refund
+          }))
+        }))
+      };
+    });
+
+    const fixedBalances = calculatedBalances.map(b => {
+      const realGroupId = groupMap[b.groupId]; 
+      return {
+        groupId: realGroupId,
+        groupBalances: (b.groupBalances || []).map(balance => ({
+          fromMemberId: balance.fromMemberId,
+          toMemberId: balance.toMemberId,  
+          balance: balance.balance,
+          isFinished: false,
+          finishHistory: [],
+        }))
+      };
+    });
+
+    // 插入 Balance 数据
+    await Balance.insertMany(fixedBalances);
+    console.log("✅ Balances inserted");
 
 
     // 插入新数据
     await Promise.all([
-      Balance.insertMany(calculatedBalances),
       Bill.insertMany(fixedBills),
       // User.insertMany(hashedUsers),
     ]);
