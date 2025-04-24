@@ -24,8 +24,10 @@ export default function GroupDetailPage() {
 
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
-  const [rawImage, setRawImage] = useState(null); 
+  const [rawImage, setRawImage] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [isAddingMember, setIsAddingMember] = useState(false);
 
   const showErrorToast = (message) => {
     setToastMessage(message);
@@ -193,6 +195,48 @@ export default function GroupDetailPage() {
                   {member.userName || member.name || 'Unnamed'}
                 </li>
               ))}
+
+              <li className={styles.memberItem}>
+                {isAddingMember ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={newMemberName}
+                      onChange={(e) => setNewMemberName(e.target.value)}
+                      placeholder="Enter name"
+                      className={styles.inputField}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      className={styles.saveButton}
+                      onClick={async () => {
+                        if (!newMemberName.trim()) {
+                          showErrorToast("Please enter a name");
+                          return;
+                        }
+                        try {
+                          const { data } = await api.post(`/groups/${groupId}/members/new`, {
+                            userName: newMemberName.trim(),
+                          });
+                          setGroup(data);
+                          setNewMemberName("");
+                          setIsAddingMember(false);
+                        } catch (err) {
+                          console.error("Failed to add member:", err);
+                          showErrorToast("Failed to add member.");
+                        }
+                      }}
+                    >
+                      ✔
+                    </button>
+                    <button className={styles.cancelButton} onClick={() => setIsAddingMember(false)}>✖</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setIsAddingMember(true)} className={styles.addMemberButton}>
+                    Add new member
+                  </button>
+                )}
+              </li>
             </ul>
           </div>
         </section>

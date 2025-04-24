@@ -364,12 +364,10 @@ export const updateGroupIcon = async (req, res) => {
     const { groupId } = req.body;
     const filePath = `groups/${req.file.filename}`;
 
-    // Step 1: 存入 Icon 表
     const newIcon = await Icon.create({
       iconUrl: filePath,
     });
 
-    // Step 2: 更新用户 iconId 为这个头像
     await Group.findByIdAndUpdate(groupId, {
       iconId: newIcon._id,
     });
@@ -384,6 +382,36 @@ export const updateGroupIcon = async (req, res) => {
     res.status(500).json({ error: "Upload failed" });
   }
 };
+
+export const addNewVirtualMember = async (req, res) => {  
+  const groupId = req.params.id;
+  const { userName } = req.body;
+
+  if (!userName) {
+    return res.status(400).json({ message: "User name are required" });
+  }
+
+  try {
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const memberId = group.members.length > 0 ? Math.max(...group.members.map(m => m.memberId)) + 1 : 1;
+    const newMember = {
+      memberId,
+      userName,
+    };
+
+    group.members.push(newMember);
+    await group.save();
+
+    res.status(201).json(group);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
 
 export const deleteGroupMember = async (req, res) => {
   const groupId = req.params.id;

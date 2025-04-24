@@ -165,3 +165,30 @@
     opacity: 0;
   }
 }
+
+.addMemberButton {
+  background: none;
+  border: none;
+  color: #ffca28;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1rem;
+}
+
+.saveButton,
+.cancelButton {
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.saveButton {
+  background-color: #ffca28;
+}
+
+.cancelButton {
+  background-color: #ccc;
+}
