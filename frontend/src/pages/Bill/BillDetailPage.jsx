@@ -8,7 +8,21 @@ export default function BillDetailPage() {
     const { groupId, billId } = useParams(); 
     const navigate = useNavigate();
     const [bill, setBill] = useState(null);
-  
+    const [labels, setLabels] = useState([]);  // labels
+
+    const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
+
+
+    // get all labels 获取所有labels，labcel下拉列表
+    useEffect(() => {
+      api.get("/bills/allLabels").then(({ data }) => {
+        setLabels(data);
+      }).catch(err => {
+        console.error("Failed to fetch labels:", err);
+      });
+    }, []);
+
+
     useEffect(() => {
       api.get(`/bills/${groupId}/bill/${billId}`).then(({ data }) => {
         setBill(data);
@@ -20,7 +34,12 @@ export default function BillDetailPage() {
     if (!bill) {
       return <div>Loading...</div>; 
     }
+
+      
+    console.log("bill", bill);
   
+    console.log("labels", labels);
+    
     return (
       <MobileFrame>
         <form className={styles.form} >
@@ -29,7 +48,10 @@ export default function BillDetailPage() {
               {"<"}
           </span>
           <div>
-            <img src="" alt="1"></img>
+            <img 
+              src={`${IMG_URL}/${labels.find(label => label._id === bill.labelId).iconUrl}`}
+              className={styles.billIcon}
+            ></img>
             <p>{bill.note || "Untitled Bill"}</p>
           </div>
           </h2>
@@ -53,7 +75,7 @@ export default function BillDetailPage() {
           
             {(bill.members || []).map((member, index) => (
               <div key={index} className={styles.row}>
-                <span>{member.memberId}</span>
+                <span>{member.userName}</span>
                 <span>${(member.expense || 0).toFixed(2)}</span>
               </div>
             ))}
