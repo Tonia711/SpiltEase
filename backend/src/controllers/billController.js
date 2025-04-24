@@ -65,13 +65,9 @@ export const getBillByGroupIdBillId = async (req, res) => {
   try {
     const bills = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
     
-        
-    console.log(bills);
-    
     if (!bills) {
       return res.status(404).json({ message: "Group not found" });
     }
-
 
     const bill = bills.groupBills.find(b =>
       b._id.toString() === billId

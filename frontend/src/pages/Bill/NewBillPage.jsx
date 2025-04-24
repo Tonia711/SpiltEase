@@ -47,6 +47,7 @@ export default function NewBillPage() {
   // get group members 通过获取group的数据来获取成员
   // paidBy 下拉列表，成员列表
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
 
   useEffect(() => {
     api
@@ -78,7 +79,7 @@ export default function NewBillPage() {
       });
   }, [groupId, BASE_URL]);
 
-  console.log("paidAmount", paidAmount);
+  // console.log("paidAmount", paidAmount);
 
 
 
@@ -105,6 +106,8 @@ export default function NewBillPage() {
       .catch((err) => console.error("Failed to create bill:", err));
   };
 
+  console.log("-------------------");
+  console.log("labels", labels);
   console.log("selectedLabelId", selectedLabelId);
   console.log("note", note);
   console.log("expenses", expenses);    
@@ -132,20 +135,24 @@ export default function NewBillPage() {
         </div>
 
         <div className={styles.row1}>
+          <img
+            src={`${IMG_URL}/${labels.find(label => label._id === selectedLabelId)?.iconUrl}`}
+            alt={labels.find(label => label._id === selectedLabelId)?.type || "label icon"}
+            className={styles.labelIcon}
+          />
 
-        <select
+          <select
             value={selectedLabelId}
             onChange={(e) => setSelectedLabelId(e.target.value)}
             className={styles.select}
           >
             {labels.map(label => (
-            <option key={label._id} value={label._id}>
-              {label.type}
-            </option>
-          ))}
+              <option key={label._id} value={label._id}>
+                {label.type}
+              </option>
+            ))}
           </select>
 
-          <span></span>
           <input
             type="text"
             placeholder="e.g. Shared taxi to airport"
@@ -154,6 +161,7 @@ export default function NewBillPage() {
             className={styles.inputHalf}
           />
         </div>
+
 
         <div className={styles.rowName}>
             <p>Paid</p>

@@ -156,17 +156,18 @@ const insertedLabels = await Label.insertMany(labelsDocs);
 console.log("✅ Labels inserted");
 const labelMap = {};
 labels.forEach((label) => {
-  const matched = insertedLabels.find((doc) => doc.name === label.name);
+  const matched = insertedLabels.find(doc => doc.type === label.type);
   if (matched) {
-    labelMap[label.id] = new mongoose.Types.ObjectId(matched._id);
+    labelMap[label.id] = matched._id;
   }
 });
 
-console.log("🔍 labelMap content:", labelMap);
-console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v]));
+
+// console.log("🔍 labelMap content:", labelMap);
+// console.log("✅ labelMap types:", Object.entries(labelMap).map(([k, v]) => [k, typeof v]));
 
 // 插入新数据
-console.log("📦 正在准备插入 Bills");
+// console.log("📦 正在准备插入 Bills");
 // console.log(
 //   bills.map(b => ({
 //     ...b,
@@ -184,8 +185,9 @@ console.log("📦 正在准备插入 Bills");
     })),
   }));
 
+
   // ✅ 验证 labelId 是否转换成 ObjectId
-  console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
+  // console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
     
 
 
