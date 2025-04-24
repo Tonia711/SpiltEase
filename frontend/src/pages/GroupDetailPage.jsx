@@ -5,6 +5,8 @@ import { AuthContext } from "../contexts/AuthContext";
 import MobileFrame from "../components/MobileFrame";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import CropperModal from "../components/CropperModal.jsx";
+import getCroppedImg from "../components/cropImage.js"; 
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
@@ -23,6 +25,8 @@ export default function GroupDetailPage() {
 
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [rawImage, setRawImage] = useState(null); 
+  const [showCropper, setShowCropper] = useState(false);
 
   const showErrorToast = (message) => {
     setToastMessage(message);
@@ -72,33 +76,37 @@ export default function GroupDetailPage() {
   //   }
   // };
 
-  const handleCustomUpload = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImage(reader.result);
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
+  };
 
-    setShowToast(false);
-
+  const handleCroppedUpload = async (croppedFile) => {
+    setShowCropper(false);
+    const formData = new FormData();
+    formData.append("icon", croppedFile);
+    formData.append("groupId", groupId);
     try {
-      const formData = new FormData();
-      formData.append("icon", file);
-      formData.append("groupId", groupId);
-
       const { data } = await api.post("/groups/icon", formData, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          "Content-Type": "multipart/form-data" 
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
       });
 
       const uploadedUrl = data.iconUrl.startsWith("http")
         ? data.iconUrl
         : `${ICON_BASE}/${data.iconUrl}`;
-
       setGroupIconUrl(uploadedUrl);
     } catch (err) {
       console.error(err);
-      setToastMessage("Upload failed. Please try again.");
-      setShowToast(true);
+      showErrorToast("Upload failed. Please try again.");
     }
   };
 
@@ -130,11 +138,19 @@ export default function GroupDetailPage() {
                 id="iconUpload"
                 type="file"
                 accept="image/*"
-                onChange={handleCustomUpload}
+                onChange={handleFileSelect}
                 style={{ display: "none" }}
               />
             </div>
           </div>
+
+          {showCropper && rawImage && (
+            <CropperModal
+              imageSrc={rawImage}
+              onClose={() => setShowCropper(false)}
+              onCropDone={handleCroppedUpload}
+            />
+          )}
 
           <div className={styles.inviteCode}>
             Invite Code <span className={styles.codeValue}>{group.joinCode}</span>
