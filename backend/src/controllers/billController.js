@@ -1,6 +1,7 @@
 import { Label } from "../db/schema.js";
 import { Bill } from "../db/schema.js";
 import  { User } from "../db/schema.js";
+import  { Group } from "../db/schema.js";
 import mongoose from "mongoose";
 
 //获取所有标签
@@ -77,11 +78,22 @@ export const getBillByGroupIdBillId = async (req, res) => {
       return res.status(404).json({ message: "Bill not found in group" });
     }
 
-    const paidByUser = await User.findById(bill.paidBy).select("userName");
+    const group = await Group.findById(groupId).lean();
+
+    const paidByMember = group?.members.find(m => m._id.toString() === bill.paidBy.toString());
+
+    const enrichedMembers = (bill.members || []).map(member => {
+      const found = group?.members.find(m => m._id.toString() === member.memberId.toString());
+      return {
+        ...member,
+        userName: found?.userName || "Unknown"
+      };
+    });
 
     return res.status(200).json({
       ...bill.toObject(),
-      paidBy: paidByUser?.userName || "Unknown"
+      paidBy: paidByMember?.userName || "Unknown",
+      members: enrichedMembers
     });
 
   } catch (error) {
@@ -90,3 +102,7 @@ export const getBillByGroupIdBillId = async (req, res) => {
   }
 };
 
+
+export const createBill = async (req, res) => {
+  console.log("11");
+};

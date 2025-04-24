@@ -22,6 +22,11 @@ padding: 0 1rem;
 color: #f2c94c; 
 }
 
+.billIcon{
+width: 20px;
+height: 20px;
+}
+
 .form {
 padding: 20px;
 background-color: #1f1c2c;
