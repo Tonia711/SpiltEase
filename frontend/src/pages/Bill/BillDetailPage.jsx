@@ -23,39 +23,49 @@ export default function BillDetailPage() {
   
     return (
       <MobileFrame>
-        <h2 className={styles.header}>
+        <form className={styles.form} >
+          <h2 className={styles.header}>
           <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses`)}>
-            {"<"}
+              {"<"}
           </span>
-          <p>Expense</p>
-        </h2>
+          <div>
+            <img src="" alt="1"></img>
+            <p>{bill.note || "Untitled Bill"}</p>
+          </div>
+          </h2>
+
+          <div className={styles.rowName}>
+              <p>Paid by</p>
+              <p>Amounts</p>
+          </div>
   
-        <h2 className={styles.title}>{bill.note || "Untitled Bill"}</h2>
-  
-        <div className={styles.section}>
-          <div className={styles.label}>Paid by</div>
-          <div className={styles.row}>
+          <div className={styles.row1}>
             <span>{bill.paidBy}</span>
             <span>${bill.expenses.toFixed(2)}</span>
           </div>
-        </div>
-  
-        <div className={styles.section}>
-          <div className={styles.label}>Split by</div>
-          {(bill.members || []).map((member, index) => (
-            <div key={index} className={styles.row}>
-              <span>{member.memberId}</span>
-              <span>${(member.expense || 0).toFixed(2)}</span>
-            </div>
-          ))}
-        </div>
-  
-        <div className={styles.actions}>
-          <button className={styles.deleteButton}>Delete</button>
-          <button className={styles.editButton} onClick={() => navigate(`/groups/${groupId}/editBill/${billId}`)}>
-            Edit
-            </button>
-        </div>
+
+          <div className={styles.rowName}>
+              <p>Split by</p>
+              <p>Amounts</p>
+          </div>
+    
+          <div className={styles.section}>
+          
+            {(bill.members || []).map((member, index) => (
+              <div key={index} className={styles.row}>
+                <span>{member.memberId}</span>
+                <span>${(member.expense || 0).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+    
+          <div className={styles.actions}>
+            <button className={styles.deleteButton}>Delete</button>
+            <button className={styles.editButton} onClick={() => navigate(`/groups/${groupId}/editBill/${billId}`)}>
+              Edit
+              </button>
+          </div>
+        </form>
       </MobileFrame>
     );
   }

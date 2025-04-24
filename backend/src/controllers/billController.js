@@ -1,5 +1,6 @@
 import { Label } from "../db/schema.js";
 import { Bill } from "../db/schema.js";
+import  { User } from "../db/schema.js";
 import mongoose from "mongoose";
 
 //获取所有标签
@@ -80,7 +81,12 @@ export const getBillByGroupIdBillId = async (req, res) => {
       return res.status(404).json({ message: "Bill not found in group" });
     }
 
-    res.status(200).json(bill);
+    const paidByUser = await User.findById(bill.paidBy).select("userName");
+
+    return res.status(200).json({
+      ...bill.toObject(),
+      paidBy: paidByUser?.userName || "Unknown"
+    });
 
   } catch (error) {
     console.error("Error fetching group bill:", error);

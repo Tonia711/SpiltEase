@@ -15,7 +15,11 @@ const billSchema = new mongoose.Schema({
       },
       date: Date,
       note: String,
-      paidBy: Number,
+      paidBy: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "User",
+        required: true,
+      },
       expenses: Number,
       refunds: Number,
       splitWay: String,

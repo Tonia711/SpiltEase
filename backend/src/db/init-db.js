@@ -180,6 +180,7 @@ console.log("📦 正在准备插入 Bills");
     groupBills: (b.groupBills || []).map(gb => ({
       ...gb,
       labelId: labelMap[gb.labelId],
+      paidBy: userIdMap[gb.paidBy],
     })),
   }));
 
