@@ -43,9 +43,15 @@ color: #f2c94c;
 }
 
 
+.labelIcon {
+width: 40px;
+height: 40px;
+}
+
+
 .row1 {
 display: flex;
-justify-content: space-between;
+align-items: center;
 margin-bottom: 16px;
 gap: 10px;
 }
@@ -133,3 +139,5 @@ border: none;
 border-radius: 12px;
 margin-top: 20px;
 }
+
+
