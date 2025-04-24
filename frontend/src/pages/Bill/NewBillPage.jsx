@@ -18,7 +18,7 @@ export default function NewBillPage() {
   const [group, setGroup] = useState(null); //group 数据
   const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
   const [splitMethod, setSplitMethod] = useState("equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
-  const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
+  // const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
 
 
 
@@ -29,7 +29,10 @@ export default function NewBillPage() {
   const [refunds, setRefunds] = useState("");
   const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-  const [chancgedPaidAmount, setchancgedPaidAmount] = useState(0); // 修改后每个人应付的钱
+  const [memberExpenses, setMemberExpenses] = useState([]);  //每个人应付的钱
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]); //选中的人
+
+
 
 
 
@@ -65,25 +68,58 @@ export default function NewBillPage() {
   // console.log("group", group);
   // console.log("members", members);
 
+  useEffect(() => {
+    if (members && members.length > 0) {
+      setSelectedMemberIds(members.map(m => m._id));
+    }
+  }, [members]);
+  
+
 
 
   // 通过获取bill的数据来获取每个人应付的钱
-  useEffect(() => {
-    api
-      .get(`/bills/groups/${groupId}`)
-      .then(({ data }) => {
-        setPaidAmount(data);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch group data:", err);
-      });
-  }, [groupId, BASE_URL]);
+  // 这个在编辑bill界面使用
+  // useEffect(() => {
+  //   api
+  //     .get(`/bills/groups/${groupId}`)
+  //     .then(({ data }) => {
+  //       setPaidAmount(data);
+  //     })
+  //     .catch((err) => {
+  //       console.error("Failed to fetch group data:", err);
+  //     });
+  // }, [groupId, BASE_URL]);
 
   // console.log("paidAmount", paidAmount);
 
-
-
-
+  //通过输入的expense来计算每个人分的钱
+  useEffect(() => {
+    if (!members || members.length === 0 || !expenses || isNaN(parseFloat(expenses))) return;
+  
+    const total = parseFloat(expenses);
+    const filtered = members.filter(m => selectedMemberIds.includes(m._id));
+    const count = filtered.length;
+  
+    if (count === 0) {
+      setMemberExpenses([]);
+      return;
+    }
+  
+    const avg = parseFloat((total / count).toFixed(2));
+    const updated = filtered.map(m => ({
+      memberId: m._id,
+      amount: avg
+    }));
+  
+    if (splitMethod === "equally") {
+      setMemberExpenses(updated);
+    }
+  
+    if (splitMethod === "amounts" && memberExpenses.length === 0) {
+      setMemberExpenses(updated);
+    }
+  }, [expenses, splitMethod, members, selectedMemberIds]);
+  
 
 
 
@@ -98,8 +134,12 @@ export default function NewBillPage() {
       refunds: parseFloat(refunds),
       paidBy,
       paidDate,
-      members: members.map((m) => ({ name: m.name || m.userName }))
+      members: memberExpenses.map(m => ({
+        memberId: m.memberId,
+        expense: m.amount,
+      }))
     };
+    
     // 提交 API
     api.post(`/groups/${groupId}/bills`, newBill)
       .then(() => navigate(`/groups/${groupId}`))
@@ -115,6 +155,7 @@ export default function NewBillPage() {
   console.log("paidBy", paidBy);
   console.log("paidDate", paidDate);
   console.log("splitMethod", splitMethod);
+  console.log("setPaidAmount", memberExpenses);
 
 
   return (
@@ -224,15 +265,71 @@ export default function NewBillPage() {
         </div>
 
         <div className={styles.splitBox}>
-          <ul className={styles.memberList}>
-            {(members || []).map((m, i) => (
-              <li key={i} className={styles.memberItem}>
-                {m.userName}
+        <ul className={styles.memberList}>
+          {(members || []).map((m, i) => {
+            const checked = selectedMemberIds.includes(m._id);
+            const current = memberExpenses.find(me => me.memberId === m._id) || { amount: 0 };
 
+            return (
+              <li key={m._id} className={styles.memberListItem}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                      setSelectedMemberIds(prev => [...prev, m._id]);
+                    } else {
+                      setSelectedMemberIds(prev => prev.filter(id => id !== m._id));
+                      setMemberExpenses(prev => prev.filter(me => me.memberId !== m._id));
+                    }
+                  }}
+                  className={styles.memberIcon}
+                />
+                <div className={styles.memberItem}>
+                  <div className={styles.memberName}>{m.userName}</div>
+
+                  <div>
+                    {splitMethod === "amounts" ? (
+                      <input
+                        type="number"
+                        value={current.amount}
+                        onChange={(e) => {
+                          const newAmount = parseFloat(e.target.value) || 0;
+                          setMemberExpenses(prev => {
+                            const exists = prev.find(p => p.memberId === m._id);
+                            if (exists) {
+                              return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+                            } else {
+                              return [...prev, { memberId: m._id, amount: newAmount }];
+                            }
+                          });
+                        }}
+                        className={styles.inputAmount}
+                        disabled={!checked}
+                      />
+                    ) : (
+                      <span>{current.amount.toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
               </li>
-            ))}
-          </ul>
+            );
+          })}
+        </ul>
         </div>
+
+        <div className={styles.rowSummary}>
+          <div>
+            <strong>Total split:</strong> $
+            {memberExpenses.reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
+          </div>
+          <div>
+            <strong>Difference:</strong> $
+            {(parseFloat(expenses || 0) - memberExpenses.reduce((sum, m) => sum + m.amount, 0)).toFixed(2)}
+          </div>
+        </div>
+
 
         <button type="submit" className={styles.addButton}>
           Add
