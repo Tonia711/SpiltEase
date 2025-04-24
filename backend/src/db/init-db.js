@@ -210,6 +210,41 @@ async function importData() {
     }));
 
 
+ 
+// 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
+const allGroups = await Group.find();
+const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
+
+allGroups.forEach(group => {
+  const memberMap = {};
+  group.members.forEach(member => {
+    memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
+  });
+  groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
+});
+
+// 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
+const fixedBills = bills.map(b => {
+  const realGroupId = groupMap[b.groupId]; // 从 groupMap 中拿真实 group ObjectId
+  const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
+
+  return {
+    groupId: realGroupId,
+    groupBills: (b.groupBills || []).map(gb => ({
+      ...gb,
+      labelId: labelMap[gb.labelId],      // 替换为 labels _id
+      paidBy: memberIdMap[gb.paidBy],     
+      members: gb.members.map(m => ({
+        memberId: memberIdMap[m.memberId], // 替换为 groups members _id
+        expense: m.expense,
+        refund: m.refund
+      }))
+    }))
+  };
+});
+
+
+
     // ✅ 验证 labelId 是否转换成 ObjectId
     // console.log("🧾 converted labelIds:", fixedBills[0].groupBills.map(g => typeof g.labelId));
 

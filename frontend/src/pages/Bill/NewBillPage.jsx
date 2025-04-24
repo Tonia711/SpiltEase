@@ -92,6 +92,8 @@ export default function NewBillPage() {
 
   // console.log("paidAmount", paidAmount);
 
+
+  
   //通过输入的expense来计算每个人分的钱
   useEffect(() => {
     if (!members || members.length === 0 || !expenses || isNaN(parseFloat(expenses))) return;
