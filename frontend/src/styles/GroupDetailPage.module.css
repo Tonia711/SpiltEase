@@ -20,7 +20,6 @@
 .groupIcon {
   width: 90px;
   height: 90px;
-  object-fit: cover;
   border-radius: 50%;
   margin: 1.5rem auto 0.3rem;
   display: block;

@@ -20,7 +20,19 @@ export const getUserGroups = async (req, res) => {
     console.log('User groupId array content:', user.groupId);
 
     const groups = await Group.find({ _id: { $in: user.groupId } }).sort({ startDate: -1 });
-    res.json(groups);
+    const groupsWithIcons = await Promise.all(groups.map(async (group) => {
+      let iconUrl = "groups/defaultIcon.jpg";
+      if (group.iconId) {
+        const icon = await Icon.findById(group.iconId).select("iconUrl");
+        iconUrl = icon?.iconUrl || iconUrl;
+      }
+      return {
+        ...group.toObject(),
+        iconUrl,
+      };
+    }));
+    
+    res.json(groupsWithIcons);
   } catch (err) {
     console.error("Error fetching user's groups:", err);
     res.status(500).json({ message: "Server error while fetching user's groups" });
@@ -77,7 +89,7 @@ export const getGroupById = async (req, res) => {
     let iconUrl = null;
     if (group.iconId) {
       const icon = await Icon.findById(group.iconId).select('iconUrl');
-      iconUrl = icon ? icon.iconUrl : "groups/testIcon1.jpg";
+      iconUrl = icon ? icon.iconUrl : "groups/defaultIcon.jpg";
     }
 
     res.status(200).json({
