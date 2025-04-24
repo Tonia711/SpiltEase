@@ -76,36 +76,6 @@ export default function GroupDetailPage() {
   //   }
   // };
 
-  const handleCustomUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setShowToast(false);
-
-    try {
-      const formData = new FormData();
-      formData.append("icon", file);
-      formData.append("groupId", groupId);
-
-      const { data } = await api.post("/groups/icon", formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          "Content-Type": "multipart/form-data"
-        },
-      });
-
-      const uploadedUrl = data.iconUrl.startsWith("http")
-        ? data.iconUrl
-        : `${ICON_BASE}/${data.iconUrl}`;
-
-      setGroupIconUrl(uploadedUrl);
-    } catch (err) {
-      console.error(err);
-      setToastMessage("Upload failed. Please try again.");
-      setShowToast(true);
-    }
-  };
-
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -139,7 +109,6 @@ export default function GroupDetailPage() {
       showErrorToast("Upload failed. Please try again.");
     }
   };
-
 
   return (
     <MobileFrame>
