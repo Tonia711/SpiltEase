@@ -278,7 +278,7 @@ export const checkMemberdeletable = async (req, res) => {
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
-    
+
     if (!memberToDelete) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -347,28 +347,33 @@ export const updateGroupInfo = async (req, res) => {
   }
 }
 
-const updateGroupIcon = async (req, res) => {
-  const groupId = req.params.id;
-  const { iconId } = req.body;
-
+export const updateGroupIcon = async (req, res) => {
   try {
-    const group = await Group.findByIdAndUpdate(
-      groupId,
-      { iconId },
-      { new: true }
-    ).select("-__v");
-    if (!group) {
-      return res.status(404).json({ message: "Group not found" });
-    }
-    res.status(200).json(group);
-  }
-  catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-}
+    const { groupId } = req.body;
+    const filePath = `groups/${req.file.filename}`;
 
-const deleteGroupMember = async (req, res) => {
+    // Step 1: 存入 Icon 表
+    const newIcon = await Icon.create({
+      iconUrl: filePath,
+    });
+
+    // Step 2: 更新用户 iconId 为这个头像
+    await Group.findByIdAndUpdate(groupId, {
+      iconId: newIcon._id,
+    });
+
+    res.status(201).json({
+      message: "Icon uploaded",
+      iconId: newIcon._id,
+      iconUrl: filePath,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Upload failed" });
+  }
+};
+
+export const deleteGroupMember = async (req, res) => {
   const groupId = req.params.id;
   const memberId = req.params.memberId;
 

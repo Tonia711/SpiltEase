@@ -1,4 +1,6 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
 import { protect } from "../../../middlewares/authMiddleware.js";
 import {
   getUserGroups,
@@ -14,6 +16,15 @@ import {
 } from "../../../controllers/groupController.js";
 
 const router = express.Router();
+const storage = multer.diskStorage({
+  destination: "public/groups/",
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `user-${Date.now()}${ext}`);
+  },
+});
+
+const upload = multer({ storage });
 
 router.get("/", protect, getUserGroups);
 router.delete("/:id", protect, deleteGroup);
@@ -24,7 +35,7 @@ router.post("/join", protect, joinGroupByCode);
 
 router.post("/", protect, createGroup);
 router.patch("/:id/update", protect, updateGroupInfo);
-router.post("/:id/icon", protect, updateGroupIcon);
+router.post("/icon", upload.single("icon"), updateGroupIcon);
 router.delete("/:id/members/:memberId/check-deletable", protect, checkMemberdeletable);
 router.delete("/:id/members/:memberId", protect, deleteGroupMember);
 

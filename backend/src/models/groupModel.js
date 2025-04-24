@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 const groupSchema = new mongoose.Schema({
   groupName: String,
   note: String,
-  iconId: Number,
+  iconId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Icon"
+  },
   budget: Number,
   totalExpenses: Number,
   totalRefunds: Number,
