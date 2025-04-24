@@ -26,14 +26,14 @@ export default function NewBillPage() {
   const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
   const [note, setNote] = useState("");  
   const [expenses, setExpenses] = useState("");   //paid
-  const [refunds, setRefunds] = useState("");
+  const [refunds, setRefunds] = useState("");   //refunds
   const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-  const [memberExpenses, setMemberExpenses] = useState([]);  //每个人应付的钱
+  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
   const [selectedMemberIds, setSelectedMemberIds] = useState([]); //选中的人
-
-
-
+  const [memberExpenses, setMemberExpenses] = useState([]);  //每个人实际的expense array
+  const [memberRefunds, setMemberRefunds] = useState([]); //每个人的refund array
+  const [error, setError] = useState("");
 
 
   // get all labels 获取所有labels，labcel下拉列表
@@ -94,70 +94,94 @@ export default function NewBillPage() {
 
 
   
-  //通过输入的expense来计算每个人分的钱
+  //通过输入的expense, refunds来计算每个人分的钱
   useEffect(() => {
     if (!members || members.length === 0 || !expenses || isNaN(parseFloat(expenses))) return;
-  
+
     const total = parseFloat(expenses);
+    const refundTotal = parseFloat(refunds || 0);
     const filtered = members.filter(m => selectedMemberIds.includes(m._id));
     const count = filtered.length;
-  
+
     if (count === 0) {
       setMemberExpenses([]);
+      setMemberRefunds([]);
+      setMemberTotalExpenses([]);
       return;
     }
-  
-    const avg = parseFloat((total / count).toFixed(2));
-    const updated = filtered.map(m => ({
+
+    const rawExpense = parseFloat((total / count).toFixed(2));       // 未减 refund 的金额
+    const avgRefund = parseFloat((refundTotal / count).toFixed(2));  // 每人退款
+    const finalAmount = parseFloat((rawExpense - avgRefund).toFixed(2)); // 实际应付
+
+    const expensesArray = filtered.map(m => ({
       memberId: m._id,
-      amount: avg
+      amount: rawExpense
     }));
-  
+
+    const refundsArray = filtered.map(m => ({
+      memberId: m._id,
+      refund: avgRefund
+    }));
+
+    const totalArray = filtered.map(m => ({
+      memberId: m._id,
+      amount: finalAmount
+    }));
+
     if (splitMethod === "equally") {
-      setMemberExpenses(updated);
+      setMemberExpenses(expensesArray);         // 原始 expense
+      setMemberRefunds(refundsArray);           // refund 分摊
+      setMemberTotalExpenses(totalArray);       // 实际应付金额
     }
-  
-    if (splitMethod === "amounts" && memberExpenses.length === 0) {
-      setMemberExpenses(updated);
+
+    if (splitMethod === "amounts" && memberTotalExpenses.length === 0) {
+      setMemberExpenses(expensesArray);
+      setMemberRefunds(refundsArray);
+      setMemberTotalExpenses(totalArray);
     }
-  }, [expenses, splitMethod, members, selectedMemberIds]);
-  
+  }, [expenses, refunds, splitMethod, members, selectedMemberIds]);
 
 
 
   // submit bill
-  const handleAddBill = (e) => {
+  const handleAddBill = async (e) => {
     e.preventDefault();
+    setError("");  // 清空之前的错误
+  
+    if (!selectedLabelId || !note || !expenses || !paidBy || !paidDate || memberTotalExpenses.length === 0) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+  
     const newBill = {
       groupId,
-      selectedLabelId,
+      labelId: selectedLabelId,
+      date: paidDate,
       note,
+      paidBy,
       expenses: parseFloat(expenses),
       refunds: parseFloat(refunds),
-      paidBy,
-      paidDate,
-      members: memberExpenses.map(m => ({
+      splitWay: splitMethod,
+      members: memberTotalExpenses.map(m => ({
         memberId: m.memberId,
-        expense: m.amount,
+        expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
+        refund: memberRefunds.find(r => r.memberId === m.memberId)?.refund || 0
       }))
     };
-    
-    // 提交 API
-    api.post(`/groups/${groupId}/bills`, newBill)
-      .then(() => navigate(`/groups/${groupId}`))
-      .catch((err) => console.error("Failed to create bill:", err));
-  };
+  
+    console.log(newBill);
 
-  console.log("-------------------");
-  console.log("labels", labels);
-  console.log("selectedLabelId", selectedLabelId);
-  console.log("note", note);
-  console.log("expenses", expenses);    
-  console.log("refunds", refunds);
-  console.log("paidBy", paidBy);
-  console.log("paidDate", paidDate);
-  console.log("splitMethod", splitMethod);
-  console.log("setPaidAmount", memberExpenses);
+    try {
+      await api.post(`/bills`, newBill);
+      navigate(`/groups/${groupId}/expenses`);
+    } catch (err) {
+      console.error("Failed to create bill:", err);
+      setError("Failed to create bill. Please try again.");
+    }
+  };
+  
+  
 
 
   return (
@@ -270,7 +294,7 @@ export default function NewBillPage() {
         <ul className={styles.memberList}>
           {(members || []).map((m, i) => {
             const checked = selectedMemberIds.includes(m._id);
-            const current = memberExpenses.find(me => me.memberId === m._id) || { amount: 0 };
+            const current = memberTotalExpenses.find(me => me.memberId === m._id) || { amount: 0 };
 
             return (
               <li key={m._id} className={styles.memberListItem}>
@@ -283,7 +307,7 @@ export default function NewBillPage() {
                       setSelectedMemberIds(prev => [...prev, m._id]);
                     } else {
                       setSelectedMemberIds(prev => prev.filter(id => id !== m._id));
-                      setMemberExpenses(prev => prev.filter(me => me.memberId !== m._id));
+                      setMemberTotalExpenses(prev => prev.filter(me => me.memberId !== m._id));
                     }
                   }}
                   className={styles.memberIcon}
@@ -298,7 +322,7 @@ export default function NewBillPage() {
                         value={current.amount}
                         onChange={(e) => {
                           const newAmount = parseFloat(e.target.value) || 0;
-                          setMemberExpenses(prev => {
+                          setMemberTotalExpenses(prev => {
                             const exists = prev.find(p => p.memberId === m._id);
                             if (exists) {
                               return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
@@ -324,14 +348,15 @@ export default function NewBillPage() {
         <div className={styles.rowSummary}>
           <div>
             <strong>Total split:</strong> $
-            {memberExpenses.reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
+            {memberTotalExpenses.reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
           </div>
           <div>
             <strong>Difference:</strong> $
-            {(parseFloat(expenses || 0) - memberExpenses.reduce((sum, m) => sum + m.amount, 0)).toFixed(2)}
+            {(parseFloat(expenses || 0) - memberTotalExpenses.reduce((sum, m) => sum + m.amount, 0) - refunds).toFixed(2)}
           </div>
         </div>
 
+        {error && <div className={styles.error}>{error}</div>}
 
         <button type="submit" className={styles.addButton}>
           Add
