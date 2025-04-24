@@ -38,8 +38,8 @@ export default function CropperModal({ imageSrc, onClose, onCropDone }) {
                 cropShape="round"
             />
             <div className={styles.controls}>
-                <button onClick={onClose}>Cancel</button>
-                <button onClick={handleCropDone}>Crop</button>
+                <button onClick={onClose} className="cancel-btn">Cancel</button>
+                <button onClick={handleCropDone}  className="save-btn"><Save></Save></button>
             </div>
         </div>
     );

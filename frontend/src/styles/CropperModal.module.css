@@ -21,9 +21,9 @@
     width: 100%;
 }
 
-button {
+.save-btn,
+.cancel-btn {
     padding: 1 rem;
-    background-color: #ffca28;
     color: white;
     border: none;
     border-radius: 6px;
@@ -32,3 +32,10 @@ button {
     transition: background-color 0.2s ease-in-out;
 }
 
+.save-btn {
+    background-color: #ffca28;
+}
+
+.cancel-btn {
+    background-color: #ccc;
+}
