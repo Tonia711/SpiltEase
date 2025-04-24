@@ -200,14 +200,14 @@ async function importData() {
 
 
     // ✅💥 在插入 Bills 之前，把每条账单的 labelId 从数字变成 ObjectId
-    const fixedBills = bills.map(b => ({
-      groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
-      groupBills: (b.groupBills || []).map(gb => ({
-        ...gb,
-        labelId: labelMap[gb.labelId],
-        paidBy: userIdMap[gb.paidBy],
-      })),
-    }));
+    // const fixedBills = bills.map(b => ({
+    //   groupId: groupMap[b.groupId], // 原来的 groupId 替换成新的 ObjectId
+    //   groupBills: (b.groupBills || []).map(gb => ({
+    //     ...gb,
+    //     labelId: labelMap[gb.labelId],
+    //     paidBy: userIdMap[gb.paidBy],
+    //   })),
+    // }));
 
 
  
