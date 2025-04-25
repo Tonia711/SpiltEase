@@ -1,6 +1,4 @@
-import { Group } from "../db/schema.js";
-import { User } from "../db/schema.js";
-import { Icon } from "../db/schema.js";
+import { Group, User, Icon, Balance } from "../db/schema.js";
 import mongoose from "mongoose";
 
 // Get all groups for a user
@@ -31,7 +29,7 @@ export const getUserGroups = async (req, res) => {
         iconUrl,
       };
     }));
-    
+
     res.json(groupsWithIcons);
   } catch (err) {
     console.error("Error fetching user's groups:", err);
@@ -291,15 +289,25 @@ export const checkMemberdeletable = async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    if (!memberToDelete) {
-      return res.status(404).json({ message: "Member not found" });
+    const unsettledBalances = await Balance.find({
+      groupId: groupId,
+      groupBalances: {
+        $elemMatch: {
+          $or: [
+            { fromMemberId: memberId },
+            { toMemberId: memberId }
+          ],
+          balance: { $gt: 0.0001 },
+          isFinished: false
+        }
+      }
+    });
+
+    if (unsettledBalances.length > 0) {
+      return res.status(400).json({ message: "Member cannot be deleted due to unsettled balance." });
     }
 
-    if (memberToDelete.balance > 0) {
-      return res.status(400).json({ message: "Member cannot be deleted due to non-zero balance." });
-    }
-
-    res.status(200).json({ message: "Member can be deleted." });
+    return res.status(200).json({ message: "Member can be deleted." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -383,7 +391,7 @@ export const updateGroupIcon = async (req, res) => {
   }
 };
 
-export const addNewVirtualMember = async (req, res) => {  
+export const addNewVirtualMember = async (req, res) => {
   const groupId = req.params.id;
   const { userName } = req.body;
 
@@ -435,7 +443,6 @@ export const deleteGroupMember = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 }
-
 
 // Create group
 export const createGroup = (req, res) => {
