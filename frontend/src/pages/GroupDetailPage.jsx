@@ -111,6 +111,27 @@ export default function GroupDetailPage() {
     }
   };
 
+  const handleDeleteMember = async (memberId, memberName) => {
+    try {
+      const checkRes = await api.get(`/groups/${groupId}/check-member-deletable/${memberId}`);
+      if (!checkRes.data.canDelete) {
+        showErrorToast(checkRes.data.reason || "You are not allowed to delete this member.");
+        return;
+      }
+      console.log("del", checkRes);
+      const confirmDelete = window.confirm(`Are you sure you want to remove ${memberName}?`);
+      if (!confirmDelete) return;
+  
+      await api.delete(`/groups/${groupId}/members/${memberId}`);
+      showSuccessToast(`${memberName} has been removed.`);
+      await fetchGroupData();
+    } catch (error) {
+      console.error("Delete member error:", error);
+      showErrorToast("Failed to delete member. Please try again.");
+    }
+  };
+  
+
   return (
     <MobileFrame>
       {showToast && (
@@ -193,6 +214,14 @@ export default function GroupDetailPage() {
               {(group.members || []).map((member) => (
                 <li key={member._id || member.userId || member.memberId} className={styles.memberItem}>
                   {member.userName || member.name || 'Unnamed'}
+                  {isEditing && (
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleDeleteMember(member._id, member.userName)}
+                    >
+                      ✖
+                    </button>
+                  )}
                 </li>
               ))}
 
