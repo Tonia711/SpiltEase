@@ -5,7 +5,7 @@ const users = [
         password: "password1",
         avatarId: 1,
         email: "test1@gmail.com",
-        groupId: [2]
+        groupId: [1,2]
     },
     {
         id: 2,

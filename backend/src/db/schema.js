@@ -3,40 +3,13 @@ import User from "../models/userModel.js";
 import Avatar from "../models/avatarModel.js";
 import Group from "../models/groupModel.js";
 import Bill from "../models/billModel.js";
-
-// 标签
-const labelSchema = new mongoose.Schema({
-  _id: Number,
-  type: String,
-  iconUrl: String,
-});
-const Label = mongoose.models.Label || mongoose.model("Label", labelSchema);
+import Label from "../models/labelModel.js";
 
 // 图标
 const iconSchema = new mongoose.Schema({
-  _id: Number,
   iconUrl: String,
 });
 const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
-
-// 账单
-// const billSchema = new mongoose.Schema({
-//   groupId: Number,
-//   groupBills: [
-//     {
-//       id: Number,
-//       labelId: Number,
-//       date: Date,
-//       note: String,
-//       paidBy: Number,
-//       expenses: Number,
-//       refunds: Number,
-//       splitWay: String,
-//       members: [{ memberId: Number, expense: Number, refund: Number }],
-//     },
-//   ],
-// });
-// const Bill = mongoose.models.Bill || mongoose.model("Bill", billSchema);
 
 // 余额
 const balanceSchema = new mongoose.Schema({

@@ -5,6 +5,8 @@ import { AuthContext } from "../contexts/AuthContext";
 import MobileFrame from "../components/MobileFrame";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import CropperModal from "../components/CropperModal.jsx";
+import getCroppedImg from "../components/cropImage.js"; 
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
@@ -14,16 +16,30 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isIconEditing, setIsIconEditing] = useState(false);
   const [editedGroupName, setEditedGroupName] = useState("");
   const [editedStartDate, setEditedStartDate] = useState("");
+  const { token } = useContext(AuthContext);
+
   const navigate = useNavigate();
 
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [rawImage, setRawImage] = useState(null); 
+  const [showCropper, setShowCropper] = useState(false);
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const ICON_BASE = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
-  const DEFAULT_ICON = `${BASE_URL}/groups/defaultIcon.jpg`;
+  const DEFAULT_ICON = `${ICON_BASE}/groups/defaultIcon.jpg`;
 
-  
+
   useEffect(() => {
     api
       .get(`/groups/${groupId}`)
@@ -32,7 +48,7 @@ export default function GroupDetailPage() {
 
         const iconUrl = data.iconUrl;
         const fullIconUrl = iconUrl
-          ? (iconUrl.startsWith("http") ? iconUrl : `${BASE_URL}/${iconUrl}`)
+          ? (iconUrl.startsWith("http") ? iconUrl : `${ICON_BASE}/${iconUrl}`)
           : DEFAULT_ICON;
 
         setGroupIconUrl(fullIconUrl);
@@ -40,38 +56,101 @@ export default function GroupDetailPage() {
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
-        setError("Failed to load group data. Please try again.");
+        showErrorToast("Upload failed. Please try again.");
         setLoading(false);
       });
-  }, [groupId, BASE_URL]);
+  }, [groupId, ICON_BASE]);
 
   if (loading) return <p className={styles.loading}>Loading group details...</p>;
   if (error) return <p className={styles.error}>{error}</p>;
   if (!group) return <p className={styles.error}>No group data found.</p>;
 
-  const formatStartDate = (dateString) => {
-    if (!dateString) return "Not specified";
+  // const formatStartDate = (dateString) => {
+  //   if (!dateString) return "Not specified";
+  //   try {
+  //     const date = new Date(dateString);
+  //     return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+  //   } catch (e) {
+  //     console.error("Error formatting date:", dateString, e);
+  //     return "Invalid Date";
+  //   }
+  // };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImage(reader.result);
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCroppedUpload = async (croppedFile) => {
+    setShowCropper(false);
+    const formData = new FormData();
+    formData.append("icon", croppedFile);
+    formData.append("groupId", groupId);
     try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
-    } catch (e) {
-      console.error("Error formatting date:", dateString, e);
-      return "Invalid Date";
+      const { data } = await api.post("/groups/icon", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const uploadedUrl = data.iconUrl.startsWith("http")
+        ? data.iconUrl
+        : `${ICON_BASE}/${data.iconUrl}`;
+      setGroupIconUrl(uploadedUrl);
+    } catch (err) {
+      console.error(err);
+      showErrorToast("Upload failed. Please try again.");
     }
   };
 
   return (
     <MobileFrame>
+      {showToast && (
+        <div className={styles.toast}>
+          {toastMessage}
+        </div>
+      )}
+
       <div className={styles.container}>
         <div className={styles.header}>
-          <button className={styles.backButton} onClick={() => navigate("/")}>
+          <button className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
             {"<"}
           </button>
-          <img
-            src={groupIconUrl}
-            alt="Group Icon"
-            className={styles.groupIcon}
-          />
+
+          <div className={styles.groupIconWrapper}>
+            <div className={styles.groupIconContainer}>
+              <img
+                src={groupIconUrl}
+                alt="Group Icon"
+                className={styles.groupIcon}
+              />
+              <label htmlFor="iconUpload" className={styles.cameraIcon} onClick={() => setIsIconEditing(true)}>
+                📷
+              </label>
+              <input
+                id="iconUpload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: "none" }}
+              />
+            </div>
+          </div>
+
+          {showCropper && rawImage && (
+            <CropperModal
+              imageSrc={rawImage}
+              onClose={() => setShowCropper(false)}
+              onCropDone={handleCroppedUpload}
+            />
+          )}
 
           <div className={styles.inviteCode}>
             Invite Code <span className={styles.codeValue}>{group.joinCode}</span>

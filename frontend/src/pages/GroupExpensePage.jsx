@@ -57,7 +57,7 @@ export default function GroupExpensePage() {
   };
 
   const handleAddExpenseClick = () => {
-    
+    navigate(`/groups/${groupId}/creatBill`);
   };
 
   const groupIconUrl = group?.iconUrl
@@ -101,7 +101,20 @@ export default function GroupExpensePage() {
                   </h4>
                   <ul>
                     {billList.map((bill) => (
-                      <li key={bill._id} className={styles.billItem}>
+
+                      <li
+                        key={bill._id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginBottom: "8px",
+                          border: "1px solid #ddd",
+                          padding: "10px",
+                          borderRadius: "8px",
+                        }}
+                      onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
+                      >
+
                         {bill.label?.iconUrl && (
                           <img
                             src={`${BASE_URL}/${bill.label.iconUrl}`}
@@ -122,7 +135,7 @@ export default function GroupExpensePage() {
               ))}
             </div>
           )}
-      
+
     
           <div className={styles.fabContainer}>
             <button className={styles.fab} onClick={handleAddExpenseClick}>
