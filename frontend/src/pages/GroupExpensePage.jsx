@@ -86,6 +86,7 @@ export default function GroupExpensePage() {
               </div>
             </div>
           </div>
+
     
           <h3>Expenses</h3>
       
@@ -95,9 +96,12 @@ export default function GroupExpensePage() {
             <div className={styles.scrollArea}>
               {Object.entries(bills).map(([date, billList]) => (
                 <div key={date} style={{ marginBottom: "20px" }}>
-                  <h4>{dayjs(date).format("MMM D, YYYY")}</h4>
+                  <h4 className={styles.billDateTitle}>
+                    {dayjs(date).format("MMM D, YYYY")}
+                  </h4>
                   <ul>
                     {billList.map((bill) => (
+
                       <li
                         key={bill._id}
                         style={{
@@ -110,16 +114,12 @@ export default function GroupExpensePage() {
                         }}
                       onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
                       >
+
                         {bill.label?.iconUrl && (
                           <img
                             src={`${BASE_URL}/${bill.label.iconUrl}`}
                             alt={bill.label.type}
-                            style={{
-                              width: "30px",
-                              height: "30px",
-                              marginRight: "10px",
-                              objectFit: "cover",
-                            }}
+                            className={styles.billIcon}
                           />
                         )}
                         <div>
