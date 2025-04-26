@@ -3,13 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../../styles/Bill/EditBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
-import { set } from "mongoose";
-// import { set } from "mongoose";
-
-
+ 
 
 export default function EditBillPage() {
-      const { groupId, billId } = useParams();
+  const { groupId } = useParams(); // 获取 groupId
   const navigate = useNavigate();
 
 
@@ -18,7 +15,7 @@ export default function EditBillPage() {
   const [group, setGroup] = useState(null); //group 数据
   const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
   const [splitMethod, setSplitMethod] = useState("equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
-  const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
+  // const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
 
 
 
@@ -26,11 +23,14 @@ export default function EditBillPage() {
   const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
   const [note, setNote] = useState("");  
   const [expenses, setExpenses] = useState("");   //paid
-  const [refunds, setRefunds] = useState("");
+  const [refunds, setRefunds] = useState("");   //refunds
   const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-  const [chancgedPaidAmount, setchancgedPaidAmount] = useState(0); // 修改后每个人应付的钱
-
+  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]); //选中的人
+  const [memberExpenses, setMemberExpenses] = useState([]);  //每个人实际的expense array
+  const [memberRefunds, setMemberRefunds] = useState([]); //每个人的refund array
+  const [error, setError] = useState("");
 
 
   // get all labels 获取所有labels，labcel下拉列表
@@ -47,6 +47,7 @@ export default function EditBillPage() {
   // get group members 通过获取group的数据来获取成员
   // paidBy 下拉列表，成员列表
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
 
   useEffect(() => {
     api
@@ -64,61 +65,127 @@ export default function EditBillPage() {
   // console.log("group", group);
   // console.log("members", members);
 
+  useEffect(() => {
+    if (members && members.length > 0) {
+      setSelectedMemberIds(members.map(m => m._id));
+    }
+  }, [members]);
+  
+
 
 
   // 通过获取bill的数据来获取每个人应付的钱
+  // 这个在编辑bill界面使用
+  // useEffect(() => {
+  //   api
+  //     .get(`/bills/groups/${groupId}`)
+  //     .then(({ data }) => {
+  //       setPaidAmount(data);
+  //     })
+  //     .catch((err) => {
+  //       console.error("Failed to fetch group data:", err);
+  //     });
+  // }, [groupId, BASE_URL]);
+
+  // console.log("paidAmount", paidAmount);
+
+
+  
+  //通过输入的expense, refunds来计算每个人分的钱
   useEffect(() => {
-    api
-      .get(`/bills/groups/${groupId}`)
-      .then(({ data }) => {
-        setPaidAmount(data);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch group data:", err);
-      });
-  }, [groupId, BASE_URL]);
+    if (!members || members.length === 0 || !expenses || isNaN(parseFloat(expenses))) return;
 
-  console.log("paidAmount", paidAmount);
+    const total = parseFloat(expenses);
+    const refundTotal = parseFloat(refunds || 0);
+    const filtered = members.filter(m => selectedMemberIds.includes(m._id));
+    const count = filtered.length;
 
+    if (count === 0) {
+      setMemberExpenses([]);
+      setMemberRefunds([]);
+      setMemberTotalExpenses([]);
+      return;
+    }
 
+    const rawExpense = parseFloat((total / count).toFixed(2));       // 未减 refund 的金额
+    const avgRefund = parseFloat((refundTotal / count).toFixed(2));  // 每人退款
+    const finalAmount = parseFloat((rawExpense - avgRefund).toFixed(2)); // 实际应付
 
+    const expensesArray = filtered.map(m => ({
+      memberId: m._id,
+      amount: rawExpense
+    }));
 
+    const refundsArray = filtered.map(m => ({
+      memberId: m._id,
+      refund: avgRefund
+    }));
+
+    const totalArray = filtered.map(m => ({
+      memberId: m._id,
+      amount: finalAmount
+    }));
+
+    if (splitMethod === "equally") {
+      setMemberExpenses(expensesArray);         // 原始 expense
+      setMemberRefunds(refundsArray);           // refund 分摊
+      setMemberTotalExpenses(totalArray);       // 实际应付金额
+    }
+
+    if (splitMethod === "amounts" && memberTotalExpenses.length === 0) {
+      setMemberExpenses(expensesArray);
+      setMemberRefunds(refundsArray);
+      setMemberTotalExpenses(totalArray);
+    }
+  }, [expenses, refunds, splitMethod, members, selectedMemberIds]);
 
 
 
   // submit bill
-  const handleEditBill = (e) => {
-    // e.preventDefault();
-    // const newBill = {
-    //   groupId,
-    //   selectedLabelId,
-    //   note,
-    //   expenses: parseFloat(expenses),
-    //   refunds: parseFloat(refunds),
-    //   paidBy,
-    //   paidDate,
-    //   members: members.map((m) => ({ name: m.name || m.userName }))
-    // };
-    // // 提交 API
-    // api.post(`/groups/${groupId}/bills`, newBill)
-    //   .then(() => navigate(`/groups/${groupId}`))
-    //   .catch((err) => console.error("Failed to create bill:", err));
-  };
+  const handleAddBill = async (e) => {
+    e.preventDefault();
+    setError("");  // 清空之前的错误
+  
+    if (!selectedLabelId || !note || !expenses || !paidBy || !paidDate || memberTotalExpenses.length === 0) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+  
+    const newBill = {
+      groupId,
+      labelId: selectedLabelId,
+      date: paidDate,
+      note,
+      paidBy,
+      expenses: parseFloat(expenses),
+      refunds: parseFloat(refunds),
+      splitWay: splitMethod,
+      members: memberTotalExpenses.map(m => ({
+        memberId: m.memberId,
+        expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
+        refund: memberRefunds.find(r => r.memberId === m.memberId)?.refund || 0
+      }))
+    };
+  
+    console.log(newBill);
 
-  console.log("selectedLabelId", selectedLabelId);
-  console.log("note", note);
-  console.log("expenses", expenses);    
-  console.log("refunds", refunds);
-  console.log("paidBy", paidBy);
-  console.log("paidDate", paidDate);
-  console.log("splitMethod", splitMethod);
+    try {
+      await api.post(`/bills`, newBill);
+      navigate(`/groups/${groupId}/expenses`);
+    } catch (err) {
+      console.error("Failed to create bill:", err);
+      setError("Failed to create bill. Please try again.");
+    }
+  };
+  
+  
 
 
   return (
     <MobileFrame>
-      <form className={styles.form} >
+      <form className={styles.form} onSubmit={handleAddBill}>
         <h2 className={styles.header}>
-        <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)}>
+        <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses`)}>
             {"<"}
         </span>
         <p >Edit Expense</p>
@@ -132,20 +199,24 @@ export default function EditBillPage() {
         </div>
 
         <div className={styles.row1}>
+          <img
+            src={`${IMG_URL}/${labels.find(label => label._id === selectedLabelId)?.iconUrl}`}
+            alt={labels.find(label => label._id === selectedLabelId)?.type || "label icon"}
+            className={styles.labelIcon}
+          />
 
-        <select
+          <select
             value={selectedLabelId}
             onChange={(e) => setSelectedLabelId(e.target.value)}
             className={styles.select}
           >
             {labels.map(label => (
-            <option key={label._id} value={label._id}>
-              {label.type}
-            </option>
-          ))}
+              <option key={label._id} value={label._id}>
+                {label.type}
+              </option>
+            ))}
           </select>
 
-          <span></span>
           <input
             type="text"
             placeholder="e.g. Shared taxi to airport"
@@ -154,6 +225,7 @@ export default function EditBillPage() {
             className={styles.inputHalf}
           />
         </div>
+
 
         <div className={styles.rowName}>
             <p>Paid</p>
@@ -216,18 +288,75 @@ export default function EditBillPage() {
         </div>
 
         <div className={styles.splitBox}>
-          <ul className={styles.memberList}>
-            {(members || []).map((m, i) => (
-              <li key={i} className={styles.memberItem}>
-                {m.userName}
+        <ul className={styles.memberList}>
+          {(members || []).map((m, i) => {
+            const checked = selectedMemberIds.includes(m._id);
+            const current = memberTotalExpenses.find(me => me.memberId === m._id) || { amount: 0 };
 
+            return (
+              <li key={m._id} className={styles.memberListItem}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                      setSelectedMemberIds(prev => [...prev, m._id]);
+                    } else {
+                      setSelectedMemberIds(prev => prev.filter(id => id !== m._id));
+                      setMemberTotalExpenses(prev => prev.filter(me => me.memberId !== m._id));
+                    }
+                  }}
+                  className={styles.memberIcon}
+                />
+                <div className={styles.memberItem}>
+                  <div className={styles.memberName}>{m.userName}</div>
+
+                  <div>
+                    {splitMethod === "amounts" ? (
+                      <input
+                        type="number"
+                        value={current.amount}
+                        onChange={(e) => {
+                          const newAmount = parseFloat(e.target.value) || 0;
+                          setMemberTotalExpenses(prev => {
+                            const exists = prev.find(p => p.memberId === m._id);
+                            if (exists) {
+                              return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+                            } else {
+                              return [...prev, { memberId: m._id, amount: newAmount }];
+                            }
+                          });
+                        }}
+                        className={styles.inputAmount}
+                        disabled={!checked}
+                      />
+                    ) : (
+                      <span>{current.amount.toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
               </li>
-            ))}
-          </ul>
+            );
+          })}
+        </ul>
         </div>
 
-        <button type="submit" className={styles.addButton} onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)} onSubmit={handleEditBill}>
-          Save
+        <div className={styles.rowSummary}>
+          <div>
+            <strong>Total split:</strong> $
+            {memberTotalExpenses.reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
+          </div>
+          <div>
+            <strong>Difference:</strong> $
+            {(parseFloat(expenses || 0) - memberTotalExpenses.reduce((sum, m) => sum + m.amount, 0) - refunds).toFixed(2)}
+          </div>
+        </div>
+
+        {error && <div className={styles.error}>{error}</div>}
+
+        <button type="submit" className={styles.addButton}>
+          Add
         </button>
       </form>
     </MobileFrame>

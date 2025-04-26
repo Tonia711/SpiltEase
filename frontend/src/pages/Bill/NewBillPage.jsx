@@ -3,10 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../../styles/Bill/NewBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
-import { set } from "mongoose";
-// import { set } from "mongoose";
-
-
+ 
 
 export default function NewBillPage() {
   const { groupId } = useParams(); // 获取 groupId
