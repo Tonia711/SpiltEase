@@ -37,8 +37,8 @@ router.post("/join", protect, joinGroupByCode);
 router.post("/", protect, createGroup);
 router.post("/icon", upload.single("icon"), updateGroupIcon);
 router.post("/:id/members/new", protect, addNewVirtualMember);
-router.patch("/:id/update", protect, updateGroupInfo);
 router.get("/:id/check-member-deletable/:memberId", protect, checkMemberdeletable);
 router.delete("/:id/members/:memberId", protect, deleteGroupMember);
+router.put("/:id/update", protect, updateGroupInfo);
 
 export default router;

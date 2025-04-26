@@ -15,67 +15,87 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isIconEditing, setIsIconEditing] = useState(false);
   const [editedGroupName, setEditedGroupName] = useState("");
   const [editedStartDate, setEditedStartDate] = useState("");
-  const { token } = useContext(AuthContext);
-
-  const navigate = useNavigate();
-
+  const [editedMembers, setEditedMembers] = useState([]);
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [toastType, setToastType] = useState("error");
   const [rawImage, setRawImage] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [isAddingMember, setIsAddingMember] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
 
-  const showErrorToast = (message) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
+  const { token } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const ICON_BASE = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
   const DEFAULT_ICON = `${ICON_BASE}/groups/defaultIcon.jpg`;
 
+  const showToastMessage = (message, type = "error") => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const showErrorToast = (message) => showToastMessage(message, "error");
+  const showSuccessToast = (message) => showToastMessage(message, "success");
+
+  const fetchGroupData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get(`/groups/${groupId}`);
+      setGroup(data);
+      const iconUrl = data.iconUrl;
+      const fullIconUrl = iconUrl
+        ? (iconUrl.startsWith("http") ? iconUrl : `${ICON_BASE}/${iconUrl}`)
+        : DEFAULT_ICON;
+      setGroupIconUrl(fullIconUrl);
+      setLoading(false);
+      return data; // Return updated group data
+    } catch (err) {
+      console.error("Failed to fetch group data:", err);
+      showErrorToast("Failed to load group details.");
+      setLoading(false);
+      setError("Failed to load group details."); // Set persistent error state
+      return null;
+    }
+  };
 
   useEffect(() => {
-    api
-      .get(`/groups/${groupId}`)
-      .then(({ data }) => {
-        setGroup(data);
-
-        const iconUrl = data.iconUrl;
-        const fullIconUrl = iconUrl
-          ? (iconUrl.startsWith("http") ? iconUrl : `${ICON_BASE}/${iconUrl}`)
-          : DEFAULT_ICON;
-
-        setGroupIconUrl(fullIconUrl);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch group data:", err);
-        showErrorToast("Upload failed. Please try again.");
-        setLoading(false);
-      });
+    fetchGroupData();
   }, [groupId, ICON_BASE]);
 
-  if (loading) return <p className={styles.loading}>Loading group details...</p>;
-  if (error) return <p className={styles.error}>{error}</p>;
-  if (!group) return <p className={styles.error}>No group data found.</p>;
+  useEffect(() => {
+    let timer;
+    if (showToast) {
+      timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+    }
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [showToast]);
 
-  // const formatStartDate = (dateString) => {
-  //   if (!dateString) return "Not specified";
-  //   try {
-  //     const date = new Date(dateString);
-  //     return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
-  //   } catch (e) {
-  //     console.error("Error formatting date:", dateString, e);
-  //     return "Invalid Date";
-  //   }
-  // };
+  useEffect(() => {
+    if (group) {
+      setEditedGroupName(group.groupName || "");
+      setEditedStartDate(group.startDate?.slice(0, 10) || "");
+      setEditedMembers(group.members ? group.members.map(m => ({ ...m })) : []);
+    }
+  }, [group]);
+
+  if (loading && !group) return <p className={styles.loading}>Loading group details...</p>;
+  if (error && !loading) return <p className={styles.error}>{error}</p>;
+  if (!group && !loading) return <p className={styles.error}>No group data found.</p>;
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -105,32 +125,112 @@ export default function GroupDetailPage() {
         ? data.iconUrl
         : `${ICON_BASE}/${data.iconUrl}`;
       setGroupIconUrl(uploadedUrl);
+      showSuccessToast("Group icon updated successfully!");
     } catch (err) {
       console.error(err);
       showErrorToast("Upload failed. Please try again.");
     }
   };
 
-  const handleDeleteMember = async (memberId, memberName) => {
-    try {
-      const checkRes = await api.get(`/groups/${groupId}/check-member-deletable/${memberId}`);
-      if (!checkRes.data.canDelete) {
-        showErrorToast(checkRes.data.reason || "You are not allowed to delete this member.");
-        return;
+  const handlePreviewNewMember = () => {
+    if (!newMemberName.trim()) {
+      showErrorToast("Please enter a member name.");
+      return;
+    }
+
+    const tempMember = {
+      userName: newMemberName.trim(),
+      tempId: Date.now() + Math.random(),
+      isNew: true,
+    };
+    setEditedMembers([...editedMembers, tempMember]);
+    setNewMemberName("");
+    setIsAddingMember(false);
+  };
+
+  const handleRemoveMemberFromList = (member) => {
+    setMemberToRemove(member);
+    setShowConfirmModal(true);
+  };
+
+  const handleCancelRemove = () => {
+    setShowConfirmModal(false);
+    setMemberToRemove(null);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (memberToRemove) {
+      try {
+        if (memberToRemove.memberId !== undefined && memberToRemove.memberId !== null) {
+          await api.get(`/groups/${groupId}/check-member-deletable/${memberToRemove.memberId}`);
+        }
+
+        setEditedMembers(prev =>
+          prev.filter(m => {
+            if (memberToRemove.memberId !== undefined && memberToRemove.memberId !== null) {
+              return m.memberId !== memberToRemove.memberId; 
+            } else if (memberToRemove.tempId !== undefined && memberToRemove.tempId !== null) {
+              return m.tempId !== memberToRemove.tempId; 
+            }
+            return true;
+          })
+        );
+
+        showToastMessage(`${memberToRemove.userName || memberToRemove.name} removed from list. Save to confirm.`, 'success');
       }
-      console.log("del", checkRes);
-      const confirmDelete = window.confirm(`Are you sure you want to remove ${memberName}?`);
-      if (!confirmDelete) return;
-  
-      await api.delete(`/groups/${groupId}/members/${memberId}`);
-      showSuccessToast(`${memberName} has been removed.`);
-      await fetchGroupData();
-    } catch (error) {
-      console.error("Delete member error:", error);
-      showErrorToast("Failed to delete member. Please try again.");
+      catch (err) {
+        showErrorToast("Failed to delete this member.");
+      }
+      finally {
+        setShowConfirmModal(false);
+        setMemberToRemove(null);
+      }
     }
   };
-  
+
+  const handleSaveGroup = async () => {
+    setIsSaving(true);
+    setError(null);
+
+    const membersToSave = editedMembers.map(m => {
+      const member = { userName: m.userName };
+      if (m.memberId !== undefined) {
+        member.memberId = m.memberId;
+      }
+      return member;
+    });
+
+    const payload = {
+      groupName: editedGroupName,
+      startDate: editedStartDate || null,
+      members: membersToSave,
+    };
+
+    try {
+      const { data } = await api.put(`/groups/${groupId}/update`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setGroup(data);
+      setEditedGroupName("");
+      setEditedStartDate("");
+      setEditedMembers([]);
+      setIsAddingMember(false);
+      setNewMemberName("");
+
+      setIsEditing(false);
+      showSuccessToast("Group updated successfully!");
+
+    } catch (err) {
+      console.error("Save group error:", err);
+      const errorMessage = err.response?.data?.message || "Failed to save group changes. Please try again.";
+      showErrorToast(errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <MobileFrame>
@@ -140,9 +240,22 @@ export default function GroupDetailPage() {
         </div>
       )}
 
+      {showConfirmModal && memberToRemove && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h4>Confirm Removal</h4>
+            <p>Are you sure you want to remove {memberToRemove.userName || 'this member'} from the group?</p>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.cancelMoalButton} onClick={handleCancelRemove}>Cancel</button>
+              <button type="button" className={styles.deleteMemberBtn} onClick={handleConfirmRemove}>Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.container}>
         <div className={styles.header}>
-          <button className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
+          <button type="button" className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
             {"<"}
           </button>
 
@@ -153,7 +266,7 @@ export default function GroupDetailPage() {
                 alt="Group Icon"
                 className={styles.groupIcon}
               />
-              <label htmlFor="iconUpload" className={styles.cameraIcon} onClick={() => setIsIconEditing(true)}>
+              <label htmlFor="iconUpload" className={styles.cameraIcon}>
                 📷
               </label>
               <input
@@ -209,15 +322,16 @@ export default function GroupDetailPage() {
 
         <section className={styles.membersSection}>
           <h4 className={styles.membersTitle}>Members</h4>
-          <div className={styles.membersListContainer}> {/* Added container for list */}
-            <ul className={styles.membersList}> {/* Renamed list class */}
-              {(group.members || []).map((member) => (
-                <li key={member._id || member.userId || member.memberId} className={styles.memberItem}>
-                  {member.userName || member.name || 'Unnamed'}
+          <div className={styles.membersListContainer}>
+            <ul className={styles.membersList}>
+              {(isEditing ? editedMembers : (group.members || [])).map((member) => (
+                <li key={member._id || member.userId || member.memberId || member.tempId} className={styles.memberItem}>
+                  {member.userName || 'Unnamed'}
                   {isEditing && (
                     <button
+                      type="button"
                       className={styles.deleteBtn}
-                      onClick={() => handleDeleteMember(member._id, member.userName)}
+                      onClick={() => handleRemoveMemberFromList(member)}
                     >
                       ✖
                     </button>
@@ -225,65 +339,78 @@ export default function GroupDetailPage() {
                 </li>
               ))}
 
-              <li className={styles.memberItem}>
-                {isAddingMember ? (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={newMemberName}
-                      onChange={(e) => setNewMemberName(e.target.value)}
-                      placeholder="Enter name"
-                      className={styles.inputField}
-                      style={{ flex: 1 }}
-                    />
-                    <button
-                      className={styles.saveButton}
-                      onClick={async () => {
-                        if (!newMemberName.trim()) {
-                          showErrorToast("Please enter a name");
-                          return;
-                        }
-                        try {
-                          const { data } = await api.post(`/groups/${groupId}/members/new`, {
-                            userName: newMemberName.trim(),
-                          });
-                          setGroup(data);
-                          setNewMemberName("");
+              {isEditing && (
+                <li className={styles.memberItem}>
+                  {isAddingMember ? (
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={newMemberName}
+                        onChange={(e) => setNewMemberName(e.target.value)}
+                        placeholder="Enter name"
+                        className={styles.inputField}
+                        style={{ flex: 1 }}
+                      />
+                      <button
+                        type="button"
+                        className={styles.saveButton}
+                        onClick={handlePreviewNewMember}
+                        disabled={isSaving}
+                      >
+                        ✔
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.cancelButton}
+                        onClick={() => {
                           setIsAddingMember(false);
-                        } catch (err) {
-                          console.error("Failed to add member:", err);
-                          showErrorToast("Failed to add member.");
-                        }
-                      }}
-                    >
-                      ✔
+                          setNewMemberName("")
+                        }}
+                        disabled={isSaving}>
+                        ✖
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => setIsAddingMember(true)} className={styles.addMemberButton} disabled={isSaving}>
+                      Add new member
                     </button>
-                    <button className={styles.cancelButton} onClick={() => setIsAddingMember(false)}>✖</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setIsAddingMember(true)} className={styles.addMemberButton}>
-                    Add new member
-                  </button>
-                )}
-              </li>
+                  )}
+                </li>
+              )}
             </ul>
           </div>
         </section>
 
         <button
-          className={styles.editButton}
+          className={`${styles.editButton} ${isEditing ? styles.saveButton : ''}`}
           onClick={() => {
             if (!isEditing) {
+              setIsEditing(true);
               setEditedGroupName(group.groupName || "");
-              setEditedStartDate(group.startDate || "");
+              setEditedStartDate(group.startDate?.slice(0, 10) || "");
+              setEditedMembers(group.members ? group.members.map(m => ({ ...m })) : []);
             } else {
-              // api.put(`/groups/${groupId}`, { groupName: editedGroupName, startDate: editedStartDate })
+              handleSaveGroup();
             }
-            setIsEditing(!isEditing);
           }}
+          disabled={isSaving}
         >
-          {isEditing ? "Save" : "Edit"}
+          {isSaving ? "Saving..." : (isEditing ? "Save" : "Edit")}
         </button>
+        {isEditing && (
+          <button
+            className={styles.cancelButton}
+            onClick={() => {
+              setIsEditing(false);
+              setIsAddingMember(false);
+              setNewMemberName("");
+              showToastMessage("Editing cancelled.", "success");
+            }}
+            disabled={isSaving}
+          >
+            Cancel
+          </button>
+        )}
 
       </div>
     </MobileFrame>
