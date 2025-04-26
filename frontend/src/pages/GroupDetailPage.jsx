@@ -6,6 +6,7 @@ import MobileFrame from "../components/MobileFrame";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import CropperModal from "../components/CropperModal.jsx";
+import { Copy } from 'lucide-react';
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
@@ -36,6 +37,15 @@ export default function GroupDetailPage() {
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
   const DEFAULT_ICON = `${ICON_BASE}/groups/defaultIcon.jpg`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(group.joinCode);
+      showToastMessage('Copied to clipboard!');
+    } catch (err) {
+      showToastMessage('Failed to copy!');
+    }
+  };
 
   const showToastMessage = (message, type = "error") => {
     setToastMessage(message);
@@ -168,9 +178,9 @@ export default function GroupDetailPage() {
         setEditedMembers(prev =>
           prev.filter(m => {
             if (memberToRemove.memberId !== undefined && memberToRemove.memberId !== null) {
-              return m.memberId !== memberToRemove.memberId; 
+              return m.memberId !== memberToRemove.memberId;
             } else if (memberToRemove.tempId !== undefined && memberToRemove.tempId !== null) {
-              return m.tempId !== memberToRemove.tempId; 
+              return m.tempId !== memberToRemove.tempId;
             }
             return true;
           })
@@ -288,7 +298,9 @@ export default function GroupDetailPage() {
           )}
 
           <div className={styles.inviteCode}>
-            Invite Code <span className={styles.codeValue}>{group.joinCode}</span>
+            Invite Code 
+            <span className={styles.codeValue}>{group.joinCode}</span>
+            <Copy className={styles.copyIcon} onClick={handleCopy} />
           </div>
         </div>
 
@@ -382,7 +394,7 @@ export default function GroupDetailPage() {
         </section>
 
         <button
-          className={`${styles.editButton} ${isEditing ? styles.saveButton : ''}`}
+          className={`${styles.editButton} ${isEditing ? styles.saveInfoButton : ''}`}
           onClick={() => {
             if (!isEditing) {
               setIsEditing(true);
@@ -399,7 +411,7 @@ export default function GroupDetailPage() {
         </button>
         {isEditing && (
           <button
-            className={styles.cancelButton}
+            className={styles.cancelEditButton}
             onClick={() => {
               setIsEditing(false);
               setIsAddingMember(false);
