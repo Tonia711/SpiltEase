@@ -26,7 +26,7 @@ export default function CropperModal({ imageSrc, onClose, onCropDone }) {
     };
 
     return (
-        <div className={styles.modal}>
+        <div className={styles.cropModal}>
             <Cropper
                 image={imageSrc}
                 crop={crop}
@@ -38,8 +38,8 @@ export default function CropperModal({ imageSrc, onClose, onCropDone }) {
                 cropShape="round"
             />
             <div className={styles.controls}>
-                <button onClick={onClose}>Cancel</button>
-                <button onClick={handleCropDone}>Crop</button>
+                <button onClick={onClose} className={styles.cancel}>Cancel</button>
+                <button onClick={handleCropDone}  className={styles.save}>Save</button>
             </div>
         </div>
     );
