@@ -382,7 +382,7 @@ export default function GroupDetailPage() {
         </section>
 
         <button
-          className={`${styles.editButton} ${isEditing ? styles.saveButton : ''}`}
+          className={`${styles.editButton} ${isEditing ? styles.saveInfoButton : ''}`}
           onClick={() => {
             if (!isEditing) {
               setIsEditing(true);
@@ -399,7 +399,7 @@ export default function GroupDetailPage() {
         </button>
         {isEditing && (
           <button
-            className={styles.cancelButton}
+            className={styles.cancelEditButton}
             onClick={() => {
               setIsEditing(false);
               setIsAddingMember(false);
