@@ -17,8 +17,7 @@ export default function LandingPage() {
             Mates don't let mates do the math
           </h2>
           <h1 className={styles.landingTitle}>
-            <span className={styles.titleYellow}>SPLiT</span>
-            <span className={styles.titleWhite}>Mate</span>
+            <img src="/images/logo-splitmate.png" alt="SplitMate" className={styles.logoImage} />
             <span className={`${styles.titleYellow} ${styles.smallRight}`}>
               does
             </span>
