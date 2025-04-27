@@ -78,9 +78,21 @@ export default function BillDetailPage() {
           </div>
   
           <div className={styles.row1}>
-            <span>{bill.paidBy}</span>
+            <span>{bill.paidByName}</span>
             <span>${bill.expenses.toFixed(2)}</span>
           </div>
+
+          <div className={styles.row1}>
+            <span>Refund</span>
+            <span>${bill.refunds.toFixed(2)}</span>
+          </div>
+
+          <div className={styles.row1}>
+            <span>Date</span>
+            <span>{bill.date ? bill.date.slice(0, 10) : ''}</span>
+          </div>
+
+
 
           <div className={styles.rowName}>
               <p>Split by</p>
@@ -91,7 +103,7 @@ export default function BillDetailPage() {
             {(bill.members || []).map((member, index) => (
               <div key={index} className={styles.row}>
                 <span>{member.userName}</span>
-                <span>${(member.expense || 0).toFixed(2)}</span>
+                <span>${((member.expense - member.refund) || 0).toFixed(2)}</span>
               </div>
             ))}
           </div>

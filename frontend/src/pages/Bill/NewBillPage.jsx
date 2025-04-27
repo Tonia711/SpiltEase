@@ -14,7 +14,7 @@ export default function NewBillPage() {
   const [labels, setLabels] = useState([]);  // labels
   const [group, setGroup] = useState(null); //group 数据
   const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
-  const [splitMethod, setSplitMethod] = useState("equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
+  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
   // const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
 
 
@@ -126,7 +126,7 @@ export default function NewBillPage() {
       amount: finalAmount
     }));
 
-    if (splitMethod === "equally") {
+    if (splitMethod === "Equally") {
       setMemberExpenses(expensesArray);         // 原始 expense
       setMemberRefunds(refundsArray);           // refund 分摊
       setMemberTotalExpenses(totalArray);       // 实际应付金额
@@ -282,8 +282,8 @@ export default function NewBillPage() {
                 onChange={(e) => setSplitMethod(e.target.value)}
                 className={styles.select}
             >
-                <option value="equally">Split Equally</option>
-                <option value="amounts">Split by Amounts</option>
+                <option value="Equally">Equally</option>
+                <option value="As Amounts">As Amounts</option>
             </select>
         </div>
 

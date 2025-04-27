@@ -11,26 +11,28 @@ export default function EditBillPage() {
 
 
   // 界面展示的数据
+  const [bill, setBill] = useState();  
   const [labels, setLabels] = useState([]);  // labels
   const [group, setGroup] = useState(null); //group 数据
-  const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
-  const [splitMethod, setSplitMethod] = useState("equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
-  // const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
-
+  const [members, setMembers] = useState(""); //下拉列表，成员列表
+  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："Equally" 或 "As Amounts"
 
 
   // 表单数据
   const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
-  const [note, setNote] = useState("");  
-  const [expenses, setExpenses] = useState("");   //paid
+  const [note, setNote] = useState("");     //note
+  const [expenses, setExpenses] = useState("");   //paid 总钱数
   const [refunds, setRefunds] = useState("");   //refunds
-  const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
+  const [paidBy, setPaidBy] = useState(""); // paidBy  member_id
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
   const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
-  const [selectedMemberIds, setSelectedMemberIds] = useState([]); //选中的人
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]); //选中要分钱的人
   const [memberExpenses, setMemberExpenses] = useState([]);  //每个人实际的expense array
   const [memberRefunds, setMemberRefunds] = useState([]); //每个人的refund array
   const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+
 
 
   // get all labels 获取所有labels，labcel下拉列表
@@ -55,7 +57,6 @@ export default function EditBillPage() {
       .then(({ data }) => {
         setGroup(data);
         setMembers(data.members);
-        setPaidBy(data.members[0]?._id || ""); // 设置默认的 paidBy
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
@@ -74,25 +75,59 @@ export default function EditBillPage() {
 
 
 
-  // 通过获取bill的数据来获取每个人应付的钱
-  // 这个在编辑bill界面使用
-  // useEffect(() => {
-  //   api
-  //     .get(`/bills/groups/${groupId}`)
-  //     .then(({ data }) => {
-  //       setPaidAmount(data);
-  //     })
-  //     .catch((err) => {
-  //       console.error("Failed to fetch group data:", err);
-  //     });
-  // }, [groupId, BASE_URL]);
+  // 通过获取bill的数据来获取界面显示的数据
+  useEffect(() => {
+    api
+      .get(`/bills/${groupId}/bill/${billId}`)
+      .then(({ data }) => {
+        setBill(data);
+        setSelectedLabelId(data.labelId);
+        setNote(data.note);
+        setExpenses(data.expenses);
+        setRefunds(data.refunds);
+        setPaidDate(data.date.slice(0, 10));
+        setSplitMethod(data.splitWay);
+        setPaidBy(data.paidBy);
+        setSelectedMemberIds(data.members.map(m => m.memberId));
+        setMemberExpenses(data.members.map(m => ({
+          memberId: m.memberId,
+          amount: m.expense
+        })));
+        setMemberRefunds(data.members.map(m => ({
+          memberId: m.memberId,
+          refund: m.refund
+        })));
+        setMemberTotalExpenses(data.members.map(m => ({
+          memberId: m.memberId,
+          amount: parseFloat((m.expense - m.refund).toFixed(2))
+        })));
+        setLoaded(true);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch group data:", err);
+      });
+  }, [groupId, BASE_URL]);
 
-  // console.log("paidAmount", paidAmount);
-
+  
+  useEffect(() => {
+    if (members && members.length > 0 && bill) {
+      setPaidBy(bill.paidBy);
+  
+      const exist = members.some(m => m._id === bill.paidBy);
+      if (!exist) {
+        setMembers(prev => [...prev, { _id: bill.paidBy, userName: "Unknown User" }]);
+      }
+    }
+  }, [members, bill]);
+  
+  console.log("bill", bill);
+  console.log("paidBy", paidBy);
 
   
   //通过输入的expense, refunds来计算每个人分的钱
   useEffect(() => {
+    if (!isEditing) return; 
+
     if (!members || members.length === 0 || !expenses || isNaN(parseFloat(expenses))) return;
 
     const total = parseFloat(expenses);
@@ -126,7 +161,7 @@ export default function EditBillPage() {
       amount: finalAmount
     }));
 
-    if (splitMethod === "equally") {
+    if (splitMethod === "Equally") {
       setMemberExpenses(expensesArray);         // 原始 expense
       setMemberRefunds(refundsArray);           // refund 分摊
       setMemberTotalExpenses(totalArray);       // 实际应付金额
@@ -142,7 +177,7 @@ export default function EditBillPage() {
 
 
   // submit bill
-  const handleAddBill = async (e) => {
+  const handleSaveBill = async (e) => {
     e.preventDefault();
     setError("");  // 清空之前的错误
   
@@ -167,10 +202,10 @@ export default function EditBillPage() {
       }))
     };
   
-    console.log(newBill);
+    // console.log(newBill);
 
     try {
-      await api.post(`/bills`, newBill);
+      // await api.post(`/bills`, newBill);
       navigate(`/groups/${groupId}/expenses`);
     } catch (err) {
       console.error("Failed to create bill:", err);
@@ -183,7 +218,7 @@ export default function EditBillPage() {
 
   return (
     <MobileFrame>
-      <form className={styles.form} onSubmit={handleAddBill}>
+      <form className={styles.form} onSubmit={handleSaveBill}>
         <h2 className={styles.header}>
         <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)}>
             {"<"}
@@ -236,7 +271,9 @@ export default function EditBillPage() {
             type="number"
             placeholder="$ 0.00"
             value={expenses}
-            onChange={(e) => setExpenses(e.target.value)}
+            onChange={(e) => {
+                setExpenses(e.target.value);
+                setIsEditing(true);}}
             className={styles.inputHalf}
           />
          
@@ -244,7 +281,10 @@ export default function EditBillPage() {
             type="number"
             placeholder="$ 0.00"
             value={refunds}
-            onChange={(e) => setRefunds(e.target.value)}
+            onChange={(e) => {
+              setRefunds(e.target.value);
+              setIsEditing(true);
+            }}
             className={styles.inputHalf}
           />
         </div>
@@ -279,11 +319,14 @@ export default function EditBillPage() {
             <select
                 id="splitMethod"
                 value={splitMethod}
-                onChange={(e) => setSplitMethod(e.target.value)}
+                onChange={(e) => {
+                  setSplitMethod(e.target.value);
+                  setIsEditing(true);
+                }}
                 className={styles.select}
             >
-                <option value="equally">Split Equally</option>
-                <option value="amounts">Split by Amounts</option>
+                <option value="Equally">Equally</option>
+                <option value="As Amounts">As Amounts</option>
             </select>
         </div>
 
@@ -356,7 +399,7 @@ export default function EditBillPage() {
         {error && <div className={styles.error}>{error}</div>}
 
         <button type="submit" className={styles.addButton}>
-          Add
+          Save
         </button>
       </form>
     </MobileFrame>
