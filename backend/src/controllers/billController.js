@@ -97,7 +97,8 @@ export const getBillByGroupIdBillId = async (req, res) => {
 
     return res.status(200).json({
       ...bill.toObject(),
-      paidBy: paidByMember?.userName || "Unknown",
+      paidBy: paidByMember?._id || "Unknown",
+      paidByName: paidByMember?.userName || "Unknown",
       members: enrichedMembers
     });
 
