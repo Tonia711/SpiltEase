@@ -158,3 +158,42 @@ export const createBill = async (req, res) => {
     res.status(500).json({ error: "Failed to create bill" });
   }
 };
+
+
+// 根据 groupId 和 billId 删除单个bill
+export const deleteBillByGroupIdBillId = async (req, res) => {
+  const { groupId, billId } = req.params;
+
+  try {
+    const billDoc = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
+
+    console.log("1");
+
+    if (!billDoc) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // 找要删除的那一条 bill
+    const targetIndex = billDoc.groupBills.findIndex(b => b._id.toString() === billId);
+
+    if (targetIndex === -1) {
+      return res.status(404).json({ message: "Bill not found in group" });
+    }
+
+    // 删除指定的 bill
+    billDoc.groupBills.splice(targetIndex, 1);
+
+    if (billDoc.groupBills.length === 0) {
+      // 如果删完没有账单了，删除整个 Bill 文档
+      await Bill.deleteOne({ _id: billDoc._id });
+      return res.status(200).json({ message: "Bill and group deleted successfully" });
+    } else {
+      // 如果还有账单，保存剩下的
+      await billDoc.save();
+      return res.status(200).json({ message: "Bill deleted successfully" });
+    }
+  } catch (err) {
+    console.error("❌ Failed to delete bill:", err);
+    res.status(500).json({ message: "Failed to delete bill" });
+  }
+};

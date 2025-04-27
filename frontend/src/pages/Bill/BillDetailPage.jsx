@@ -43,8 +43,8 @@ export default function BillDetailPage() {
   
     const handleConfirmDelete = async () => {
       try {
-        await api.delete(`/bills/${groupId}/bill/${billId}`);
         navigate(`/groups/${groupId}/expenses`);
+        await api.delete(`/bills/${groupId}/bill/${billId}`);
       } catch (err) {
         console.error("Failed to delete bill:", err);
       }
