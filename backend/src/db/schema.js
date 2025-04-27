@@ -13,11 +13,11 @@ const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
 
 // 余额
 const balanceSchema = new mongoose.Schema({
-  groupId: Number,
+  groupId: { type: mongoose.Schema.Types.ObjectId, ref: "Group" },
   groupBalances: [
     {
-      fromMemberId: Number,
-      toMemberId: Number,
+      fromMemberId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      toMemberId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       balance: Number,
       isFinished: { type: Boolean, default: false },
       finishHistory: [{ date: Date, amount: Number }],
