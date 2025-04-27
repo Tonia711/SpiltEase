@@ -36,9 +36,9 @@ export default function BillDetailPage() {
     }
 
       
-    console.log("bill", bill);
+    // console.log("bill", bill);
   
-    console.log("labels", labels);
+    // console.log("labels", labels);
     
     return (
       <MobileFrame>
@@ -47,13 +47,14 @@ export default function BillDetailPage() {
           <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses`)}>
               {"<"}
           </span>
-          <div>
+          <div className={styles.titleup}>
             <img 
               src={`${IMG_URL}/${labels.find(label => label._id === bill.labelId).iconUrl}`}
               className={styles.billIcon}
             ></img>
             <p>{bill.note || "Untitled Bill"}</p>
           </div>
+          <span></span>
           </h2>
 
           <div className={styles.rowName}>
@@ -83,6 +84,7 @@ export default function BillDetailPage() {
     
           <div className={styles.actions}>
             <button className={styles.deleteButton}>Delete</button>
+            <span></span>
             <button className={styles.editButton} onClick={() => navigate(`/groups/${groupId}/editBill/${billId}`)}>
               Edit
               </button>

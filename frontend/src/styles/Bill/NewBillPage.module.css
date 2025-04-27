@@ -171,6 +171,9 @@ border-radius: 12px;
 margin-top: 10px;
 }
 
+.addButton:hover {
+    background-color: #ffd54f;
+    }
 
 .error {
     color: red;
