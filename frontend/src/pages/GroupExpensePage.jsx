@@ -31,11 +31,11 @@ export default function GroupExpensePage() {
 
     if (myUserId && balance.length > 0) {
       myBalances = balance.filter(b => 
-        ((b.fromMemberId && b.fromMemberId._id?.toString() === myUserId) || (b.toMemberId && b.toMemberId._id?.toString() === myUserId))
+        ((b.fromMemberId?.toString() === myUserId) || (b.toMemberId?.toString() === myUserId))
       );
 
     totalOwed = myBalances.reduce((sum, b) => {
-      if (b.toMemberId?._id?.toString() === myUserId) {
+      if (b.toMemberId?.toString() === myUserId) {
         return sum + b.balance; // 别人欠我
       } else {
         return sum - b.balance; // 我欠别人
@@ -193,8 +193,10 @@ export default function GroupExpensePage() {
             ) : (
               <ul className={styles.balanceList}>
                 {myBalances.map((b, index) => {
-                  const isOwedToMe = b.toMemberId?._id?.toString() === myUserId;
-                  const otherPerson = isOwedToMe ? b.fromMemberId : b.toMemberId;
+                  const isOwedToMe = b.toMemberId?.toString() === myUserId;
+                  const otherPersonId = isOwedToMe ? b.fromMemberId : b.toMemberId;
+                  const otherPerson = group?.members?.find(m => m.userId?.toString() === otherPersonId?.toString());
+
                   return (
                     <li key={index} className={styles.balanceItem}>
                       {isOwedToMe ? (
