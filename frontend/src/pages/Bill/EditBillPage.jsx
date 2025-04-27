@@ -99,7 +99,7 @@ export default function EditBillPage() {
         })));
         setMemberTotalExpenses(data.members.map(m => ({
           memberId: m.memberId,
-          amount: parseFloat((m.expense - m.refund).toFixed(2))
+          amount: parseFloat(m.expense.toFixed(2))
         })));
         setLoaded(true);
       })
@@ -196,10 +196,11 @@ export default function EditBillPage() {
       splitWay: splitMethod,
       members: memberTotalExpenses.map(m => ({
         memberId: m.memberId,
-        expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
+        expense: m.amount,
         refund: memberRefunds.find(r => r.memberId === m.memberId)?.refund || 0
       }))
     };
+    
   
     try {
       await api.put(`/bills/${groupId}/bill/${billId}`, updatedBill);
@@ -210,8 +211,78 @@ export default function EditBillPage() {
     }
   };
   
+  function handleChangeCheckBox(e, m) {
+    const checked = e.target.checked;
+    let newSelected;
+    
+    if (checked) {
+      newSelected = [...selectedMemberIds, m._id];
+    } else {
+      newSelected = selectedMemberIds.filter(id => id !== m._id);
+    }
+    setSelectedMemberIds(newSelected);
+  
+    if (splitMethod === "Equally") {
+      const total = parseFloat(expenses) || 0;
+      const refundTotal = parseFloat(refunds) || 0;
+      const count = newSelected.length;
+  
+      if (count > 0) {
+        const rawExpense = parseFloat((total / count).toFixed(2));
+        const avgRefund = parseFloat((refundTotal / count).toFixed(2));
+        const finalAmount = parseFloat((rawExpense - avgRefund).toFixed(2));
+  
+        setMemberExpenses(newSelected.map(id => ({
+          memberId: id,
+          amount: rawExpense
+        })));
+  
+        setMemberRefunds(newSelected.map(id => ({
+          memberId: id,
+          refund: avgRefund
+        })));
+  
+        setMemberTotalExpenses(newSelected.map(id => ({
+          memberId: id,
+          amount: finalAmount
+        })));
+      } else {
+        setMemberExpenses([]);
+        setMemberRefunds([]);
+        setMemberTotalExpenses([]);
+      }
+    } else {
+      if (!checked) {
+        // As Amounts 模式下，去掉取消的人
+        setMemberTotalExpenses(prev => prev.filter(me => me.memberId !== m._id));
+      }
+    }
+  }
   
   
+  function handleChangeAmount(e, m) {
+    const newAmount = parseFloat(e.target.value) || 0;
+    setMemberTotalExpenses(prev => {
+      const exists = prev.find(p => p.memberId === m._id);
+      if (exists) {
+        return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+      } else {
+        return [...prev, { memberId: m._id, amount: newAmount }];
+      }
+    });
+  
+    // 同时更新 refund
+    const newSelected = [...selectedMemberIds];
+    const refundTotal = parseFloat(refunds) || 0;
+    const count = newSelected.length;
+    const avgRefund = count > 0 ? parseFloat((refundTotal / count).toFixed(2)) : 0;
+    setMemberRefunds(newSelected.map(id => ({
+      memberId: id,
+      refund: avgRefund
+    })));
+  }
+  
+
 
 
   return (
@@ -339,36 +410,18 @@ export default function EditBillPage() {
                 <input
                   type="checkbox"
                   checked={checked}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    if (checked) {
-                      setSelectedMemberIds(prev => [...prev, m._id]);
-                    } else {
-                      setSelectedMemberIds(prev => prev.filter(id => id !== m._id));
-                      setMemberTotalExpenses(prev => prev.filter(me => me.memberId !== m._id));
-                    }
-                  }}
+                  onChange={(e) => {handleChangeCheckBox(e, m)}}
                   className={styles.memberIcon}
                 />
                 <div className={styles.memberItem}>
                   <div className={styles.memberName}>{m.userName}</div>
 
                   <div>
-                    {splitMethod === "amounts" ? (
+                    {splitMethod === "As Amounts" ? (
                       <input
                         type="number"
                         value={current.amount}
-                        onChange={(e) => {
-                          const newAmount = parseFloat(e.target.value) || 0;
-                          setMemberTotalExpenses(prev => {
-                            const exists = prev.find(p => p.memberId === m._id);
-                            if (exists) {
-                              return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
-                            } else {
-                              return [...prev, { memberId: m._id, amount: newAmount }];
-                            }
-                          });
-                        }}
+                        onChange={(e) => {handleChangeAmount(e, m)}}
                         className={styles.inputAmount}
                         disabled={!checked}
                       />
