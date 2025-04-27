@@ -64,30 +64,36 @@ export const getBillByGroupIdBillId = async (req, res) => {
 
   try {
     const bills = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
-    
+
     if (!bills) {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const bill = bills.groupBills.find(b =>
-      b._id.toString() === billId
-    );
+    const bill = bills.groupBills.find(b => b._id.toString() === billId);
 
     if (!bill) {
       return res.status(404).json({ message: "Bill not found in group" });
     }
 
     const group = await Group.findById(groupId).lean();
-
     const paidByMember = group?.members.find(m => m._id.toString() === bill.paidBy.toString());
 
     const enrichedMembers = (bill.members || []).map(member => {
       const found = group?.members.find(m => m._id.toString() === member.memberId.toString());
       return {
-        ...member,
+        memberId: member.memberId,
+        expense: member.expense,
+        refund: member.refund,
         userName: found?.userName || "Unknown"
       };
     });
+
+    // 🔥 正确更新 members：清空再 push
+    bill.members.splice(0, bill.members.length);
+    bill.members.push(...enrichedMembers);
+
+    // 保存回数据库
+    await bills.save();
 
     return res.status(200).json({
       ...bill.toObject(),
@@ -100,6 +106,7 @@ export const getBillByGroupIdBillId = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 // 创建新bill

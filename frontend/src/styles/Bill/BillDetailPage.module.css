@@ -9,6 +9,17 @@ text-align: center;
 margin-bottom: 20px;
 }
 
+.titleup {
+    display: flex;
+    justify-self: center;
+
+    p{
+        margin: 0;
+    }
+  }
+  
+  
+
 .backButton {
 background: none;
 border: none;
@@ -23,8 +34,8 @@ color: #f2c94c;
 }
 
 .billIcon{
-width: 20px;
-height: 20px;
+width: 30px;
+height: 30px;
 }
 
 .form {
@@ -88,34 +99,39 @@ font-size: 14px;
 }
 
 .actions {
-display: flex;
-justify-content: space-between;
-padding: 0 16px;
-margin-top: 20px;
+    position: fixed;
+    bottom: 100px;
+    left: 50px;
+display: grid;
+grid-template-rows: 1fr 0.2fr 1fr;
+width: 340px;
 }
 
 .deleteButton {
-background-color: #fff;
-color: #000;
-padding: 12px 0;
-width: 48%;
-font-size: 14px;
-font-weight: bold;
-border: none;
-border-radius: 12px;
-cursor: pointer;
+    background-color: #fff;
+    color: #000;
+    padding: 12px 0;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
 }
 
-.editButton {
-background-color: #fbc02d;
-color: #000;
-padding: 12px 0;
-width: 48%;
-font-size: 14px;
-font-weight: bold;
-border: none;
-border-radius: 12px;
-cursor: pointer;
+.editButton { 
+    background-color: #fbc02d; 
+    color: #000; 
+    padding: 12px 0; 
+    font-size: 14px; 
+    font-weight: bold; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    -webkit-border-radius: 8px; -moz-border-radius: 8px; -ms-border-radius: 8px; -o-border-radius: 8px;
 }
 
 .deleteButton:hover {
