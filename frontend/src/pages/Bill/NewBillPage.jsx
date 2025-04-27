@@ -313,7 +313,7 @@ export default function NewBillPage() {
                   <div className={styles.memberName}>{m.userName}</div>
 
                   <div>
-                    {splitMethod === "amounts" ? (
+                    {splitMethod === "As Amounts" ? (
                       <input
                         type="number"
                         value={current.amount}
