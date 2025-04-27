@@ -25,26 +25,53 @@ export default function GroupExpensePage() {
 
   const myUserId = currentUser?._id?.toString() || "";
 
-  const { totalOwed, myBalances } = useMemo(() => {
+  const { totalOwed, myBalances, othersBalances, myExpenses, totalExpenses } = useMemo(() => {
+    let myExpenses = 0;
+    let totalExpenses = 0;    
     let totalOwed = 0;
     let myBalances = [];
+    const memberBalanceMap = {};
+
+    if (bills && Object.keys(bills).length > 0) {
+      Object.values(bills).forEach(billList => {
+        billList.forEach(bill => {
+          totalExpenses += bill.expenses;
+          if (bill.paidBy?.toString() === myUserId) {
+            myExpenses += bill.expenses;
+          }
+        });
+      });
+    }
 
     if (myUserId && balance.length > 0) {
-      myBalances = balance.filter(b => 
-        ((b.fromMemberId && b.fromMemberId._id?.toString() === myUserId) || (b.toMemberId && b.toMemberId._id?.toString() === myUserId))
-      );
+      balance.forEach(b => {
+        const fromId = b.fromMemberId?.toString();
+        const toId = b.toMemberId?.toString();
 
-    totalOwed = myBalances.reduce((sum, b) => {
-      if (b.toMemberId?._id?.toString() === myUserId) {
-        return sum + b.balance; // 别人欠我
-      } else {
-        return sum - b.balance; // 我欠别人
-      }
-    }, 0);
-  }
+        if (fromId === myUserId || toId === myUserId) {
+          myBalances.push(b);
+          if (toId === myUserId) {
+            totalOwed += b.balance;
+          } else {
+            totalOwed -= b.balance;
+          }
+        }
 
-  return { totalOwed, myBalances };
-}, [balance, myUserId]);
+        if (fromId && !memberBalanceMap[fromId]) {
+          memberBalanceMap[fromId] = -b.balance;
+        } else if (fromId) {
+          memberBalanceMap[fromId] -= b.balance;
+        }
+
+        if (toId && !memberBalanceMap[toId]) {
+          memberBalanceMap[toId] = b.balance;
+        } else if (toId) {
+          memberBalanceMap[toId] += b.balance;
+        }
+      });
+    }
+    return { totalOwed, myBalances, othersBalances: memberBalanceMap, myExpenses, totalExpenses };
+}, [balance, myUserId, bills]);
 
   useEffect(() => {
     async function fetchData() {
@@ -153,7 +180,20 @@ export default function GroupExpensePage() {
             Object.keys(bills).length === 0 ? (
               <p>No expenses found.</p>
             ) : (
-              Object.entries(bills).map(([date, billList]) => (
+              <>
+                <div className={styles.expensesHeader}>
+                  <div className={styles.expensesHeaderRow}>
+                    <span>My Expenses</span>
+                    <span>Total Expenses</span>
+                  </div>
+                  <div className={styles.expensesHeaderRow}>
+                    <span>${myExpenses.toFixed(2)}</span>
+                    <span>${totalExpenses.toFixed(2)}</span>
+                  </div>
+                </div>
+
+              
+              {Object.entries(bills).map(([date, billList]) => (
                 <div key={date} style={{ marginBottom: "20px" }}>
                   <h4 className={styles.billDateTitle}>
                     {dayjs(date).format("MMM D, YYYY")}
@@ -183,18 +223,27 @@ export default function GroupExpensePage() {
                     ))}
                   </ul>
                 </div>
-              ))
+              ))}
+            </>
           )
       ) : (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <h3>You are {totalOwed >= 0 ? "owed" : "owe"} ${Math.abs(totalOwed).toFixed(2)}</h3>
-          {myBalances.length === 0 ? (
+          <div className={styles.totalOwedRow}>
+            <span>You owe</span>
+            <span>${Math.abs(totalOwed).toFixed(2)}</span>
+          </div>
+             
+          {!group?.members ? (
+                <p>Loading balances...</p>
+              ) : myBalances.length === 0 ? (
               <p>No balances to show.</p>
             ) : (
               <ul className={styles.balanceList}>
                 {myBalances.map((b, index) => {
-                  const isOwedToMe = b.toMemberId?._id?.toString() === myUserId;
-                  const otherPerson = isOwedToMe ? b.fromMemberId : b.toMemberId;
+                  const isOwedToMe = b.toMemberId?.toString() === myUserId;
+                  const otherPersonId = isOwedToMe ? b.fromMemberId : b.toMemberId;
+                  const otherPerson = group?.members?.find(m => m._id?.toString() === otherPersonId?.toString());
+
                   return (
                     <li key={index} className={styles.balanceItem}>
                       {isOwedToMe ? (
@@ -213,6 +262,62 @@ export default function GroupExpensePage() {
                 })}
               </ul>
             )}
+
+            <div className={styles.memberSection}>
+              <h3>Group Members Balance</h3>
+              {group?.members?.some(member => {
+                const memberId = member._id?.toString();
+                if (!memberId) return false;
+                return balance.some(b => b.fromMemberId?.toString() === memberId);
+              }) ? (
+              group?.members?.map(member => {
+                const memberId = member._id?.toString();
+                if (!memberId) return null;
+
+                const relatedBalances = balance.filter(
+                  b => b.fromMemberId?.toString() === memberId
+                );
+          
+                if (relatedBalances.length === 0) return null;
+
+                const totalOwes = relatedBalances.reduce((sum, b) => sum + b.balance, 0);
+
+                return (
+                  <div key={member._id} className={styles.memberBlock}>
+                    <div className={styles.memberNameRow}>
+                      <span className={styles.memberNameLeft}>
+                        {member.userName} owes
+                      </span>
+                      <span className={styles.memberNameRight}>
+                        ${totalOwes.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <ul className={styles.memberList}>
+                      {relatedBalances.map((b, index) => {
+                        const toMember = group?.members?.find(m => m._id?.toString() === b.toMemberId?.toString());
+                        if (!toMember) return null;
+
+                        const isCurrentUser = toMember._id?.toString() === myUserId;
+
+                        return (
+                          <li key={index} className={isCurrentUser ? styles.highlightedItem : styles.memberItem}>
+                            <span>{toMember.userName}</span>
+                            <span>${b.balance.toFixed(2)}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })
+            ) : (
+              <p>No group member balances to show.</p>
+            )}
+            </div>
+
+
+
           </div>
         )}
       </div>

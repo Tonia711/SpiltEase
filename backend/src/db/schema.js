@@ -11,7 +11,6 @@ const iconSchema = new mongoose.Schema({
 const Icon = mongoose.models.Icon || mongoose.model("Icon", iconSchema);
 
 const balanceSchema = new mongoose.Schema({
-
   groupId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Group",
