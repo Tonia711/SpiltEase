@@ -65,3 +65,23 @@ export const deleteMe = async (req, res) => {
       .json({ error: "Failed to delete user", detail: err.message });
   }
 };
+
+// 搜索用户（根据 userName 模糊匹配）
+export const searchUsers = async (req, res) => {
+  const { q } = req.query;
+
+  if (!q || q.trim() === "") {
+    return res.status(400).json({ error: "Missing search query" });
+  }
+
+  try {
+    const users = await User.find({
+      userName: { $regex: q, $options: "i" }, // 模糊匹配，忽略大小写
+    }).select("_id userName email"); // 返回 _id, userName, email，不返回 password！
+
+    res.json(users);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};

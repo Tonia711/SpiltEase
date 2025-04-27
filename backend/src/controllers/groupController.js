@@ -3,37 +3,44 @@ import mongoose from "mongoose";
 
 // Get all groups for a user
 export const getUserGroups = async (req, res) => {
-
   try {
-    const user = await User.findById(req.user.id).select('groupId');
+    const user = await User.findById(req.user.id).select("groupId");
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (!user.groupId || !Array.isArray(user.groupId)) {
       console.warn(`User ${req.user.id} missing groupId array.`);
-      return res.status(400).json({ message: 'User group information not found or invalid.' });
+      return res
+        .status(400)
+        .json({ message: "User group information not found or invalid." });
     }
 
-    console.log('User groupId array content:', user.groupId);
+    console.log("User groupId array content:", user.groupId);
 
-    const groups = await Group.find({ _id: { $in: user.groupId } }).sort({ startDate: -1 });
-    const groupsWithIcons = await Promise.all(groups.map(async (group) => {
-      let iconUrl = "groups/defaultIcon.jpg";
-      if (group.iconId) {
-        const icon = await Icon.findById(group.iconId).select("iconUrl");
-        iconUrl = icon?.iconUrl || iconUrl;
-      }
-      return {
-        ...group.toObject(),
-        iconUrl,
-      };
-    }));
+    const groups = await Group.find({ _id: { $in: user.groupId } }).sort({
+      startDate: -1,
+    });
+    const groupsWithIcons = await Promise.all(
+      groups.map(async (group) => {
+        let iconUrl = "groups/defaultIcon.jpg";
+        if (group.iconId) {
+          const icon = await Icon.findById(group.iconId).select("iconUrl");
+          iconUrl = icon?.iconUrl || iconUrl;
+        }
+        return {
+          ...group.toObject(),
+          iconUrl,
+        };
+      })
+    );
 
     res.json(groupsWithIcons);
   } catch (err) {
     console.error("Error fetching user's groups:", err);
-    res.status(500).json({ message: "Server error while fetching user's groups" });
+    res
+      .status(500)
+      .json({ message: "Server error while fetching user's groups" });
   }
 };
 
@@ -42,34 +49,39 @@ export const deleteGroup = async (req, res) => {
   try {
     const groupIdToRemove = req.params.id;
 
-    const user = await User.findById(req.user.id).select('groupId');
+    const user = await User.findById(req.user.id).select("groupId");
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (!user.groupId || !Array.isArray(user.groupId)) {
-      return res.status(400).json({ message: 'User group list not found or invalid' });
+      return res
+        .status(400)
+        .json({ message: "User group list not found or invalid" });
     }
 
     const hasGroup = user.groupId.some(
-      id => id.toString() === groupIdToRemove
+      (id) => id.toString() === groupIdToRemove
     );
 
     if (!hasGroup) {
-      return res.status(403).json({ message: 'User is not a member of this group.' });
+      return res
+        .status(403)
+        .json({ message: "User is not a member of this group." });
     }
 
-    await User.findByIdAndUpdate(req.user.id, { $pull: { groupId: groupIdToRemove } });
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { groupId: groupIdToRemove },
+    });
 
-    res.json({ message: 'Group removed from user successfully' });
-
+    res.json({ message: "Group removed from user successfully" });
   } catch (err) {
-    console.error('Error deleting group:', err);
-    if (err.name === 'CastError') {
-      return res.status(400).json({ message: 'Invalid group ID format' });
+    console.error("Error deleting group:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ message: "Invalid group ID format" });
     }
-    res.status(500).json({ message: 'Server error while deleting group' });
+    res.status(500).json({ message: "Server error while deleting group" });
   }
 };
 
@@ -81,12 +93,12 @@ export const getGroupById = async (req, res) => {
     const group = await Group.findById(groupId);
 
     if (!group) {
-      return res.status(404).json({ message: 'Group not found' });
+      return res.status(404).json({ message: "Group not found" });
     }
 
     let iconUrl = null;
     if (group.iconId) {
-      const icon = await Icon.findById(group.iconId).select('iconUrl');
+      const icon = await Icon.findById(group.iconId).select("iconUrl");
       iconUrl = icon ? icon.iconUrl : "groups/defaultIcon.jpg";
     }
 
@@ -95,8 +107,8 @@ export const getGroupById = async (req, res) => {
       iconUrl,
     });
   } catch (error) {
-    console.error('Error fetching group:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching group:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -104,23 +116,25 @@ export const validateJoinCode = async (req, res) => {
   const { joinCode } = req.body;
   const currentUserId = req.user.id;
 
-  if (!joinCode || typeof joinCode !== 'string') {
+  if (!joinCode || typeof joinCode !== "string") {
     return res.status(400).json({ message: "Valid join code is required" });
   }
 
   try {
-    const group = await Group.findOne({ joinCode: joinCode.trim() }).select("_id groupName members");
+    const group = await Group.findOne({ joinCode: joinCode.trim() }).select(
+      "_id groupName members"
+    );
     if (!group) {
       return res.status(404).json({ message: "Invalid code" });
     }
 
     const user = await User.findById(currentUserId).select("_id groupId");
 
-    const isInGroupMembers = group.members.some(member =>
-      member.userId && member.userId.equals(currentUserId)
+    const isInGroupMembers = group.members.some(
+      (member) => member.userId && member.userId.equals(currentUserId)
     );
 
-    const isInUserGroupList = user.groupId.some(aGroupId =>
+    const isInUserGroupList = user.groupId.some((aGroupId) =>
       aGroupId.equals(group._id)
     );
 
@@ -147,7 +161,6 @@ export const validateJoinCode = async (req, res) => {
       isAlreadyMember: false,
       group,
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -167,24 +180,26 @@ function getUniqueName(baseName, existingMembers) {
 export const joinGroupByCode = async (req, res) => {
   const { joinCode, selectedMemberId } = req.body;
   const currentUserId = req.user.id;
-  const user = await User.findById(currentUserId).select('userName');
+  const user = await User.findById(currentUserId).select("userName");
 
   if (!user) {
-    return res.status(404).json({ message: 'Authenticated user not found' });
+    return res.status(404).json({ message: "Authenticated user not found" });
   }
 
-  if (!joinCode || typeof joinCode !== 'string') {
+  if (!joinCode || typeof joinCode !== "string") {
     return res.status(400).json({ message: "Join code is required" });
   }
 
   try {
-    const group = await Group.findOne({ joinCode: joinCode.trim() }).populate("members");
+    const group = await Group.findOne({ joinCode: joinCode.trim() }).populate(
+      "members"
+    );
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const alreadyMember = group.members.some(member =>
-      member.userId && member.userId.equals(currentUserId)
+    const alreadyMember = group.members.some(
+      (member) => member.userId && member.userId.equals(currentUserId)
     );
 
     if (alreadyMember) {
@@ -194,12 +209,15 @@ export const joinGroupByCode = async (req, res) => {
         });
 
         return res.status(200).json({
-          message: "You were previously a member of this group. Your membership has been restored.",
+          message:
+            "You were previously a member of this group. Your membership has been restored.",
           groupId: group._id,
           groupName: group.groupName,
         });
       } else {
-        return res.status(409).json({ message: "You are already a member of this group." });
+        return res
+          .status(409)
+          .json({ message: "You are already a member of this group." });
       }
     }
 
@@ -211,17 +229,22 @@ export const joinGroupByCode = async (req, res) => {
     );
 
     if (nameConflictMember) {
-      const newName = getUniqueName(`${nameConflictMember.userName}-old`, group.members);
+      const newName = getUniqueName(
+        `${nameConflictMember.userName}-old`,
+        group.members
+      );
       nameConflictMember.userName = newName;
     }
 
     if (selectedMemberId !== undefined && selectedMemberId !== null) {
       const virtualMember = group.members.find(
-        m => String(m.memberId) === String(selectedMemberId) && !m.userId
+        (m) => String(m.memberId) === String(selectedMemberId) && !m.userId
       );
 
       if (!virtualMember) {
-        return res.status(400).json({ message: "Invalid or already claimed memberId" });
+        return res
+          .status(400)
+          .json({ message: "Invalid or already claimed memberId" });
       }
 
       virtualMember.userId = currentUserId;
@@ -239,11 +262,12 @@ export const joinGroupByCode = async (req, res) => {
         groupName: group.groupName,
         memberId: virtualMember.memberId,
       });
-
     } else {
-
       const newMember = {
-        memberId: group.members.length > 0 ? Math.max(...group.members.map(m => m.memberId)) + 1 : 1,
+        memberId:
+          group.members.length > 0
+            ? Math.max(...group.members.map((m) => m.memberId)) + 1
+            : 1,
         userName: user.userName,
         userId: currentUserId,
       };
@@ -263,7 +287,6 @@ export const joinGroupByCode = async (req, res) => {
         memberId: newMember.memberId,
       });
     }
-
   } catch (error) {
     console.error("Error joining group by code:", error);
     res.status(500).json({ message: "Server error" });
@@ -299,7 +322,7 @@ export const checkMemberdeletable = async (req, res) => {
   const memberId = parseInt(req.params.memberId, 10);
 
   if (isNaN(memberId)) {
-    return res.status(400).json({ message: 'Invalid member ID' });
+    return res.status(400).json({ message: "Invalid member ID" });
   }
 
   try {
@@ -308,7 +331,7 @@ export const checkMemberdeletable = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const member = group.members.find(m => m.memberId === memberId);
+    const member = group.members.find((m) => m.memberId === memberId);
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -317,18 +340,17 @@ export const checkMemberdeletable = async (req, res) => {
       groupId: groupId,
       groupBalances: {
         $elemMatch: {
-          $or: [
-            { fromMemberId: memberId },
-            { toMemberId: memberId }
-          ],
+          $or: [{ fromMemberId: memberId }, { toMemberId: memberId }],
           balance: { $gt: 0.0001 },
-          isFinished: false
-        }
-      }
+          isFinished: false,
+        },
+      },
     });
 
     if (unsettledBalances.length > 0) {
-      return res.status(400).json({ message: "Member cannot be deleted due to unsettled balance." });
+      return res.status(400).json({
+        message: "Member cannot be deleted due to unsettled balance.",
+      });
     }
 
     return res.status(200).json({ message: "Member can be deleted." });
@@ -343,7 +365,9 @@ export const updateGroupInfo = async (req, res) => {
   const { groupName, startDate, members: incomingMembers } = req.body;
 
   if (!groupName || !incomingMembers) {
-    return res.status(400).json({ message: "Group name and members list are required." });
+    return res
+      .status(400)
+      .json({ message: "Group name and members list are required." });
   }
 
   try {
@@ -357,16 +381,24 @@ export const updateGroupInfo = async (req, res) => {
     group.startDate = startDate ? new Date(startDate) : null;
 
     const currentMembers = group.members.toObject();
-    const currentMemberIds = new Set(currentMembers.map(m => m.memberId));
+    const currentMemberIds = new Set(currentMembers.map((m) => m.memberId));
 
     // Filter incoming members to identify those with and without memberId
-    const incomingMembersWithId = incomingMembers.filter(m => m.memberId !== undefined);
-    const incomingMembersWithoutId = incomingMembers.filter(m => m.memberId === undefined); // These are the new members from frontend preview
+    const incomingMembersWithId = incomingMembers.filter(
+      (m) => m.memberId !== undefined
+    );
+    const incomingMembersWithoutId = incomingMembers.filter(
+      (m) => m.memberId === undefined
+    ); // These are the new members from frontend preview
 
-    const incomingMemberIds = new Set(incomingMembersWithId.map(m => m.memberId));
+    const incomingMemberIds = new Set(
+      incomingMembersWithId.map((m) => m.memberId)
+    );
 
     // Identify members marked for deletion (exist in current but not in incoming with ID)
-    const membersToDelete = currentMembers.filter(m => !incomingMemberIds.has(m.memberId));
+    const membersToDelete = currentMembers.filter(
+      (m) => !incomingMemberIds.has(m.memberId)
+    );
 
     for (const memberToDelete of membersToDelete) {
       const unsettledBalances = await Balance.find({
@@ -375,17 +407,17 @@ export const updateGroupInfo = async (req, res) => {
           $elemMatch: {
             $or: [
               { fromMemberId: memberToDelete.memberId },
-              { toMemberId: memberToDelete.memberId }
+              { toMemberId: memberToDelete.memberId },
             ],
             balance: { $gt: 0.0001 },
-            isFinished: false
-          }
-        }
+            isFinished: false,
+          },
+        },
       });
 
       if (unsettledBalances.length > 0) {
         return res.status(400).json({
-          message: `Cannot delete member '${memberToDelete.userName}' due to unsettled balances. Please settle balances before removing.`
+          message: `Cannot delete member '${memberToDelete.userName}' due to unsettled balances. Please settle balances before removing.`,
         });
       }
     }
@@ -393,29 +425,34 @@ export const updateGroupInfo = async (req, res) => {
     const newMembersArray = [];
 
     // Add existing members that were *not* deleted
-    currentMembers.forEach(member => {
+    currentMembers.forEach((member) => {
       // If the member's ID is present in the incoming list (meaning they weren't deleted)
       if (incomingMemberIds.has(member.memberId)) {
         // Add the member to the new array.
         // Optional: Update userName here if frontend allowed editing existing member names
-        const incomingMember = incomingMembersWithId.find(m => m.memberId === member.memberId);
+        const incomingMember = incomingMembersWithId.find(
+          (m) => m.memberId === member.memberId
+        );
         newMembersArray.push({
           memberId: member.memberId,
-          userName: incomingMember ? incomingMember.userName : member.userName // Use incoming name if provided, otherwise keep current
+          userName: incomingMember ? incomingMember.userName : member.userName, // Use incoming name if provided, otherwise keep current
         });
       }
     });
 
-    let nextMemberId = currentMembers.length > 0 ? Math.max(...currentMembers.map(m => m.memberId)) + 1 : 1;
+    let nextMemberId =
+      currentMembers.length > 0
+        ? Math.max(...currentMembers.map((m) => m.memberId)) + 1
+        : 1;
 
-    incomingMembersWithoutId.forEach(newMemberData => {
+    incomingMembersWithoutId.forEach((newMemberData) => {
       if (!newMemberData.userName || newMemberData.userName.trim() === "") {
         // Basic check for empty new member name, although frontend should prevent this
         return; // Skip invalid entries
       }
       newMembersArray.push({
         memberId: nextMemberId++, // Assign next available sequential ID
-        userName: newMemberData.userName.trim()
+        userName: newMemberData.userName.trim(),
       });
     });
 
@@ -426,15 +463,14 @@ export const updateGroupInfo = async (req, res) => {
     await group.save();
 
     res.status(200).json(group.toObject({ virtuals: true, versionKey: false }));
-  }
-  catch (err) {
+  } catch (err) {
     console.error("Error updating group:", err);
-    if (err.name === 'ValidationError') {
+    if (err.name === "ValidationError") {
       return res.status(400).json({ message: err.message });
     }
     res.status(500).json({ message: "Server error updating group." });
   }
-}
+};
 
 export const addNewVirtualMember = async (req, res) => {
   const groupId = req.params.id;
@@ -450,7 +486,10 @@ export const addNewVirtualMember = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const memberId = group.members.length > 0 ? Math.max(...group.members.map(m => m.memberId)) + 1 : 1;
+    const memberId =
+      group.members.length > 0
+        ? Math.max(...group.members.map((m) => m.memberId)) + 1
+        : 1;
     const newMember = {
       memberId,
       userName,
@@ -464,32 +503,86 @@ export const addNewVirtualMember = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
-}
+};
 
 export const deleteGroupMember = async (req, res) => {
   const groupId = req.params.id;
   const memberId = req.params.memberId;
 
   try {
-    const group = await Group
-      .findByIdAndUpdate(
-        groupId,
-        { $pull: { members: { memberId } } },
-        { new: true }
-      )
-      .select("-__v");
+    const group = await Group.findByIdAndUpdate(
+      groupId,
+      { $pull: { members: { memberId } } },
+      { new: true }
+    ).select("-__v");
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
     res.status(200).json(group);
-  }
-  catch (err) {
+  } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+// Helper：生成随机 joinCode
+function generateJoinCode(length = 6) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 }
 
-// Create group
-export const createGroup = (req, res) => {
-  res.send("Create group API");
+export const createGroup = async (req, res) => {
+  const { groupName, startDate, members } = req.body;
+  const currentUserId = req.user.id;
+
+  if (!groupName || !Array.isArray(members) || members.length === 0) {
+    return res
+      .status(400)
+      .json({ message: "Group name and members are required." });
+  }
+
+  try {
+    // 生成唯一 joinCode，避免重复
+    let joinCode;
+    let codeExists = true;
+    while (codeExists) {
+      joinCode = generateJoinCode();
+      const existingGroup = await Group.findOne({ joinCode });
+      codeExists = !!existingGroup;
+    }
+
+    // 组装新 group
+    const newGroup = new Group({
+      groupName,
+      startDate: startDate ? new Date(startDate) : null,
+      joinCode,
+      members: members.map((m, idx) => ({
+        memberId: idx + 1, // 自动编号，从1开始
+        userName: m.userName,
+        userId: m.userId || null,
+      })),
+      budget: 0,
+      totalExpenses: 0,
+      totalRefunds: 0,
+    });
+
+    const savedGroup = await newGroup.save();
+
+    // 把 groupId 加到用户自己的 groupId 列表里
+    await User.findByIdAndUpdate(currentUserId, {
+      $addToSet: { groupId: savedGroup._id },
+    });
+
+    res.status(201).json({
+      message: "Group created successfully",
+      group: savedGroup,
+    });
+  } catch (error) {
+    console.error("Error creating group:", error);
+    res.status(500).json({ message: "Server error while creating group" });
+  }
 };

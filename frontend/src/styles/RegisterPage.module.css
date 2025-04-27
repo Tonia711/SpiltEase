@@ -5,7 +5,7 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 2rem; 
+  padding: 2rem;
 }
 
 .form {
@@ -20,7 +20,7 @@
   font-size: 32px;
   font-weight: bold;
   text-align: center;
-  color: #fcd34d;
+  color: #fbc609;
   margin-bottom: 10px;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .button {
-  background-color: #fcd34d;
+  background-color: #fbc609;
   border: none;
   border-radius: 12px;
   padding: 0.75rem;
@@ -69,7 +69,7 @@
 }
 
 .button:hover {
-  background-color: #fbbf24;
+  background-color: #fbc609;
 }
 
 .error {
@@ -85,7 +85,7 @@
 }
 
 .loginLink {
-  color: #fcd34d;
+  color: #fbc609;
   margin-left: 0.25rem;
   text-decoration: underline;
 }
