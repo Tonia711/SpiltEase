@@ -6,7 +6,7 @@ import MobileFrame from "../../components/MobileFrame";
  
 
 export default function EditBillPage() {
-  const { groupId } = useParams(); // 获取 groupId
+  const { groupId, billId } = useParams();  // 获取 groupId
   const navigate = useNavigate();
 
 
@@ -185,7 +185,7 @@ export default function EditBillPage() {
     <MobileFrame>
       <form className={styles.form} onSubmit={handleAddBill}>
         <h2 className={styles.header}>
-        <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses`)}>
+        <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)}>
             {"<"}
         </span>
         <p >Edit Expense</p>
