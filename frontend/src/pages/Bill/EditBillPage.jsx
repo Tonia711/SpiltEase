@@ -179,15 +179,14 @@ export default function EditBillPage() {
   // submit bill
   const handleSaveBill = async (e) => {
     e.preventDefault();
-    setError("");  // 清空之前的错误
+    setError("");
   
     if (!selectedLabelId || !note || !expenses || !paidBy || !paidDate || memberTotalExpenses.length === 0) {
       setError("Please fill in all required fields.");
       return;
     }
   
-    const newBill = {
-      groupId,
+    const updatedBill = {
       labelId: selectedLabelId,
       date: paidDate,
       note,
@@ -202,16 +201,15 @@ export default function EditBillPage() {
       }))
     };
   
-    // console.log(newBill);
-
     try {
-      // await api.post(`/bills`, newBill);
-      navigate(`/groups/${groupId}/expenses`);
+      await api.put(`/bills/${groupId}/bill/${billId}`, updatedBill);
+      navigate(`/groups/${groupId}/expenses/${billId}`);
     } catch (err) {
-      console.error("Failed to create bill:", err);
-      setError("Failed to create bill. Please try again.");
+      console.error("Failed to update bill:", err);
+      setError("Failed to update bill. Please try again.");
     }
   };
+  
   
   
 
