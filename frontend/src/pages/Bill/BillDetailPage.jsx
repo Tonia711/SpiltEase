@@ -9,6 +9,7 @@ export default function BillDetailPage() {
     const navigate = useNavigate();
     const [bill, setBill] = useState(null);
     const [labels, setLabels] = useState([]);  // labels
+    const [showConfirm, setShowConfirm] = useState(false); // 新增：控制确认弹窗
 
     const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
 
@@ -35,10 +36,24 @@ export default function BillDetailPage() {
       return <div>Loading...</div>; 
     }
 
-      
-    // console.log("bill", bill);
+    const handleClickDelete = (e) => {
+      e.preventDefault();
+      setShowConfirm(true); // 显示确认弹窗
+    };
   
-    // console.log("labels", labels);
+    const handleConfirmDelete = async () => {
+      try {
+        await api.delete(`/bills/${groupId}/bill/${billId}`);
+        navigate(`/groups/${groupId}/expenses`);
+      } catch (err) {
+        console.error("Failed to delete bill:", err);
+      }
+    };
+  
+    const handleCancelDelete = () => {
+      setShowConfirm(false); // 取消删除
+    };
+  
     
     return (
       <MobileFrame>
@@ -72,8 +87,7 @@ export default function BillDetailPage() {
               <p>Amounts</p>
           </div>
     
-          <div className={styles.section}>
-          
+          <div>
             {(bill.members || []).map((member, index) => (
               <div key={index} className={styles.row}>
                 <span>{member.userName}</span>
@@ -82,12 +96,24 @@ export default function BillDetailPage() {
             ))}
           </div>
     
-          <div className={styles.actions}>
-            <button className={styles.deleteButton}>Delete</button>
-            <span></span>
-            <button className={styles.editButton} onClick={() => navigate(`/groups/${groupId}/editBill/${billId}`)}>
-              Edit
-              </button>
+          <div >
+            {!showConfirm ? (
+              <div className={styles.actions}>
+                <button className={styles.deleteButton} onClick={handleClickDelete}>Delete</button>
+                <span></span>
+                <button className={styles.editButton} onClick={() => navigate(`/groups/${groupId}/editBill/${billId}`)}>
+                  Edit
+                </button>
+              </div>
+            ) : (
+              <div className={styles.confirmBox}>
+                <p>Are you sure you want to delete this expense?</p>
+                <div className={styles.confirmButtons}>
+                  <button className={styles.confirmDelete} onClick={handleConfirmDelete}>Delete</button>
+                  <button className={styles.confirmCancel} onClick={handleCancelDelete}>Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </MobileFrame>
