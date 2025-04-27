@@ -219,20 +219,6 @@ async function importData() {
       };
     });
 
-    const fixedBalances = calculatedBalances.map(b => {
-      const realGroupId = groupMap[b.groupId]; 
-      return {
-        groupId: realGroupId,
-        groupBalances: (b.groupBalances || []).map(balance => ({
-          fromMemberId: balance.fromMemberId,
-          toMemberId: balance.toMemberId,  
-          balance: balance.balance,
-          isFinished: false,
-          finishHistory: [],
-        }))
-      };
-    });
-
 
 
 const originalBillsForBalanceCalculation = bills.map(b => ({
