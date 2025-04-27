@@ -19,9 +19,6 @@ import getMinimalTransfers from "../data/balancesCalculate.js";
 dotenv.config();
 const MONGO_URI = process.env.MONGO_URI;
 
-// 计算最简转账
-const calculatedBalances = getMinimalTransfers(bills); // 这里调用并传入 bills 数据
-
 async function importData() {
   try {
     await mongoose.connect(MONGO_URI);
@@ -114,6 +111,7 @@ async function importData() {
     console.log("✅ Users inserted and userIdMap created");
 
     const groupMap = {};
+    const virtualUserIdMap = {};
     const groupDocs = groups.map((g) => {
       const groupObjectId = new Types.ObjectId();
       groupMap[g.id] = groupObjectId;
@@ -135,7 +133,9 @@ async function importData() {
             userName: m.userName || `user${i}`,
           };
           if (m.userId === "") {
-            memberDoc.userId = null;
+            const virtualId = new Types.ObjectId();
+            memberDoc.userId = virtualId;
+            virtualUserIdMap[m.memberId] = virtualId;
           } else {
             memberDoc.userId = userIdMap[m.userId] || null;
           }
@@ -186,6 +186,7 @@ async function importData() {
       }
     });
 
+
     // 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
     const allGroups = await Group.find();
     const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
@@ -232,13 +233,43 @@ async function importData() {
       };
     });
 
-    // 插入 Balance 数据
-    await Balance.insertMany(fixedBalances);
-    console.log("✅ Balances inserted");
 
+
+const originalBillsForBalanceCalculation = bills.map(b => ({
+  ...b,
+  groupBills: b.groupBills.map(gb => ({
+    ...gb,
+    members: gb.members.map(m => ({ ...m }))
+  }))
+}));
+
+const calculatedBalances = getMinimalTransfers(originalBillsForBalanceCalculation);
+
+
+const fixedBalances = calculatedBalances.map(groupBalance => {
+  const realGroupId = groupMap[groupBalance.groupId];
+  const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
+
+  return {
+    groupId: realGroupId,
+    groupBalances: groupBalance.groupBalances
+    .map(b => {
+      const fromId = (memberIdMap[b.fromMemberId] || virtualUserIdMap[b.fromMemberId]) ?? null;
+      const toId = (memberIdMap[b.toMemberId] || virtualUserIdMap[b.toMemberId]) ?? null;
+      return {
+      fromMemberId: fromId,
+      toMemberId: toId,
+      balance: b.balance,
+      isFinished: false,
+      finishHistory: []
+      };
+    })
+  };
+});
 
     // 插入新数据
     await Promise.all([
+      Balance.insertMany(fixedBalances),
       Bill.insertMany(fixedBills),
       // User.insertMany(hashedUsers),
     ]);

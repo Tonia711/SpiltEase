@@ -118,6 +118,33 @@
     margin: 16px 0 8px;
   }
   
+  .tabContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .tabButton {
+    padding: 8px 16px;
+    background-color: #2a2933;
+    color: white;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border-radius: 10px 0 0 10px;
+  }
+
+  .tabButton:last-child {
+    border-radius: 0 10px 10px 0;
+  }
+  
+  .activeTab {
+    background-color: #ffca28;
+    color: black;
+  }
+  
   
   
 

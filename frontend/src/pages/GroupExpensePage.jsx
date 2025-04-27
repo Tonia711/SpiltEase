@@ -1,22 +1,50 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import MobileFrame from "../components/MobileFrame";
 import styles from "../styles/GroupExpensePage.module.css";
 import dayjs from "dayjs";
+import { AuthContext } from "../contexts/AuthContext";
+import { useMemo } from "react";
 
 export default function GroupExpensePage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
   const [group, setGroup] = useState(null);
   const [bills, setBills] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("expenses");
+  const [balance, setBalance] = useState([]);
 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
   const DEFAULT_ICON = `${BASE_URL}/groups/defaultIcon.jpg`;
+
+  const myUserId = currentUser?._id?.toString() || "";
+
+  const { totalOwed, myBalances } = useMemo(() => {
+    let totalOwed = 0;
+    let myBalances = [];
+
+    if (myUserId && balance.length > 0) {
+      myBalances = balance.filter(b => 
+        ((b.fromMemberId && b.fromMemberId._id?.toString() === myUserId) || (b.toMemberId && b.toMemberId._id?.toString() === myUserId))
+      );
+
+    totalOwed = myBalances.reduce((sum, b) => {
+      if (b.toMemberId?._id?.toString() === myUserId) {
+        return sum + b.balance; // 别人欠我
+      } else {
+        return sum - b.balance; // 我欠别人
+      }
+    }, 0);
+  }
+
+  return { totalOwed, myBalances };
+}, [balance, myUserId]);
 
   useEffect(() => {
     async function fetchData() {
@@ -48,6 +76,24 @@ export default function GroupExpensePage() {
     }
     fetchData();
   }, [groupId]);
+
+  useEffect(() => {
+    async function fetchBalance() {
+      try {
+        const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
+        console.log("Fetched balanceData:", balanceData);
+        setBalance(balanceData.groupBalances || []);
+      } catch (err) {
+        console.error("Failed to fetch balance:", err);
+        setBalance([]);
+      }
+    }
+
+    if (activeTab === "balance") {
+      fetchBalance();
+    }
+  }, [activeTab, groupId]); 
+
 
   if (loading) return <p>Loading expenses...</p>;
   if (error) return <p>{error}</p>;
@@ -87,32 +133,37 @@ export default function GroupExpensePage() {
             </div>
           </div>
 
-    
-          <h3>Expenses</h3>
+          <div className={styles.tabContainer}>
+            <button
+              className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
+              onClick={() => setActiveTab("expenses")}
+            >
+              Expenses
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
+              onClick={() => setActiveTab("balance")}
+            >
+              Balance
+            </button>
+          </div>
       
-          {Object.keys(bills).length === 0 ? (
-            <p>No expenses found.</p>
-          ) : (
-            <div className={styles.scrollArea}>
-              {Object.entries(bills).map(([date, billList]) => (
+          <div className={styles.scrollArea}>
+          {activeTab === "expenses" ? (
+            Object.keys(bills).length === 0 ? (
+              <p>No expenses found.</p>
+            ) : (
+              Object.entries(bills).map(([date, billList]) => (
                 <div key={date} style={{ marginBottom: "20px" }}>
                   <h4 className={styles.billDateTitle}>
                     {dayjs(date).format("MMM D, YYYY")}
                   </h4>
                   <ul>
                     {billList.map((bill) => (
-
                       <li
                         key={bill._id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          marginBottom: "8px",
-                          border: "1px solid #ddd",
-                          padding: "10px",
-                          borderRadius: "8px",
-                        }}
-                      onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
+                        className={styles.billItem}
+                        onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
                       >
 
                         {bill.label?.iconUrl && (
@@ -132,9 +183,39 @@ export default function GroupExpensePage() {
                     ))}
                   </ul>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+          )
+      ) : (
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
+          <h3>You are {totalOwed >= 0 ? "owed" : "owe"} ${Math.abs(totalOwed).toFixed(2)}</h3>
+          {myBalances.length === 0 ? (
+              <p>No balances to show.</p>
+            ) : (
+              <ul className={styles.balanceList}>
+                {myBalances.map((b, index) => {
+                  const isOwedToMe = b.toMemberId?._id?.toString() === myUserId;
+                  const otherPerson = isOwedToMe ? b.fromMemberId : b.toMemberId;
+                  return (
+                    <li key={index} className={styles.balanceItem}>
+                      {isOwedToMe ? (
+                        <>
+                          <span>{otherPerson?.userName || "Someone"}</span> owes you
+                          <span style={{ fontWeight: "bold" }}> ${b.balance.toFixed(2)}</span>
+                        </>
+                      ) : (
+                        <>
+                          You owe <span>{otherPerson?.userName || "Someone"}</span>
+                          <span style={{ fontWeight: "bold" }}> ${b.balance.toFixed(2)}</span>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
 
     
           <div className={styles.fabContainer}>
