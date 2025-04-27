@@ -42,7 +42,7 @@ async function importData() {
         iconUrl: i.iconUrl,
       };
 
-      if (i.id && i.id <= 100) {  
+      if (i.id && i.id <= 100) {
         const hexId = i.id.toString(16).padStart(24, "0");
         doc._id = new mongoose.Types.ObjectId(hexId);
         i._id = doc._id;
@@ -185,58 +185,54 @@ async function importData() {
         labelMap[label.id] = matched._id;
       }
     });
- 
-// 获取所有 Group 文档，并构建 groupId -> memberId 对应 userId 的映射
-const allGroups = await Group.find();
-const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: userId } }
-
-allGroups.forEach(group => {
-  const memberMap = {};
-  group.members.forEach(member => {
-    memberMap[member.memberId] = member.userId;
-  })  
-  groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
-});
 
 
-const fixedBills = bills.map(b => {
-  const realGroupId = groupMap[b.groupId];
-  const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
+    // 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
+    const allGroups = await Group.find();
+    const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
 
-  return {
-    groupId: realGroupId,
-    groupBills: (b.groupBills || []).map(gb => {
-      const paidByUserId = memberIdMap[gb.paidBy] || virtualUserIdMap[gb.paidBy];
-      if (!paidByUserId) {
-        throw new Error(`Cannot find userId for paidBy memberId ${gb.paidBy} in group ${b.groupId}`);
-      }
-
-      const members = gb.members.map(m => {
-        const memberUserId = memberIdMap[m.memberId] || virtualUserIdMap[m.memberId];
-        if (!memberUserId) {
-          throw new Error(`Cannot find userId for memberId ${m.memberId} in group ${b.groupId}`);
-        }
-        return {
-          memberId: memberUserId,
-          expense: m.expense,
-          refund: m.refund
-        };
+    allGroups.forEach(group => {
+      const memberMap = {};
+      group.members.forEach(member => {
+        memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
       });
+      groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
+    });
+
+    // 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
+    const fixedBills = bills.map(b => {
+      const realGroupId = groupMap[b.groupId]; // 从 groupMap 中拿真实 group ObjectId
+      const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
 
       return {
-        id: gb.id,
-        labelId: labelMap[gb.labelId],
-        date: gb.date ? new Date(gb.date) : null,
-        note: gb.note,
-        paidBy: paidByUserId,
-        expenses: gb.expenses,
-        refunds: gb.refunds,
-        splitWay: gb.splitWay,
-        members: members,
+        groupId: realGroupId,
+        groupBills: (b.groupBills || []).map(gb => ({
+          ...gb,
+          labelId: labelMap[gb.labelId],      // 替换为 labels _id
+          paidBy: memberIdMap[gb.paidBy],
+          members: gb.members.map(m => ({
+            memberId: memberIdMap[m.memberId], // 替换为 groups members _id
+            expense: m.expense,
+            refund: m.refund
+          }))
+        }))
       };
-    })
-  };
-});
+    });
+
+    const fixedBalances = calculatedBalances.map(b => {
+      const realGroupId = groupMap[b.groupId]; 
+      return {
+        groupId: realGroupId,
+        groupBalances: (b.groupBalances || []).map(balance => ({
+          fromMemberId: balance.fromMemberId,
+          toMemberId: balance.toMemberId,  
+          balance: balance.balance,
+          isFinished: false,
+          finishHistory: [],
+        }))
+      };
+    });
+
 
 
 const originalBillsForBalanceCalculation = bills.map(b => ({

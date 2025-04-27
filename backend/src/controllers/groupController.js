@@ -1,6 +1,4 @@
-import { Group } from "../db/schema.js";
-import { User } from "../db/schema.js";
-import { Icon } from "../db/schema.js";
+import { Group, User, Icon, Balance } from "../db/schema.js";
 import mongoose from "mongoose";
 
 // Get all groups for a user
@@ -31,7 +29,7 @@ export const getUserGroups = async (req, res) => {
         iconUrl,
       };
     }));
-    
+
     res.json(groupsWithIcons);
   } catch (err) {
     console.error("Error fetching user's groups:", err);
@@ -272,6 +270,30 @@ export const joinGroupByCode = async (req, res) => {
   }
 };
 
+export const updateGroupIcon = async (req, res) => {
+  try {
+    const { groupId } = req.body;
+    const filePath = `groups/${req.file.filename}`;
+
+    const newIcon = await Icon.create({
+      iconUrl: filePath,
+    });
+
+    await Group.findByIdAndUpdate(groupId, {
+      iconId: newIcon._id,
+    });
+
+    res.status(201).json({
+      message: "Icon uploaded",
+      iconId: newIcon._id,
+      iconUrl: filePath,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Upload failed" });
+  }
+};
+
 export const checkMemberdeletable = async (req, res) => {
   const groupId = req.params.id;
   const memberId = parseInt(req.params.memberId, 10);
@@ -291,15 +313,25 @@ export const checkMemberdeletable = async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    if (!memberToDelete) {
-      return res.status(404).json({ message: "Member not found" });
+    const unsettledBalances = await Balance.find({
+      groupId: groupId,
+      groupBalances: {
+        $elemMatch: {
+          $or: [
+            { fromMemberId: memberId },
+            { toMemberId: memberId }
+          ],
+          balance: { $gt: 0.0001 },
+          isFinished: false
+        }
+      }
+    });
+
+    if (unsettledBalances.length > 0) {
+      return res.status(400).json({ message: "Member cannot be deleted due to unsettled balance." });
     }
 
-    if (memberToDelete.balance > 0) {
-      return res.status(400).json({ message: "Member cannot be deleted due to non-zero balance." });
-    }
-
-    res.status(200).json({ message: "Member can be deleted." });
+    return res.status(200).json({ message: "Member can be deleted." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -308,82 +340,131 @@ export const checkMemberdeletable = async (req, res) => {
 
 export const updateGroupInfo = async (req, res) => {
   const groupId = req.params.id;
-  const { groupName, startDate, members } = req.body;
+  const { groupName, startDate, members: incomingMembers } = req.body;
 
-  if (!groupName || !startDate || !Array.isArray(members)) {
-    return res.status(400).json({ message: "Invalid request data." });
+  if (!groupName || !incomingMembers) {
+    return res.status(400).json({ message: "Group name and members list are required." });
   }
 
-  let session;
-
   try {
-    const group = await Group.findById(groupId).populate('members');
+    const group = await Group.findById(groupId);
 
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
 
     group.groupName = groupName;
-    group.startDate = new Date(startDate);
+    group.startDate = startDate ? new Date(startDate) : null;
 
-    const existingMembers = group.members.map(m => m.userId);
-    const incomingMembers = members.map(m => m.userId).filter(userId => userId);
-    const newMembersData = members.filter(m => !m.userId);
+    const currentMembers = group.members.toObject();
+    const currentMemberIds = new Set(currentMembers.map(m => m.memberId));
 
-    const membersTodeleteIds = existingMembers.filter(userId => !incomingMembers.includes(userId));
+    // Filter incoming members to identify those with and without memberId
+    const incomingMembersWithId = incomingMembers.filter(m => m.memberId !== undefined);
+    const incomingMembersWithoutId = incomingMembers.filter(m => m.memberId === undefined); // These are the new members from frontend preview
 
-    const membersToDelete = [];
-    const undeletableMembers = [];
+    const incomingMemberIds = new Set(incomingMembersWithId.map(m => m.memberId));
 
-    for (const memberId of membersTodeleteIds) {
-      const member = group.members.find(m => m.userId && m.userId.equals(memberId));
-      if (member) {
-        if (member.balance === 0) {
-          undeletableMembers.push(member.memberName || `ID: ${member.id}`);
-        } else {
-          membersToDelete.push(member);
+    // Identify members marked for deletion (exist in current but not in incoming with ID)
+    const membersToDelete = currentMembers.filter(m => !incomingMemberIds.has(m.memberId));
+
+    for (const memberToDelete of membersToDelete) {
+      const unsettledBalances = await Balance.find({
+        groupId: groupId,
+        groupBalances: {
+          $elemMatch: {
+            $or: [
+              { fromMemberId: memberToDelete.memberId },
+              { toMemberId: memberToDelete.memberId }
+            ],
+            balance: { $gt: 0.0001 },
+            isFinished: false
+          }
         }
-      }
+      });
 
-      if (undeletableMembers.length > 0) {
-        return res.status(400).json({ message: `Cannot delete members with non-zero balance: ${undeletableMembers.join(", ")}` });
+      if (unsettledBalances.length > 0) {
+        return res.status(400).json({
+          message: `Cannot delete member '${memberToDelete.userName}' due to unsettled balances. Please settle balances before removing.`
+        });
       }
     }
 
+    const newMembersArray = [];
 
-    res.status(200).json(group);
+    // Add existing members that were *not* deleted
+    currentMembers.forEach(member => {
+      // If the member's ID is present in the incoming list (meaning they weren't deleted)
+      if (incomingMemberIds.has(member.memberId)) {
+        // Add the member to the new array.
+        // Optional: Update userName here if frontend allowed editing existing member names
+        const incomingMember = incomingMembersWithId.find(m => m.memberId === member.memberId);
+        newMembersArray.push({
+          memberId: member.memberId,
+          userName: incomingMember ? incomingMember.userName : member.userName // Use incoming name if provided, otherwise keep current
+        });
+      }
+    });
+
+    let nextMemberId = currentMembers.length > 0 ? Math.max(...currentMembers.map(m => m.memberId)) + 1 : 1;
+
+    incomingMembersWithoutId.forEach(newMemberData => {
+      if (!newMemberData.userName || newMemberData.userName.trim() === "") {
+        // Basic check for empty new member name, although frontend should prevent this
+        return; // Skip invalid entries
+      }
+      newMembersArray.push({
+        memberId: nextMemberId++, // Assign next available sequential ID
+        userName: newMemberData.userName.trim()
+      });
+    });
+
+    // Update the group's members array with the new list
+    group.members = newMembersArray;
+
+    // 6. Save the updated group document
+    await group.save();
+
+    res.status(200).json(group.toObject({ virtuals: true, versionKey: false }));
   }
   catch (err) {
+    console.error("Error updating group:", err);
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ message: err.message });
+    }
+    res.status(500).json({ message: "Server error updating group." });
+  }
+}
+
+export const addNewVirtualMember = async (req, res) => {
+  const groupId = req.params.id;
+  const { userName } = req.body;
+
+  if (!userName) {
+    return res.status(400).json({ message: "User name are required" });
+  }
+
+  try {
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const memberId = group.members.length > 0 ? Math.max(...group.members.map(m => m.memberId)) + 1 : 1;
+    const newMember = {
+      memberId,
+      userName,
+    };
+
+    group.members.push(newMember);
+    await group.save();
+
+    res.status(201).json(group);
+  } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 }
-
-export const updateGroupIcon = async (req, res) => {
-  try {
-    const { groupId } = req.body;
-    const filePath = `groups/${req.file.filename}`;
-
-    // Step 1: 存入 Icon 表
-    const newIcon = await Icon.create({
-      iconUrl: filePath,
-    });
-
-    // Step 2: 更新用户 iconId 为这个头像
-    await Group.findByIdAndUpdate(groupId, {
-      iconId: newIcon._id,
-    });
-
-    res.status(201).json({
-      message: "Icon uploaded",
-      iconId: newIcon._id,
-      iconUrl: filePath,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Upload failed" });
-  }
-};
 
 export const deleteGroupMember = async (req, res) => {
   const groupId = req.params.id;
@@ -407,7 +488,6 @@ export const deleteGroupMember = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 }
-
 
 // Create group
 export const createGroup = (req, res) => {

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext"; // ✅ 引入 AuthContext
 import styles from "../styles/RegisterPage.module.css";
 import MobileFrame from "../components/MobileFrame"; // ✅ 引入 MobileFrame 组件
+import '../App.css'; // ✅ 引入 App.css
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -39,9 +40,7 @@ export default function RegisterPage() {
     <MobileFrame>
       <div className={styles.container}>
         <form className={styles.form} onSubmit={handleSubmit}>
-          <h2 className={styles.logo}>
-            SPLiT<span className={styles.logoHighlight}>Mate</span>
-          </h2>
+          <img src="/images/logo-splitmate.png" alt="SplitMate" className="logoImage" />
 
           <div className={styles.inputGroup}>
             <label className={styles.label}>Username</label>
