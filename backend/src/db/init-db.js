@@ -189,20 +189,20 @@ async function importData() {
 
     // 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
     const allGroups = await Group.find();
-    const groupMemberIdToUserIdMap = {};
+    const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
 
     allGroups.forEach(group => {
       const memberMap = {};
       group.members.forEach(member => {
-        memberMap[member.memberId] = member.userId;
+        memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
       });
-      groupMemberIdToUserIdMap[group._id.toString()] = memberMap;
+      groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
     });
 
     // 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
     const fixedBills = bills.map(b => {
-      const realGroupId = groupMap[b.groupId];
-      const memberIdMap = groupMemberIdToUserIdMap[realGroupId.toString()] || {};
+      const realGroupId = groupMap[b.groupId]; // 从 groupMap 中拿真实 group ObjectId
+      const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
 
       return {
         groupId: realGroupId,
@@ -234,7 +234,7 @@ const calculatedBalances = getMinimalTransfers(originalBillsForBalanceCalculatio
 
 const fixedBalances = calculatedBalances.map(groupBalance => {
   const realGroupId = groupMap[groupBalance.groupId];
-  const memberIdMap = groupMemberIdToUserIdMap[realGroupId.toString()] || {};
+  const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
 
   return {
     groupId: realGroupId,

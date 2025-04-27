@@ -12,16 +12,7 @@ export const getBalanceByGroupId = async (req, res) => {
     }
 
     // 查询 balance，groupId要转成 ObjectId
-    const balance = await Balance.findOne({ groupId: new mongoose.Types.ObjectId(groupId) })
-    .populate({
-      path: "groupBalances.fromMemberId",
-      select: "userName _id",
-    })
-    .populate({
-      path: "groupBalances.toMemberId",
-      select: "userName _id",
-    })
-    .lean();
+    const balance = await Balance.findOne({ groupId: new mongoose.Types.ObjectId(groupId) }).lean();
 
     if (!balance) {
       return res.status(404).json({ error: "Balance not found for this group" });
