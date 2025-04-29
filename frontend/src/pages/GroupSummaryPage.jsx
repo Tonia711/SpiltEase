@@ -29,16 +29,16 @@ const DEFAULT_SUMMARY_DATA = {
   billCount: 0,
   memberCount: 0,
   groupSummary: [
-    { labelName: "No Data", totalExpense: 1 }
+    { labelName: "No Data", totalExpense: 0 }
   ],
   userSummary: [
-    { labelName: "No Data", userExpense: 1 }
+    { labelName: "No Data", userExpense: 0 }
   ],
   categoryBreakdown: {
-    "No Data": 1
+    "No Data": 0
   },
   memberContributions: {
-    "No Members": 1
+    "No Members": 0
   },
   balances: {},
   settleUpSuggestions: []
@@ -157,7 +157,7 @@ export default function GroupSummaryPage() {
       labels: ['No Categories'],
       datasets: [
         {
-          data: [1],
+          data: [0],
           backgroundColor: ['#808080'],
           borderWidth: 0,
         },
@@ -208,7 +208,7 @@ export default function GroupSummaryPage() {
       labels: ['No Data'],
       datasets: [
         {
-          data: [1],
+          data: [0],
           backgroundColor: ['#808080'],
           borderWidth: 0,
         },
