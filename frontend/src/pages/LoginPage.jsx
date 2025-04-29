@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
 import styles from "../styles/LoginPage.module.css";
 import MobileFrame from "../components/MobileFrame";
+import '../App.css'; // ✅ 引入 App.css
 
 export default function LoginPage() {
   const { login } = useContext(AuthContext);
@@ -29,9 +30,7 @@ export default function LoginPage() {
     <MobileFrame>
       <div className={styles.container}>
         <form className={styles.form} onSubmit={handleLogin}>
-          <h2 className={styles.logo}>
-            SPLiT<span className={styles.logoHighlight}>Mate</span>
-          </h2>
+          <img src="/images/logo-splitmate.png" alt="SplitMate" className="logoImage" />
 
           <div className={styles.inputGroup}>
             <label className={styles.label}>Email address</label>

@@ -19,7 +19,7 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
       throw new Error('User is not a member of this group');
     }
     
-    const userMemberId = userMember.memberId;
+    console.log('User member found:', userMember);
     
     if (!billsData || !billsData.groupBills || billsData.groupBills.length === 0) {
       return {
@@ -48,29 +48,20 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
       }
     });
     
-    console.log('Label mapping by numeric ID:', Object.entries(labelTypeByNumber).map(
-      ([id, info]) => `${id} -> ${info.name}`
-    ));
+    // Create a reverse-mapping from ObjectId to memberId (numeric)
+    // This is critical for matching the user's memberId in the bills
+    const memberIdMapping = {};
     
-    // Debug the bills and their labelIds
-    const billsDebugInfo = billsData.groupBills.map(bill => {
-      // For each bill, extract numeric ID from ObjectId
-      const labelIdStr = bill.labelId ? bill.labelId.toString() : null;
-      const labelNumericId = labelIdStr ? parseInt(labelIdStr.slice(-2), 16) : null;
-      
-      return {
-        billId: bill.id,
-        labelId: labelIdStr,
-        numericId: labelNumericId,
-        labelType: labelNumericId && labelTypeByNumber[labelNumericId] 
-          ? labelTypeByNumber[labelNumericId].name 
-          : 'unknown',
-        expenses: bill.expenses,
-        refunds: bill.refunds
-      };
+    // Map all group members' _id to their numeric memberId
+    group.members.forEach(member => {
+      if (member._id) {
+        memberIdMapping[member._id.toString()] = member.memberId;
+      }
     });
     
-    console.log('Bills with numeric IDs:', billsDebugInfo);
+    // Get the user's memberId (numeric) for the expense comparison
+    const userNumericMemberId = userMember.memberId;
+    console.log(`User numeric memberId for expense matching: ${userNumericMemberId}`);
     
     // Process bill data to calculate expenses by label
     const groupSummaryMap = {};
@@ -131,10 +122,42 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
       groupSummaryMap[labelKey].totalRefund += billRefund;
       groupSummaryMap[labelKey].netExpense += netBillExpense;
       
-      // Calculate user's expense and refund based on the split expense in the members array
-      const userEntry = bill.members.find(m => m.memberId === userMemberId);
+      // Debug the members in this bill
+      console.log(`Bill ${bill.id} members:`, bill.members.map(m => ({
+        memberId: m.memberId,
+        expense: m.expense
+      })));
+      
+      // IMPORTANT: Find user's entry in the bill.members array
+      // First, find the member matching user's MongoDB ObjectId
+      let userEntry = null;
+      
+      // First try direct numeric memberId matching (init-db.js sets these values)
+      userEntry = bill.members.find(m => {
+        // See if the bill's member is a direct match for the user (numeric ID)
+        // This works if the bill data has numeric memberIds
+        return m.memberId === userNumericMemberId;
+      });
+      
+      // If not found by direct numeric match, try comparing the string versions
+      if (!userEntry) {
+        const userMemberIdStr = userMember._id ? userMember._id.toString() : null;
+        
+        userEntry = bill.members.find(m => {
+          if (!m.memberId) return false;
+          
+          // Try string comparison of ObjectIds
+          if (m.memberId.toString && userMemberIdStr) {
+            return m.memberId.toString() === userMemberIdStr;
+          }
+          return false;
+        });
+      }
+      
+      // If we found the user's entry in this bill
       if (userEntry) {
-        // Use the split expense from the members array instead of the total bill expense
+        console.log(`✅ Found user expense in bill ${bill.id}:`, userEntry);
+        // Add to user totals - this user's portion of the bill
         const userExpense = parseFloat(userEntry.expense) || 0;
         const userRefund = parseFloat(userEntry.refund) || 0;
         const netUserExpense = userExpense - userRefund;
@@ -143,6 +166,8 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
         userSummaryMap[labelKey].userExpense += userExpense;
         userSummaryMap[labelKey].userRefund += userRefund;
         userSummaryMap[labelKey].netExpense += netUserExpense;
+      } else {
+        console.log(`User with memberId ${userNumericMemberId} not found in bill ${bill.id} members list`);
       }
     }
     
@@ -153,6 +178,7 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
     console.log("User summary before formatting:", Object.entries(userSummaryMap).map(
       ([labelKey, data]) => `${labelKey} (${data.labelName}): ${data.userExpense} - ${data.userRefund} = ${data.netExpense}`
     ));
+    console.log("Calculated user total:", userTotal);
     
     // Format the data for the frontend with proper capitalization
     const groupSummary = Object.entries(groupSummaryMap)
@@ -165,7 +191,8 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
       }))
       .filter(item => item.totalExpense > 0);
     
-    const userSummary = Object.entries(userSummaryMap)
+    // Handle the case with no user expenses
+    const processedUserSummary = Object.entries(userSummaryMap)
       .map(([labelKey, item]) => ({
         labelId: item.labelId,
         // Capitalize first letter of label name for display
@@ -175,9 +202,17 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
       }))
       .filter(item => item.userExpense > 0);
     
+    // If no user expenses found at all, log a warning
+    if (processedUserSummary.length === 0 && billsData.groupBills.length > 0) {
+      console.log("Warning: No user expenses found despite bills existing.");
+    }
+    
+    console.log("Final user summary:", processedUserSummary);
+    console.log("Final user total:", userTotal);
+    
     return {
       groupSummary,
-      userSummary,
+      userSummary: processedUserSummary,
       groupTotal: parseFloat(groupTotal.toFixed(2)),
       userTotal: parseFloat(userTotal.toFixed(2))
     };

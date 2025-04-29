@@ -12,8 +12,10 @@ import GroupDetailPage from "./pages/GroupDetailPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import JoinGroupPage from "./pages/JoinGroupPage";
-import NewBillPage from "./pages/NewBillPage.jsx";
+import NewBillPage from "./pages/Bill/NewBillPage.jsx";
 import GroupExpensePage from "./pages/GroupExpensePage.jsx";
+import BillDetailPage from "./pages/Bill/BillDetailPage.jsx";
+import EditBillPage from "./pages/Bill/EditBillPage.jsx";
 import GroupSummaryPage from "./pages/GroupSummaryPage.jsx";
 
 
@@ -58,6 +60,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      {/* 新建bill */}
       <Route
         path="/groups/:groupId/creatBill"
         element={
@@ -66,6 +69,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      {/* bill列表 */}
       <Route
         path="/groups/:groupId/expenses"
         element={
@@ -79,6 +83,24 @@ function App() {
         element={
           <ProtectedRoute>
             <GroupDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* 查看单个bill内容 */}
+      <Route
+        path="/groups/:groupId/expenses/:billId"
+        element={
+          <ProtectedRoute>
+            <BillDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* 修改单个bill */}
+      <Route
+        path="/groups/:groupId/editBill/:billId"
+        element={
+          <ProtectedRoute>
+            <EditBillPage />
           </ProtectedRoute>
         }
       />
