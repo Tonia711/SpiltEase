@@ -16,8 +16,8 @@ import {
   addNewVirtualMember,
   deleteGroupMember,
   checkMemberdeletable,
-  getGroupSummary
 } from "../../../controllers/groupController.js";
+import { getGroupSummary } from "../../../controllers/summaryController.js";
 
 const router = express.Router();
 const storage = multer.diskStorage({
