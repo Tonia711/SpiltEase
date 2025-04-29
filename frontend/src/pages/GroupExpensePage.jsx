@@ -10,8 +10,9 @@ import { useMemo } from "react";
 export default function GroupExpensePage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useContext(AuthContext);
+  const { user: currentUser } = useContext(AuthContext);
   const [group, setGroup] = useState(null);
+  const [groupBills, setGroupBills] = useState([]); 
   const [bills, setBills] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,6 +26,14 @@ export default function GroupExpensePage() {
 
   const myUserId = currentUser?._id?.toString() || "";
 
+  // 找到自己在 group.members 里的 _id
+  const myGroupMemberObjectId = useMemo(() => {
+    if (!group || !group.members || !currentUser) return null;
+    const myMember = group.members.find(m => m.userId?.toString() === currentUser._id?.toString());
+    return myMember?._id?.toString() || null;
+  }, [group, currentUser]);
+
+
   const { totalOwed, myBalances, othersBalances, myExpenses, totalExpenses } = useMemo(() => {
     let myExpenses = 0;
     let totalExpenses = 0;    
@@ -32,16 +41,23 @@ export default function GroupExpensePage() {
     let myBalances = [];
     const memberBalanceMap = {};
 
-    if (bills && Object.keys(bills).length > 0) {
-      Object.values(bills).forEach(billList => {
-        billList.forEach(bill => {
-          totalExpenses += bill.expenses;
-          if (bill.paidBy?.toString() === myUserId) {
-            myExpenses += bill.expenses;
-          }
-        });
+    if (groupBills && groupBills.length > 0) {
+      groupBills.forEach(bill => {
+        totalExpenses += (bill.expenses || 0) - (bill.refunds || 0);
+    
+        if (bill.members && bill.members.length > 0) {
+          bill.members.forEach(member => {
+            const matchedGroupMember = group?.members?.find(m => m._id?.toString() === member.memberId?.toString());
+            
+            if (member.memberId?.toString() === myGroupMemberObjectId) {
+              myExpenses += (member.expense || 0) - (member.refund || 0);
+            }
+            
+          });
+        }
       });
     }
+    
 
     if (myUserId && balance.length > 0) {
       balance.forEach(b => {
@@ -71,7 +87,7 @@ export default function GroupExpensePage() {
       });
     }
     return { totalOwed, myBalances, othersBalances: memberBalanceMap, myExpenses, totalExpenses };
-}, [balance, myUserId, bills]);
+}, [balance, myUserId, groupBills, myGroupMemberObjectId]);
 
   useEffect(() => {
     async function fetchData() {
@@ -81,6 +97,7 @@ export default function GroupExpensePage() {
           api.get(`/bills/group/${groupId}`),
         ]);
         setGroup(groupData);
+        setGroupBills(billsData || []);
 
         console.log("Fetched bills:", billsData);
         console.log("Current groupId:", groupId);
