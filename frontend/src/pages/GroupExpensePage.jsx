@@ -6,6 +6,7 @@ import styles from "../styles/GroupExpensePage.module.css";
 import dayjs from "dayjs";
 import { AuthContext } from "../contexts/AuthContext";
 import { useMemo } from "react";
+import GroupSummary from "../components/GroupSummary";
 
 export default function GroupExpensePage() {
   const { groupId } = useParams();
@@ -24,7 +25,7 @@ export default function GroupExpensePage() {
     : "";
   const DEFAULT_ICON = `${BASE_URL}/groups/defaultIcon.jpg`;
 
-  const myUserId = currentUser?._id?.toString() || "";
+    const myUserId = currentUser?._id?.toString() || "";
 
   // 找到自己在 group.members 里的 _id
   const myGroupMemberObjectId = useMemo(() => {
@@ -149,62 +150,56 @@ export default function GroupExpensePage() {
   const handleAddExpenseClick = () => {
     navigate(`/groups/${groupId}/creatBill`);
   };
-  
-  const handleSummaryClick = () => {
-    navigate(`/groups/${groupId}/summary`);
-  };
 
   const groupIconUrl = group?.iconUrl
     ? (group.iconUrl.startsWith("http") ? group.iconUrl : `${BASE_URL}/${group.iconUrl}`)
     : DEFAULT_ICON;
 
-    return (
-      <MobileFrame>
-        <div className={styles.container}>
-          <div className={styles.header}>
-            <button className={styles.backButton} onClick={() => navigate("/")}>
-              {"<"}
-            </button>
-            <div onClick={handleGroupClick}>
-              <img
-                src={groupIconUrl}
-                alt="Group Icon"
-                className={styles.groupIcon}
-              />
-              <div className={styles.groupName}>{group?.groupName}</div>
-              <div
-                className="group-id"
-                style={{ fontSize: "0.7rem", color: "#888" }}
-              >
-                ID: {group._id}
-              </div>
+  return (
+    <MobileFrame>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <button className={styles.backButton} onClick={() => navigate("/")}>
+            {"<"}
+          </button>
+          <div onClick={handleGroupClick}>
+            <img
+              src={groupIconUrl}
+              alt="Group Icon"
+              className={styles.groupIcon}
+            />
+            <div className={styles.groupName}>{group?.groupName}</div>
+            <div
+              className="group-id"
+              style={{ fontSize: "0.7rem", color: "#888" }}
+            >
+              ID: {group._id}
             </div>
-            
-            {/* Summary button */}
-            <button 
-              className={styles.summaryButton} 
-              onClick={handleSummaryClick}
-            >
-              Summary
-            </button>
           </div>
+        </div>
 
-          <div className={styles.tabContainer}>
-            <button
-              className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
-              onClick={() => setActiveTab("expenses")}
-            >
-              Expenses
-            </button>
-            <button
-              className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
-              onClick={() => setActiveTab("balance")}
-            >
-              Balance
-            </button>
-          </div>
-      
-          <div className={styles.scrollArea}>
+        <div className={styles.tabContainer}>
+          <button
+            className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("expenses")}
+          >
+            Expenses
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("balance")}
+          >
+            Balance
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === "summary" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("summary")}
+          >
+            Summary
+          </button>
+        </div>
+    
+        <div className={styles.scrollArea}>
           {activeTab === "expenses" ? (
             Object.keys(bills).length === 0 ? (
               <p>No expenses found.</p>
@@ -255,7 +250,7 @@ export default function GroupExpensePage() {
               ))}
             </>
           )
-      ) : (
+      ) : activeTab === "balance" ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
           <div className={styles.totalOwedRow}>
             <span>You owe</span>
@@ -344,10 +339,14 @@ export default function GroupExpensePage() {
               <p>No group member balances to show.</p>
             )}
             </div>
-
-
-
           </div>
+        ) : (
+          // Summary tab content
+          <GroupSummary
+            groupId={groupId}
+            group={group}
+            groupIconUrl={groupIconUrl}
+          />
         )}
       </div>
 

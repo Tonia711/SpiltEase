@@ -16,7 +16,7 @@ import NewBillPage from "./pages/Bill/NewBillPage.jsx";
 import GroupExpensePage from "./pages/GroupExpensePage.jsx";
 import BillDetailPage from "./pages/Bill/BillDetailPage.jsx";
 import EditBillPage from "./pages/Bill/EditBillPage.jsx";
-import GroupSummaryPage from "./pages/GroupSummaryPage.jsx";
+import GroupSummary from "./components/GroupSummary.jsx";
 
 
 function App() {
@@ -109,7 +109,7 @@ function App() {
         path="/groups/:groupId/summary"
         element={
           <ProtectedRoute>
-            <GroupSummaryPage />
+            <GroupSummary />
           </ProtectedRoute>
         }
       />
