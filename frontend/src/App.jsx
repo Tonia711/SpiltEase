@@ -16,6 +16,8 @@ import NewBillPage from "./pages/Bill/NewBillPage.jsx";
 import GroupExpensePage from "./pages/GroupExpensePage.jsx";
 import BillDetailPage from "./pages/Bill/BillDetailPage.jsx";
 import EditBillPage from "./pages/Bill/EditBillPage.jsx";
+import GroupSummary from "./components/GroupSummary.jsx";
+
 
 function App() {
   const { isLoggedIn } = useContext(AuthContext);
@@ -99,6 +101,15 @@ function App() {
         element={
           <ProtectedRoute>
             <EditBillPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/groups/:groupId/summary"
+        element={
+          <ProtectedRoute>
+            <GroupSummary />
           </ProtectedRoute>
         }
       />

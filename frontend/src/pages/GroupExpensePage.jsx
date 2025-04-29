@@ -6,6 +6,7 @@ import styles from "../styles/GroupExpensePage.module.css";
 import dayjs from "dayjs";
 import { AuthContext } from "../contexts/AuthContext";
 import { useMemo } from "react";
+import GroupSummary from "../components/GroupSummary";
 
 export default function GroupExpensePage() {
   const { groupId } = useParams();
@@ -194,6 +195,12 @@ export default function GroupExpensePage() {
             >
               Balance
             </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === "summary" ? styles.activeTab : ""}`}
+              onClick={() => setActiveTab("summary")}
+            >
+              Summary
+            </button>
           </div>
       
           <div className={styles.scrollArea}>
@@ -247,7 +254,7 @@ export default function GroupExpensePage() {
               ))}
             </>
           )
-      ) : (
+      ) : activeTab === "balance" ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
           <div className={styles.memberNameRow}>
             {owedToMe > 0 ? (
@@ -365,8 +372,14 @@ export default function GroupExpensePage() {
               <p>No group member balances to show.</p>
             )}
             </div>
-
           </div>
+      ) : ( 
+          // Summary tab content
+          <GroupSummary
+            groupId={groupId}
+            group={group}
+            groupIconUrl={groupIconUrl}
+          />                 
         )}
       </div>
 
