@@ -296,7 +296,7 @@ export default function GroupSummary({ groupId, group, groupIconUrl }) {
           <div className={styles.chartSection}>
             <h3>My Summary</h3>
             <div className={styles.summaryHeader}>
-              <span className={styles.summaryTitle}>Total Contributions</span>
+              <span className={styles.summaryTitle}>Total</span>
               <span className={styles.summaryAmount}>
                 ${displayUserTotal.toFixed(2)}
               </span>
