@@ -4,6 +4,17 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./index.css";
 import App from "./App.jsx";
+import { registerSW } from 'virtual:pwa-register'
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    console.log('New version available. Refresh to update.')
+  },
+  onOfflineReady() {
+    console.log('App ready to work offline.')
+  }
+})
+
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
