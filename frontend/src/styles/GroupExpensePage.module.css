@@ -226,6 +226,69 @@
     margin-bottom: 5px;
   }
   
+  .confirmActions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
   
+  .okButton {
+    background-color: #e86f6f;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .cancelButton {
+    background-color: grey;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 
+  .balanceDetailBox {
+    background-color: #3f3f3f6b;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 16px;
+    border-radius: 10px;
+    position: relative;
+    color: white;
+  }
+  
+  
+  .balanceLineTop .balanceCloseBtn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+  
+  
+  .balanceLineBottom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  .markPaidText {
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: 0.9rem;
+    color: grey;
+    font-weight: bold;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
   

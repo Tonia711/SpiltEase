@@ -19,6 +19,8 @@ export default function GroupExpensePage() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("expenses");
   const [balance, setBalance] = useState([]);
+  const [expandedBalanceId, setExpandedBalanceId] = useState(null);
+  const [confirmMarkPaidId, setConfirmMarkPaidId] = useState(null);
 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
@@ -291,24 +293,68 @@ export default function GroupExpensePage() {
                   const isIncoming = b.direction === "incoming";
                   const otherId = isIncoming ? b.fromMemberId : b.toMemberId;
                   const other = group?.members?.find(m => m._id?.toString() === otherId?.toString());
-
+                  
                   return (
-                    <li key={index} className={styles.memberItem}>
-                      {isIncoming ? (
-                        <>
-                          <span>{other?.userName || "Someone"}</span>
-                          <span>
-                            ${b.balance.toFixed(2)}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          You owe <span>{other?.userName || "Someone"}</span>
-                          <span>
-                            ${b.balance.toFixed(2)}
-                          </span>
-                        </>
-                      )}
+                    <li key={index}>
+                        {/* ✅ 展开详情卡片 */}
+                        {expandedBalanceId === b._id ? (
+                          <div className={styles.balanceDetailBox}>
+                            <div className={styles.balanceLineTop}>
+                              {isIncoming
+                                ? `${other?.userName || "Someone"} ${currentUser.userName} (me)`
+                                : `${currentUser.userName} (me) owe ${other?.userName || "Someone"}`}{" "}
+                              <button 
+                                className={styles.balanceCloseBtn} 
+                                onClick={() => setExpandedBalanceId(null)}
+                              >
+                                x
+                              </button>
+                            </div>  
+                          
+
+                            {/* ✅ 如果点击了 Mark as paid，就显示 Okay 和 Cancel */}
+                            {confirmMarkPaidId === b._id ? (
+                              <>
+                                <p style={{ fontSize: "0.85rem", color: "grey" }}>
+                                  A transfer will be added to group expense.
+                                </p>
+                                <div className={styles.confirmActions}>
+                                  <button className={styles.okButton}>
+                                    Okay
+                                  </button>
+                                  <button
+                                    className={styles.cancelButton}
+                                    onClick={() => setConfirmMarkPaidId(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <div className={styles.balanceLineBottom}>
+                                <strong>${b.balance.toFixed(2)}</strong>
+                                <button
+                                  className={styles.markPaidText} 
+                                  onClick={() => setConfirmMarkPaidId(b._id)}
+                                >
+                                  Mark as paid
+                                </button>
+                                
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          // 🔁 默认显示项
+                          <li
+                            className={styles.memberItem}
+                            onClick={() =>
+                              setExpandedBalanceId(b._id === expandedBalanceId ? null : b._id)
+                            }
+                          >
+                            <span>{isIncoming ? other?.userName || "Someone" : `You owe ${other?.userName || "Someone"}`}</span>
+                            <span>${b.balance.toFixed(2)}</span>
+                          </li>
+                        )}
                     </li>
                   );
                 })}
