@@ -142,13 +142,12 @@ async function importData() {
           const memberDoc = {
             memberId: m.memberId || i,
             userName: m.userName || `user${i}`,
+            isVirtual: m.userId ? false : true,
           };
           if (m.userId === "") {
             memberDoc.userId = null;
-            memberDoc.isVirtual = true;
           } else {
             memberDoc.userId = userIdMap[m.userId] || null;
-            memberDoc.isVirtual = false;
           }
           return memberDoc;
         }),
