@@ -88,16 +88,15 @@ export const getBillByGroupIdBillId = async (req, res) => {
       };
     });
 
-    // 🔥 正确更新 members：清空再 push
     bill.members.splice(0, bill.members.length);
     bill.members.push(...enrichedMembers);
 
-    // 保存回数据库
     await bills.save();
 
     return res.status(200).json({
       ...bill.toObject(),
-      paidBy: paidByMember?.userName || "Unknown",
+      paidBy: paidByMember?._id || "Unknown",
+      paidByName: paidByMember?.userName || "Unknown",
       members: enrichedMembers
     });
 
@@ -182,18 +181,58 @@ export const deleteBillByGroupIdBillId = async (req, res) => {
 
     // 删除指定的 bill
     billDoc.groupBills.splice(targetIndex, 1);
+    await billDoc.save();
+    return res.status(200).json({ message: "Bill deleted successfully" });
 
-    if (billDoc.groupBills.length === 0) {
-      // 如果删完没有账单了，删除整个 Bill 文档
-      await Bill.deleteOne({ _id: billDoc._id });
-      return res.status(200).json({ message: "Bill and group deleted successfully" });
-    } else {
-      // 如果还有账单，保存剩下的
-      await billDoc.save();
-      return res.status(200).json({ message: "Bill deleted successfully" });
-    }
   } catch (err) {
-    console.error("❌ Failed to delete bill:", err);
+    console.error("Failed to delete bill:", err);
     res.status(500).json({ message: "Failed to delete bill" });
+  }
+};
+
+
+// 根据 groupId 和 billId 修改单个bill
+export const updateBillByGroupIdBillId = async (req, res) => {
+  const { groupId, billId } = req.params;
+  const {
+    labelId,
+    date,
+    note,
+    paidBy,
+    expenses,
+    refunds,
+    splitWay,
+    members
+  } = req.body;
+
+  try {
+    const billDoc = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
+
+    if (!billDoc) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const targetBill = billDoc.groupBills.find(b => b._id.toString() === billId);
+
+    if (!targetBill) {
+      return res.status(404).json({ message: "Bill not found in group" });
+    }
+
+    // 更新字段
+    targetBill.labelId = labelId || targetBill.labelId;
+    targetBill.date = date ? new Date(date) : targetBill.date;
+    targetBill.note = note ?? targetBill.note; // 注意允许空字符串
+    targetBill.paidBy = paidBy || targetBill.paidBy;
+    targetBill.expenses = expenses ?? targetBill.expenses;
+    targetBill.refunds = refunds ?? targetBill.refunds;
+    targetBill.splitWay = splitWay || targetBill.splitWay;
+    targetBill.members = members || targetBill.members;
+
+    await billDoc.save();
+
+    return res.status(200).json({ message: "Bill updated successfully" });
+  } catch (err) {
+    console.error("Failed to update bill:", err);
+    res.status(500).json({ message: "Failed to update bill" });
   }
 };

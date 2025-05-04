@@ -1,8 +1,7 @@
 import express from "express";
 import { getAllLabels, createBill } from "../../../controllers/billController.js";
 import { getBillsByGroupId } from "../../../controllers/billController.js"; 
-import { getBillByGroupIdBillId } from "../../../controllers/billController.js";
-import {deleteBillByGroupIdBillId} from "../../../controllers/billController.js";
+import {getBillByGroupIdBillId, deleteBillByGroupIdBillId, updateBillByGroupIdBillId} from "../../../controllers/billController.js";
 
 const router = express.Router();
 
@@ -26,5 +25,7 @@ router.get("/:groupId/bill/:billId", getBillByGroupIdBillId);
 //根据 groupId和billId 删除某一条账单
 router.delete("/:groupId/bill/:billId", deleteBillByGroupIdBillId);
 
+//根据 groupId和billId 修改某一条账单
+router.put("/:groupId/bill/:billId", updateBillByGroupIdBillId);
 
 export default router;

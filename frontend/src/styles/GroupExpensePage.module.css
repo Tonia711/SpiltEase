@@ -144,8 +144,151 @@
     background-color: #ffca28;
     color: black;
   }
-  
-  
-  
 
+  .memberSection {
+    margin-top: 30px;
+  }
+  
+  .memberBlock {
+    margin-top: 20px;
+  }
+  
+  .memberName {
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  
+  .memberList {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .memberItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2a2933;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+
+  .highlightedItem {
+    background-color: #ccc;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .memberNameRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  
+  .memberNameLeft {
+    font-size: 0.95rem;
+    color: #ccc;
+  }
+  
+  .memberNameRight {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  
+  .totalOwedRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding: 0 10px;
+  }
+
+  .expensesHeader {
+    margin-bottom: 20px;
+    padding: 0 10px;
+  }
+  
+  .expensesHeaderRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .confirmActions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  
+  .okButton {
+    background-color: #e86f6f;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .cancelButton {
+    background-color: grey;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .balanceDetailBox {
+    background-color: #3f3f3f6b;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 16px;
+    border-radius: 10px;
+    position: relative;
+    color: white;
+  }
+  
+  
+  .balanceLineTop .balanceCloseBtn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+  
+  
+  .balanceLineBottom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  .markPaidText {
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: 0.9rem;
+    color: grey;
+    font-weight: bold;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
   

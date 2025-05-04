@@ -17,6 +17,7 @@ import {
   deleteGroupMember,
   checkMemberdeletable,
 } from "../../../controllers/groupController.js";
+import { getGroupSummary } from "../../../controllers/summaryController.js";
 
 const router = express.Router();
 const storage = multer.diskStorage({
@@ -32,6 +33,7 @@ const upload = multer({ storage });
 router.get("/", protect, getUserGroups);
 router.delete("/:id", protect, deleteGroup);
 router.get("/:id", protect, getGroupById);
+router.get("/:id/summary", protect, getGroupSummary);
 
 router.post("/validate", protect, validateJoinCode);
 router.post("/join", protect, joinGroupByCode);

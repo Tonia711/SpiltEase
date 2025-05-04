@@ -94,18 +94,29 @@ async function importData() {
     const userIdMap = {};
 
     for (const u of users) {
+
       // 使用你引入的原始 users 数据
       const hashedPassword = await bcrypt.hash(u.password, 10);
-      const userObjectId = new Types.ObjectId(); // 为每个用户生成一个 ObjectId
+
+      let userObjectId;
+      if (u.id && u.id <= 10) {
+        // 写死ID：前10个测试用户，固定ID
+        const hexId = u.id.toString(16).padStart(24, "0");
+        userObjectId = new Types.ObjectId(hexId);
+      } else {
+        userObjectId = new Types.ObjectId(); // 其他正常生成
+      }
+
       userDocs.push({
         _id: userObjectId,
         userName: u.userName,
         email: u.email,
         password: hashedPassword,
-        avatarId: avatarMap[u.avatarId], // 使用 avatarMap
-        // groupId 稍后更新，因为它依赖于 groupMap
+        avatarId: avatarMap[u.avatarId],
+        // groupId 稍后补
       });
-      userIdMap[u.id] = userObjectId;
+
+      userIdMap[u.id] = userObjectId; // 保存id映射
     }
 
     await User.insertMany(userDocs);
@@ -243,12 +254,17 @@ async function importData() {
       return {
         groupId: realGroupId,
         groupBalances: groupBalance.groupBalances.map((b) => {
+
           const fromId =
             (memberIdMap[b.fromMemberId] || virtualUserIdMap[b.fromMemberId]) ??
             null;
           const toId =
             (memberIdMap[b.toMemberId] || virtualUserIdMap[b.toMemberId]) ??
             null;
+
+          const fromId = memberIdMap[b.fromMemberId] ?? null;
+          const toId = memberIdMap[b.toMemberId] ?? null;
+
           return {
             fromMemberId: fromId,
             toMemberId: toId,
