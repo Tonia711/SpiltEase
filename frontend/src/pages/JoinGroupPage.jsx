@@ -73,13 +73,14 @@ export default function GroupJoinPage() {
         setHasValidCode(true);
         setSelectedMember(null);
       }
-
     } catch (e) {
       console.error(e);
       if (e.response && e.response.status === 404) {
         setError("Wrong Code!");
       } else {
-        setError("An error occurred during validation. Please try again later.");
+        setError(
+          "An error occurred during validation. Please try again later."
+        );
       }
       setShowInputError(true);
       setTimeout(() => setShowInputError(false), 2000);
@@ -99,14 +100,16 @@ export default function GroupJoinPage() {
   // Step 3： add new member
   const handleJoinAsNewUser = () => {
     if (!user || !user.userName) {
-      setError("Could not retrieve your username. Please try logging in again.");
+      setError(
+        "Could not retrieve your username. Please try logging in again."
+      );
       return;
     }
     setError("");
     const tempNewMember = {
       memberId: null,
       userName: user.userName,
-      isNew: true
+      isNew: true,
     };
     setSelectedMember(tempNewMember);
   };
@@ -129,7 +132,7 @@ export default function GroupJoinPage() {
 
       await api.post(`/groups/join`, {
         selectedMemberId: memberIdToJoin,
-        joinCode: inviteCode.trim()
+        joinCode: inviteCode.trim(),
       });
 
       navigate(`/groups/${group._id}`);
@@ -166,7 +169,10 @@ export default function GroupJoinPage() {
         {!hasValidCode && (
           <>
             <div className={styles.titleRow}>
-              <button className={styles.backButton} onClick={() => navigate("/")}>
+              <button
+                className={styles.backButton}
+                onClick={() => navigate("/")}
+              >
                 {"<"}
               </button>
               <h2 className={styles.title}>Join Group</h2>
@@ -175,24 +181,27 @@ export default function GroupJoinPage() {
             <div className={styles.inputGroup}>
               <div className={styles.labelRow}>
                 <label className={styles.label}>Invite Code</label>
-                {error && !hasValidCode && <span className={styles.inlineError}>{error}</span>}
+                {error && !hasValidCode && (
+                  <span className={styles.inlineError}>{error}</span>
+                )}
               </div>
               <input
-                key={showInputError ? 'shake' : 'normal'}
+                key={showInputError ? "shake" : "normal"}
                 type="text"
-                maxLength={5}
+                maxLength={6}
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
-                className={`${styles.inputField} ${showInputError ? `${styles.inputError} ${styles.shake}` : ""}`}
-                placeholder="5 digits"
-                readOnly={showRejoinOption} 
+                className={`${styles.inputField} ${
+                  showInputError ? `${styles.inputError} ${styles.shake}` : ""
+                }`}
+                placeholder="6‑character code"
+                readOnly={showRejoinOption}
               />
-
             </div>
             <button
               onClick={handleCodeSubmit}
               className={styles.joinButton}
-              disabled={isValidating || showRejoinOption} 
+              disabled={isValidating || showRejoinOption}
             >
               {isValidating ? "Validating..." : "Join"}
             </button>
@@ -202,7 +211,9 @@ export default function GroupJoinPage() {
 
         {showRejoinOption && group && (
           <div className={styles.rejoinContainer}>
-            <p>You've been part of this group before. Would you like to rejoin?</p>
+            <p>
+              You've been part of this group before. Would you like to rejoin?
+            </p>
             <button
               onClick={handleJoin}
               className={styles.joinButton}
@@ -217,7 +228,10 @@ export default function GroupJoinPage() {
         {hasValidCode && group && (
           <>
             <div className={styles.titleRow}>
-              <button className={styles.backButton} onClick={() => navigate("/")}>
+              <button
+                className={styles.backButton}
+                onClick={() => navigate("/")}
+              >
                 {"<"}
               </button>
               <h2 className={styles.title}>{group.groupName}</h2>
@@ -231,12 +245,17 @@ export default function GroupJoinPage() {
             />
 
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Select your name from the list:</h3>
+              <h3 className={styles.sectionTitle}>
+                Select your name from the list:
+              </h3>
               <div className={styles.membersListContainer}>
                 <ul className={styles.membersList}>
                   {sortedMembers.map((m) => {
                     const isRealMember = !!m.userId;
-                    const isSelectedVirtual = selectedMember && !selectedMember.isNew && selectedMember.memberId === m.memberId;
+                    const isSelectedVirtual =
+                      selectedMember &&
+                      !selectedMember.isNew &&
+                      selectedMember.memberId === m.memberId;
 
                     return (
                       <li
@@ -244,11 +263,13 @@ export default function GroupJoinPage() {
                         className={
                           isRealMember
                             ? styles.memberItemReal
-                            : (isSelectedVirtual
-                              ? styles.memberItemSelected
-                              : styles.memberItem)
+                            : isSelectedVirtual
+                            ? styles.memberItemSelected
+                            : styles.memberItem
                         }
-                        onClick={isRealMember ? undefined : () => handleSelectMember(m)}
+                        onClick={
+                          isRealMember ? undefined : () => handleSelectMember(m)
+                        }
                       >
                         {m.userName}
                       </li>
@@ -263,11 +284,14 @@ export default function GroupJoinPage() {
               <h3 className={styles.sectionTitle}>Can't find your name? </h3>
               <button
                 onClick={handleJoinAsNewUser}
-                className={`${styles.joinAsNewButton} ${selectedMember && selectedMember.isNew ? styles.memberItemSelected : ''
-                  }`}
+                className={`${styles.joinAsNewButton} ${
+                  selectedMember && selectedMember.isNew
+                    ? styles.memberItemSelected
+                    : ""
+                }`}
                 disabled={!user || !user.userName}
               >
-                Join as "{user?.userName || '...'}"
+                Join as "{user?.userName || "..."}"
               </button>
             </div>
 
@@ -282,6 +306,6 @@ export default function GroupJoinPage() {
           </>
         )}
       </div>
-    </MobileFrame >
+    </MobileFrame>
   );
 }

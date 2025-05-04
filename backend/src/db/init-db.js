@@ -56,7 +56,7 @@ async function importData() {
 
     const iconMap = {};
     icons.forEach((i) => {
-      const matched = insertedIcons.find(doc => doc.iconUrl === i.iconUrl);
+      const matched = insertedIcons.find((doc) => doc.iconUrl === i.iconUrl);
       if (matched) {
         iconMap[i.id] = matched._id;
       }
@@ -86,14 +86,15 @@ async function importData() {
     const avatarMap = {};
     avatars.forEach((a) => {
       avatarMap[a.id] =
-        insertedAvatars.find((doc) => doc.avatarUrl === a.avatarUrl)._id
-        || a._id;
+        insertedAvatars.find((doc) => doc.avatarUrl === a.avatarUrl)._id ||
+        a._id;
     });
 
     const userDocs = [];
     const userIdMap = {};
 
-    for (const u of users) { // 使用你引入的原始 users 数据
+    for (const u of users) {
+      // 使用你引入的原始 users 数据
       const hashedPassword = await bcrypt.hash(u.password, 10);
       const userObjectId = new Types.ObjectId(); // 为每个用户生成一个 ObjectId
       userDocs.push({
@@ -133,11 +134,11 @@ async function importData() {
             userName: m.userName || `user${i}`,
           };
           if (m.userId === "") {
-            const virtualId = new Types.ObjectId();
-            memberDoc.userId = virtualId;
-            virtualUserIdMap[m.memberId] = virtualId;
+            memberDoc.userId = null;
+            memberDoc.isVirtual = true;
           } else {
             memberDoc.userId = userIdMap[m.userId] || null;
+            memberDoc.isVirtual = false;
           }
           return memberDoc;
         }),
@@ -147,15 +148,19 @@ async function importData() {
     await Group.insertMany(groupDocs);
     console.log("✅ Groups inserted and groupMap created");
 
-    const userUpdates = users.map(u => {
-      const groupObjectIds = (u.groupId || []).map(groupId => groupMap[groupId]).filter(id => id); // 映射原始groupId到ObjectId，过滤掉null
-      return {
-        updateOne: {
-          filter: { _id: userIdMap[u.id] },
-          update: { $set: { groupId: groupObjectIds } }
-        }
-      };
-    }).filter(update => update.updateOne.filter._id);
+    const userUpdates = users
+      .map((u) => {
+        const groupObjectIds = (u.groupId || [])
+          .map((groupId) => groupMap[groupId])
+          .filter((id) => id); // 映射原始groupId到ObjectId，过滤掉null
+        return {
+          updateOne: {
+            filter: { _id: userIdMap[u.id] },
+            update: { $set: { groupId: groupObjectIds } },
+          },
+        };
+      })
+      .filter((update) => update.updateOne.filter._id);
 
     if (userUpdates.length > 0) {
       await User.bulkWrite(userUpdates);
@@ -174,84 +179,86 @@ async function importData() {
       return doc;
     });
 
-
     // 插入 Labels 并构建 labelMap
     const insertedLabels = await Label.insertMany(labelsDocs);
     console.log("✅ Labels inserted");
     const labelMap = {};
     labels.forEach((label) => {
-      const matched = insertedLabels.find(doc => doc.type === label.type);
+      const matched = insertedLabels.find((doc) => doc.type === label.type);
       if (matched) {
         labelMap[label.id] = matched._id;
       }
     });
 
-
     // 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
     const allGroups = await Group.find();
     const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
 
-    allGroups.forEach(group => {
+    allGroups.forEach((group) => {
       const memberMap = {};
-      group.members.forEach(member => {
+      group.members.forEach((member) => {
         memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
       });
       groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
     });
 
     // 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
-    const fixedBills = bills.map(b => {
+    const fixedBills = bills.map((b) => {
       const realGroupId = groupMap[b.groupId]; // 从 groupMap 中拿真实 group ObjectId
-      const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
+      const memberIdMap =
+        groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
 
       return {
         groupId: realGroupId,
-        groupBills: (b.groupBills || []).map(gb => ({
+        groupBills: (b.groupBills || []).map((gb) => ({
           ...gb,
-          labelId: labelMap[gb.labelId],      // 替换为 labels _id
+          labelId: labelMap[gb.labelId], // 替换为 labels _id
           paidBy: memberIdMap[gb.paidBy],
-          members: gb.members.map(m => ({
+          members: gb.members.map((m) => ({
             memberId: memberIdMap[m.memberId], // 替换为 groups members _id
             expense: m.expense,
-            refund: m.refund
-          }))
-        }))
+            refund: m.refund,
+          })),
+        })),
       };
     });
 
+    const originalBillsForBalanceCalculation = bills.map((b) => ({
+      ...b,
+      groupBills: b.groupBills.map((gb) => ({
+        ...gb,
+        members: gb.members.map((m) => ({ ...m })),
+      })),
+    }));
 
+    const calculatedBalances = getMinimalTransfers(
+      originalBillsForBalanceCalculation
+    );
 
-const originalBillsForBalanceCalculation = bills.map(b => ({
-  ...b,
-  groupBills: b.groupBills.map(gb => ({
-    ...gb,
-    members: gb.members.map(m => ({ ...m }))
-  }))
-}));
+    const fixedBalances = calculatedBalances.map((groupBalance) => {
+      const realGroupId = groupMap[groupBalance.groupId];
+      const memberIdMap =
+        groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
 
-const calculatedBalances = getMinimalTransfers(originalBillsForBalanceCalculation);
-
-
-const fixedBalances = calculatedBalances.map(groupBalance => {
-  const realGroupId = groupMap[groupBalance.groupId];
-  const memberIdMap = groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
-
-  return {
-    groupId: realGroupId,
-    groupBalances: groupBalance.groupBalances
-    .map(b => {
-      const fromId = (memberIdMap[b.fromMemberId] || virtualUserIdMap[b.fromMemberId]) ?? null;
-      const toId = (memberIdMap[b.toMemberId] || virtualUserIdMap[b.toMemberId]) ?? null;
       return {
-      fromMemberId: fromId,
-      toMemberId: toId,
-      balance: b.balance,
-      isFinished: false,
-      finishHistory: []
+        groupId: realGroupId,
+        groupBalances: groupBalance.groupBalances.map((b) => {
+          const fromId =
+            (memberIdMap[b.fromMemberId] || virtualUserIdMap[b.fromMemberId]) ??
+            null;
+          const toId =
+            (memberIdMap[b.toMemberId] || virtualUserIdMap[b.toMemberId]) ??
+            null;
+          return {
+            fromMemberId: fromId,
+            toMemberId: toId,
+            balance: b.balance,
+            isFinished: false,
+            finishHistory: [],
+          };
+        }),
       };
-    })
-  };
-});
+    });
 
     // 插入新数据
     await Promise.all([
