@@ -171,14 +171,14 @@ export default function GroupDetailPage() {
   const handleConfirmRemove = async () => {
     if (memberToRemove) {
       try {
-        if (memberToRemove.memberId !== undefined && memberToRemove.memberId !== null) {
-          await api.get(`/groups/${groupId}/check-member-deletable/${memberToRemove.memberId}`);
+        if (memberToRemove._id !== undefined && memberToRemove._id !== null) {
+          await api.get(`/groups/${groupId}/check-member-deletable/${memberToRemove._id}`);
         }
 
         setEditedMembers(prev =>
           prev.filter(m => {
-            if (memberToRemove.memberId !== undefined && memberToRemove.memberId !== null) {
-              return m.memberId !== memberToRemove.memberId;
+            if (memberToRemove._id !== undefined && memberToRemove._id !== null) {
+              return m._id !== memberToRemove._id;
             } else if (memberToRemove.tempId !== undefined && memberToRemove.tempId !== null) {
               return m.tempId !== memberToRemove.tempId;
             }
@@ -204,8 +204,8 @@ export default function GroupDetailPage() {
 
     const membersToSave = editedMembers.map(m => {
       const member = { userName: m.userName };
-      if (m.memberId !== undefined) {
-        member.memberId = m.memberId;
+      if (m._id !== undefined) {
+        member._id = m._id;
       }
       return member;
     });
@@ -337,7 +337,7 @@ export default function GroupDetailPage() {
           <div className={styles.membersListContainer}>
             <ul className={styles.membersList}>
               {(isEditing ? editedMembers : (group.members || [])).map((member) => (
-                <li key={member._id || member.userId || member.memberId || member.tempId} className={styles.memberItem}>
+                <li key={member._id || member.userId || member.tempId} className={styles.memberItem}>
                   {member.userName || 'Unnamed'}
                   {isEditing && (
                     <button

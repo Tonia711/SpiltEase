@@ -21,7 +21,11 @@ const groupSchema = new mongoose.Schema({
       memberId: {
         type: Number,
       },
-      userId: mongoose.Schema.Types.ObjectId,
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
       userName: String,
     },
   ],

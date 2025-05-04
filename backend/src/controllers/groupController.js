@@ -238,7 +238,7 @@ export const joinGroupByCode = async (req, res) => {
 
     if (selectedMemberId !== undefined && selectedMemberId !== null) {
       const virtualMember = group.members.find(
-        (m) => String(m.memberId) === String(selectedMemberId) && !m.userId
+        (m) => String(m._id) === String(selectedMemberId) && !m.userId
       );
 
       if (!virtualMember) {
@@ -260,7 +260,7 @@ export const joinGroupByCode = async (req, res) => {
         message: "Claimed virtual member successfully",
         groupId: group._id,
         groupName: group.groupName,
-        memberId: virtualMember.memberId,
+        _id: virtualMember._id,
       });
     } else {
       const newMember = {
@@ -319,11 +319,13 @@ export const updateGroupIcon = async (req, res) => {
 
 export const checkMemberdeletable = async (req, res) => {
   const groupId = req.params.id;
-  const memberId = parseInt(req.params.memberId, 10);
+  const memberObjectIdStr = req.params.memberId;
 
-  if (isNaN(memberId)) {
+  if (!mongoose.Types.ObjectId.isValid(memberObjectIdStr)) {
     return res.status(400).json({ message: "Invalid member ID" });
   }
+
+  const memberObjectId = new mongoose.Types.ObjectId(memberObjectIdStr);
 
   try {
     const group = await Group.findById(groupId);
@@ -331,7 +333,9 @@ export const checkMemberdeletable = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const member = group.members.find((m) => m.memberId === memberId);
+    const member = group.members.find(
+      (m) => m._id.toString() === memberObjectIdStr
+    );
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -340,7 +344,7 @@ export const checkMemberdeletable = async (req, res) => {
       groupId: groupId,
       groupBalances: {
         $elemMatch: {
-          $or: [{ fromMemberId: memberId }, { toMemberId: memberId }],
+          $or: [{ fromMemberId: memberObjectId  }, { toMemberId: memberObjectId }],
           balance: { $gt: 0.0001 },
           isFinished: false,
         },
@@ -381,23 +385,23 @@ export const updateGroupInfo = async (req, res) => {
     group.startDate = startDate ? new Date(startDate) : null;
 
     const currentMembers = group.members.toObject();
-    const currentMemberIds = new Set(currentMembers.map((m) => m.memberId));
+    const currentMemberIds = new Set(currentMembers.map((m) => m._id.toString()));
 
     // Filter incoming members to identify those with and without memberId
     const incomingMembersWithId = incomingMembers.filter(
-      (m) => m.memberId !== undefined
+      (m) => m._id
     );
     const incomingMembersWithoutId = incomingMembers.filter(
-      (m) => m.memberId === undefined
+      (m) => !m._id
     ); // These are the new members from frontend preview
 
     const incomingMemberIds = new Set(
-      incomingMembersWithId.map((m) => m.memberId)
+      incomingMembersWithId.map((m) => m._id.toString())
     );
 
     // Identify members marked for deletion (exist in current but not in incoming with ID)
     const membersToDelete = currentMembers.filter(
-      (m) => !incomingMemberIds.has(m.memberId)
+      (m) => !incomingMemberIds.has(m._id.toString())
     );
 
     for (const memberToDelete of membersToDelete) {
@@ -406,8 +410,8 @@ export const updateGroupInfo = async (req, res) => {
         groupBalances: {
           $elemMatch: {
             $or: [
-              { fromMemberId: memberToDelete.memberId },
-              { toMemberId: memberToDelete.memberId },
+              { fromMemberId: memberToDelete._id },
+              { toMemberId: memberToDelete._id },
             ],
             balance: { $gt: 0.0001 },
             isFinished: false,
@@ -424,37 +428,27 @@ export const updateGroupInfo = async (req, res) => {
 
     const newMembersArray = [];
 
-    // Add existing members that were *not* deleted
-    currentMembers.forEach((member) => {
-      // If the member's ID is present in the incoming list (meaning they weren't deleted)
-      if (incomingMemberIds.has(member.memberId)) {
-        // Add the member to the new array.
-        // Optional: Update userName here if frontend allowed editing existing member names
-        const incomingMember = incomingMembersWithId.find(
-          (m) => m.memberId === member.memberId
+    for (const member of currentMembers) {
+      if (incomingMemberIds.has(member._id.toString())) {
+        const incoming = incomingMembersWithId.find(
+          (m) => m._id.toString() === member._id.toString()
         );
         newMembersArray.push({
-          memberId: member.memberId,
-          userName: incomingMember ? incomingMember.userName : member.userName, // Use incoming name if provided, otherwise keep current
+          _id: member._id,
+          userName: incoming?.userName?.trim() || member.userName,
         });
       }
-    });
-
-    let nextMemberId =
-      currentMembers.length > 0
-        ? Math.max(...currentMembers.map((m) => m.memberId)) + 1
-        : 1;
-
-    incomingMembersWithoutId.forEach((newMemberData) => {
-      if (!newMemberData.userName || newMemberData.userName.trim() === "") {
-        // Basic check for empty new member name, although frontend should prevent this
-        return; // Skip invalid entries
+    }
+    // Add new members
+    for (const newMember of incomingMembersWithoutId) {
+      if (!newMember.userName || newMember.userName.trim() === "") {
+        continue;
       }
       newMembersArray.push({
-        memberId: nextMemberId++, // Assign next available sequential ID
-        userName: newMemberData.userName.trim(),
+        _id: new mongoose.Types.ObjectId(),
+        userName: newMember.userName.trim(),
       });
-    });
+    }
 
     // Update the group's members array with the new list
     group.members = newMembersArray;
@@ -507,12 +501,12 @@ export const addNewVirtualMember = async (req, res) => {
 
 export const deleteGroupMember = async (req, res) => {
   const groupId = req.params.id;
-  const memberId = req.params.memberId;
+  const _id = req.params.memberId;
 
   try {
     const group = await Group.findByIdAndUpdate(
       groupId,
-      { $pull: { members: { memberId } } },
+      { $pull: { members: { _id } } },
       { new: true }
     ).select("-__v");
     if (!group) {
