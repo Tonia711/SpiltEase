@@ -143,9 +143,6 @@ async function importData() {
             userName: m.userName || `user${i}`,
           };
           if (m.userId === "") {
-            // const virtualId = new Types.ObjectId();
-            // memberDoc.userId = virtualId;
-            // virtualUserIdMap[m.memberId] = virtualId;
             memberDoc.userId = null;
           } else {
             memberDoc.userId = userIdMap[m.userId] || null;

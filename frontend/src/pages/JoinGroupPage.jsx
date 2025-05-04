@@ -123,8 +123,8 @@ export default function GroupJoinPage() {
 
     try {
       let memberIdToJoin = null;
-      if (!selectedMember.isNew && selectedMember.memberId !== null) {
-        memberIdToJoin = selectedMember.memberId;
+      if (!selectedMember.isNew && selectedMember._id !== null) {
+        memberIdToJoin = selectedMember._id;
       }
 
       await api.post(`/groups/join`, {
@@ -236,7 +236,7 @@ export default function GroupJoinPage() {
                 <ul className={styles.membersList}>
                   {sortedMembers.map((m) => {
                     const isRealMember = !!m.userId;
-                    const isSelectedVirtual = selectedMember && !selectedMember.isNew && selectedMember.memberId === m.memberId;
+                    const isSelectedVirtual = selectedMember && !selectedMember.isNew && selectedMember._id === m._id;
 
                     return (
                       <li
