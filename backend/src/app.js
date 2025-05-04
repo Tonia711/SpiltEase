@@ -9,9 +9,10 @@ const app = express();
 app.use(morgan("combined"));
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+
+// app.use("/public", express.static("public"));
 
 import routes from "./routes/routes.js";
 app.use("/", routes);
-
+app.use(express.static("public"));
 export default app;

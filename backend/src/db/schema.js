@@ -18,8 +18,14 @@ const balanceSchema = new mongoose.Schema({
 
   groupBalances: [
     {
-      fromMemberId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      toMemberId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      fromMemberId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Group.members",
+      },
+      toMemberId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Group.members",
+      },
       balance: Number,
       isFinished: { type: Boolean, default: false },
       finishHistory: [{ date: Date, amount: Number }],
@@ -31,13 +37,21 @@ const Balance =
 
 // 结算记录
 const balancesCalculateSchema = new mongoose.Schema({
-  groupId: { type: Number, required: true },
+  // groupId: { type: Number, required: true },
+  groupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Group",
+    required: true,
+  },
   calculatedAt: { type: Date, default: Date.now },
   groupBalances: [
     {
-      fromMemberId: Number,
-      toMemberId: Number,
-      balance: Number,
+      // fromMemberId: Number,
+      // toMemberId: Number,
+      // balance: Number,
+      fromMemberId: { type: mongoose.Schema.Types.ObjectId, required: true },
+      toMemberId: { type: mongoose.Schema.Types.ObjectId, required: true },
+      balance: { type: Number, required: true },
     },
   ],
 });

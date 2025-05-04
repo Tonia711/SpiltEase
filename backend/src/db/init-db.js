@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { User, Avatar, Balance, Bill, Group, Icon, Label } from "./schema.js";
-const { Types } = mongoose;
 
 // 引入数据
 import avatars from "../data/avatars.js";
@@ -17,6 +16,7 @@ import users from "../data/users.js";
 import getMinimalTransfers from "../data/balancesCalculate.js";
 
 dotenv.config();
+const { Types } = mongoose;
 const MONGO_URI = process.env.MONGO_URI;
 
 async function importData() {
@@ -141,6 +141,7 @@ async function importData() {
           const memberDoc = {
             memberId: m.memberId || i,
             userName: m.userName || `user${i}`,
+            isVirtual: m.userId ? false : true,
           };
           if (m.userId === "") {
             // const virtualId = new Types.ObjectId();
