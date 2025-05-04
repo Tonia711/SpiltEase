@@ -5,17 +5,17 @@ const groupSchema = new mongoose.Schema({
   note: String,
   iconId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Icon"
+    ref: "Icon",
   },
   budget: Number,
   totalExpenses: Number,
   totalRefunds: Number,
   startDate: Date,
   endDate: Date,
-  joinCode:{
-        type: String,
-        unique: true
-      },
+  joinCode: {
+    type: String,
+    unique: true,
+  },
   members: [
     {
       memberId: {
