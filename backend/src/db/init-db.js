@@ -94,7 +94,6 @@ async function importData() {
     const userIdMap = {};
 
     for (const u of users) {
-
       // 使用你引入的原始 users 数据
       const hashedPassword = await bcrypt.hash(u.password, 10);
 
@@ -254,16 +253,12 @@ async function importData() {
       return {
         groupId: realGroupId,
         groupBalances: groupBalance.groupBalances.map((b) => {
-
           const fromId =
             (memberIdMap[b.fromMemberId] || virtualUserIdMap[b.fromMemberId]) ??
             null;
           const toId =
             (memberIdMap[b.toMemberId] || virtualUserIdMap[b.toMemberId]) ??
             null;
-
-          const fromId = memberIdMap[b.fromMemberId] ?? null;
-          const toId = memberIdMap[b.toMemberId] ?? null;
 
           return {
             fromMemberId: fromId,
