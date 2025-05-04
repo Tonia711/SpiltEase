@@ -15,7 +15,7 @@ import {
   updateGroupIcon,
   addNewVirtualMember,
   deleteGroupMember,
-  checkMemberDeletable,
+  checkMemberdeletable,
 } from "../../../controllers/groupController.js";
 import { getGroupSummary } from "../../../controllers/summaryController.js";
 
@@ -40,11 +40,11 @@ router.post("/join", protect, joinGroupByCode);
 
 router.post("/create", protect, createGroup);
 router.post("/icon", upload.single("icon"), updateGroupIcon);
-// router.post("/:id/members/new", protect, addNewVirtualMember);
+router.post("/:id/members/new", protect, addNewVirtualMember);
 router.get(
   "/:id/check-member-deletable/:memberId",
   protect,
-  checkMemberDeletable
+  checkMemberdeletable
 );
 router.delete("/:id/members/:memberId", protect, deleteGroupMember);
 router.put("/:id/update", protect, updateGroupInfo);
