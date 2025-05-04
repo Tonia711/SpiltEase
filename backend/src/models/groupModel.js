@@ -27,6 +27,10 @@ const groupSchema = new mongoose.Schema({
         default: null,
       },
       userName: String,
+      isVirtual: {
+        type: Boolean,
+        default: true,
+      },
     },
   ],
 });

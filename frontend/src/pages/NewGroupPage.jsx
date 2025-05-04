@@ -14,8 +14,6 @@ export default function NewGroupPage() {
     new Date().toISOString().slice(0, 10)
   );
   const [members, setMembers] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [success, setSuccess] = useState(false);
@@ -32,46 +30,6 @@ export default function NewGroupPage() {
     }
   }, [user]);
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      if (searchText.trim()) {
-        searchUsers(searchText.trim());
-      } else {
-        setSearchResults([]);
-      }
-    }, 500);
-    return () => clearTimeout(delayDebounce);
-  }, [searchText]);
-
-  const searchUsers = async (query) => {
-    try {
-      const { data } = await api.get(`/users/search?q=${query}`);
-      setSearchResults(data);
-    } catch (err) {
-      console.error("Search error", err);
-    }
-  };
-
-  const handleSelectUser = (user) => {
-    const exists = members.find((m) => m.userId === user._id);
-    if (!exists) {
-      setMembers([...members, { userId: user._id, userName: user.userName }]);
-    }
-    setSearchText("");
-    setSearchResults([]);
-    setIsAddingMember(false);
-  };
-
-  const handleAddVirtualMember = () => {
-    if (!newMemberName.trim()) return;
-    setMembers([
-      ...members,
-      { userName: newMemberName.trim(), isVirtual: true },
-    ]);
-    setNewMemberName("");
-    setIsAddingMember(false);
-  };
-
   const handleRemoveMember = (index) => {
     if (members[index].isCreator) return;
     const updated = [...members];
@@ -82,7 +40,6 @@ export default function NewGroupPage() {
   const handleCreateGroup = async (e) => {
     e.preventDefault();
 
-    // 如果群组名为空，提前返回（保险）
     if (!groupName.trim()) {
       alert("Please enter a group name.");
       return;
@@ -98,24 +55,14 @@ export default function NewGroupPage() {
       })),
     };
 
-    console.log("Submitting group:", payload);
-
     try {
-      // 发送 POST 请求到后端，真正创建群组
       const response = await api.post("/groups/create", payload);
-
-      console.log("Group created successfully:", response.data);
-
       setSuccess(true);
-
-      // 延迟 1 秒后跳转到群组主页
       setTimeout(() => {
         navigate("/groups");
       }, 1000);
     } catch (error) {
       console.error("Failed to create group:", error);
-
-      // 提示用户失败信息
       alert("Failed to create group. Please try again later.");
     }
   };
@@ -162,12 +109,7 @@ export default function NewGroupPage() {
               {members.length > 0 ? (
                 members.map((member, index) => (
                   <li key={index} className={styles.memberItem}>
-                    {member.userName}{" "}
-                    {member.isVirtual
-                      ? "(Virtual)"
-                      : member.isCreator
-                      ? "(You)"
-                      : "(Real)"}
+                    {member.userName} {member.isCreator ? "(You)" : "(Virtual)"}
                     {!member.isCreator && (
                       <button
                         type="button"
@@ -188,28 +130,25 @@ export default function NewGroupPage() {
               <div style={{ display: "flex", gap: "8px", marginTop: "0.8rem" }}>
                 <input
                   type="text"
-                  value={searchText || newMemberName}
-                  onChange={(e) => {
-                    if (searchText !== undefined) setSearchText(e.target.value);
-                    else setNewMemberName(e.target.value);
-                  }}
-                  placeholder="Enter member name or search"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  placeholder="Enter virtual member name"
                   className={styles.memberInput}
                 />
                 <button
                   type="button"
                   className={styles.saveButton}
                   onClick={() => {
-                    if (searchResults.length > 0) {
-                      // 有搜索结果，不处理；等待用户点击选项
-                    } else if (searchText.trim()) {
-                      setMembers([
-                        ...members,
-                        { userName: searchText.trim(), isVirtual: true },
-                      ]);
-                      setSearchText("");
-                      setIsAddingMember(false);
-                    }
+                    if (!newMemberName.trim()) return;
+                    setMembers([
+                      ...members,
+                      {
+                        userName: newMemberName.trim(),
+                        isVirtual: true,
+                      },
+                    ]);
+                    setNewMemberName("");
+                    setIsAddingMember(false);
                   }}
                 >
                   ✔
@@ -219,7 +158,6 @@ export default function NewGroupPage() {
                   className={styles.cancelButton}
                   onClick={() => {
                     setIsAddingMember(false);
-                    setSearchText("");
                     setNewMemberName("");
                   }}
                 >
@@ -234,43 +172,6 @@ export default function NewGroupPage() {
               >
                 Add another member
               </button>
-            )}
-
-            {searchResults.length > 0 && (
-              <ul className={styles.searchResultList}>
-                {searchResults
-                  .filter(
-                    (searchUser) => searchUser._id !== (user.id || user._id)
-                  )
-                  .map((user) => (
-                    <li
-                      key={user._id}
-                      className={styles.searchResultItem}
-                      onClick={() => handleSelectUser(user)}
-                    >
-                      {user.userName}
-                    </li>
-                  ))}
-
-                {/* 🔥 新增这一项： */}
-                {searchText.trim() && (
-                  <li
-                    className={styles.searchResultItem}
-                    style={{ color: "#fbc609" }} // 黄色提示更明显
-                    onClick={() => {
-                      setMembers([
-                        ...members,
-                        { userName: searchText.trim(), isVirtual: true },
-                      ]);
-                      setSearchText("");
-                      setIsAddingMember(false);
-                      setSearchResults([]);
-                    }}
-                  >
-                    ➕ Add "{searchText.trim()}" as a virtual member
-                  </li>
-                )}
-              </ul>
             )}
           </div>
 
