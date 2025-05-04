@@ -249,6 +249,7 @@ export const joinGroupByCode = async (req, res) => {
 
       virtualMember.userId = currentUserId;
       virtualMember.userName = user.userName;
+      virtualMember.isVirtual = false;
 
       await group.save();
 
@@ -270,6 +271,7 @@ export const joinGroupByCode = async (req, res) => {
             : 1,
         userName: user.userName,
         userId: currentUserId,
+        isVirtual: false,
       };
 
       group.members.push(newMember);
@@ -344,7 +346,10 @@ export const checkMemberdeletable = async (req, res) => {
       groupId: groupId,
       groupBalances: {
         $elemMatch: {
-          $or: [{ fromMemberId: memberObjectId  }, { toMemberId: memberObjectId }],
+          $or: [
+            { fromMemberId: memberObjectId },
+            { toMemberId: memberObjectId },
+          ],
           balance: { $gt: 0.0001 },
           isFinished: false,
         },
@@ -385,15 +390,13 @@ export const updateGroupInfo = async (req, res) => {
     group.startDate = startDate ? new Date(startDate) : null;
 
     const currentMembers = group.members.toObject();
-    const currentMemberIds = new Set(currentMembers.map((m) => m._id.toString()));
+    const currentMemberIds = new Set(
+      currentMembers.map((m) => m._id.toString())
+    );
 
     // Filter incoming members to identify those with and without memberId
-    const incomingMembersWithId = incomingMembers.filter(
-      (m) => m._id
-    );
-    const incomingMembersWithoutId = incomingMembers.filter(
-      (m) => !m._id
-    ); // These are the new members from frontend preview
+    const incomingMembersWithId = incomingMembers.filter((m) => m._id);
+    const incomingMembersWithoutId = incomingMembers.filter((m) => !m._id); // These are the new members from frontend preview
 
     const incomingMemberIds = new Set(
       incomingMembersWithId.map((m) => m._id.toString())
@@ -558,6 +561,7 @@ export const createGroup = async (req, res) => {
         memberId: idx + 1, // 自动编号，从1开始
         userName: m.userName,
         userId: m.userId || null,
+        isVirtual: m.userId ? false : true,
       })),
       budget: 0,
       totalExpenses: 0,
