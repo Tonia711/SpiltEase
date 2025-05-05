@@ -3,11 +3,11 @@ import { format } from 'date-fns';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/GroupList.css';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
-const GROUP_URL = 'http://localhost:3000/api/groups';
 const GROUP_BASE = import.meta.env.VITE_API_BASE_URL
-? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
-: "";
+    ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
+    : "";
 const DEFAULT_ICON = `${GROUP_BASE}/groups/defaultIcon.jpg`;
 
 const GroupList = () => {
@@ -32,20 +32,15 @@ const GroupList = () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(GROUP_URL, {
+                const response = await api.get("/groups", {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
+                        Authorization: `Bearer ${token}`
                     }
                 });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
+                const data = response.data;
                 setGroups(data);
             } catch (e) {
-                setError('Failed to delete group.');
+                setError('Failed to fetch group.');
                 setTimeout(() => setError(null), 3000);
             } finally {
                 setLoading(false);
@@ -53,7 +48,7 @@ const GroupList = () => {
         };
 
         fetchGroups();
-    }, []);
+    }, [token]);
 
     const handleDeleteClick = (id) => {
         setGroupToDelete(id);
@@ -62,17 +57,11 @@ const GroupList = () => {
 
     const confirmDelete = async () => {
         try {
-            const res = await fetch(`${GROUP_URL}/${groupToDelete}`,
-                {
-                    method: 'DELETE',
-                    headers:
-                    {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+            const res = await api.delete(`/groups/${groupToDelete}`, {
+                headers: {
+                  Authorization: `Bearer ${token}` 
                 }
-            );
-            if (!res.ok) throw new Error('Failed to delete');
+              });
             setGroups(groups.filter(group => group._id !== groupToDelete));
             setSuccess('Group deleted successfully.');
 
@@ -110,12 +99,12 @@ const GroupList = () => {
                         <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}/expenses`)}>
                             <div>
                                 <img
-                                    src= {group.iconUrl ? `${GROUP_BASE}/${group.iconUrl}` : DEFAULT_ICON} 
+                                    src={group.iconUrl ? `${GROUP_BASE}/${group.iconUrl}` : DEFAULT_ICON}
                                     alt=""
                                     className="group-icon"
                                 />
                             </div>
-                            
+
                             <div className="group-info">
                                 <div className="group-name">{group.groupName}</div>
                                 <div className="group-date">
