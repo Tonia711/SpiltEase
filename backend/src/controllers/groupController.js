@@ -370,7 +370,7 @@ export const checkMemberdeletable = async (req, res) => {
 };
 
 export const updateGroupInfo = async (req, res) => {
-  const groupId = req.params.id;
+  const currentGroupId = req.params.id;
   const { groupName, startDate, members: incomingMembers } = req.body;
 
   if (!groupName || !incomingMembers) {
@@ -380,7 +380,7 @@ export const updateGroupInfo = async (req, res) => {
   }
 
   try {
-    const group = await Group.findById(groupId);
+    const group = await Group.findById(currentGroupId);
 
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
@@ -409,7 +409,7 @@ export const updateGroupInfo = async (req, res) => {
 
     for (const memberToDelete of membersToDelete) {
       const unsettledBalances = await Balance.find({
-        groupId: groupId,
+        groupId: currentGroupId,
         groupBalances: {
           $elemMatch: {
             $or: [
@@ -426,6 +426,15 @@ export const updateGroupInfo = async (req, res) => {
         return res.status(400).json({
           message: `Cannot delete member '${memberToDelete.userName}' due to unsettled balances. Please settle balances before removing.`,
         });
+      } else {
+        const member = group.members.id(memberToDelete._id);
+        if (member) {
+          member.isHidden = true;
+        }
+        await User.updateOne(
+          { _id: memberToDelete.userId },
+          { $pull: { groupId: currentGroupId } }
+        );
       }
     }
 
