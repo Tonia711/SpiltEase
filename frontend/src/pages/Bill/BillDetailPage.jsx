@@ -54,7 +54,7 @@ export default function BillDetailPage() {
       setShowConfirm(false); // 取消删除
     };
   
-    console.log("BillinDetail", bill);
+    // console.log("BillinDetail", bill);
     
     return (
       <MobileFrame>

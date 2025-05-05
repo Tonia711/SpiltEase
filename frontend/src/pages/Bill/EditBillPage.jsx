@@ -101,7 +101,6 @@ export default function EditBillPage() {
           memberId: m.memberId,
           amount: parseFloat(m.expense.toFixed(2))
         })));
-        setLoaded(true);
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
@@ -120,59 +119,74 @@ export default function EditBillPage() {
     }
   }, [members, bill]);
   
-  console.log("bill", bill);
-  console.log("paidBy", paidBy);
+  // console.log("bill", bill);
+  // console.log("paidBy", paidBy);
 
   
   //通过输入的expense, refunds来计算每个人分的钱
   useEffect(() => {
-    if (!isEditing) return; 
-
-    if (!members || members.length === 0 || !expenses || isNaN(parseFloat(expenses))) return;
-
+    if (!isEditing) return;
+  
     const total = parseFloat(expenses);
     const refundTotal = parseFloat(refunds || 0);
+    if (
+      !members || members.length === 0 ||
+      !selectedMemberIds || selectedMemberIds.length === 0 ||
+      isNaN(total)
+    ) return;
+  
     const filtered = members.filter(m => selectedMemberIds.includes(m._id));
     const count = filtered.length;
-
     if (count === 0) {
       setMemberExpenses([]);
       setMemberRefunds([]);
       setMemberTotalExpenses([]);
       return;
     }
-
-    const rawExpense = parseFloat((total / count).toFixed(2));       // 未减 refund 的金额
-    const avgRefund = parseFloat((refundTotal / count).toFixed(2));  // 每人退款
-    const finalAmount = parseFloat((rawExpense - avgRefund).toFixed(2)); // 实际应付
-
-    const expensesArray = filtered.map(m => ({
+  
+    const rawExpense = parseFloat((total / count).toFixed(2));
+    const avgRefund = parseFloat((refundTotal / count).toFixed(2));
+  
+    const expenseDistributed = parseFloat((rawExpense * count).toFixed(2));
+    const refundDistributed = parseFloat((avgRefund * count).toFixed(2));
+    const expenseLeftover = parseFloat((total - expenseDistributed).toFixed(2));
+    const refundLeftover = parseFloat((refundTotal - refundDistributed).toFixed(2));
+  
+    const expenseRandomIndex = expenseLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
+    const refundRandomIndex = refundLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
+  
+    const expensesArray = filtered.map((m, i) => ({
       memberId: m._id,
-      amount: rawExpense
+      amount: i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense
     }));
-
-    const refundsArray = filtered.map(m => ({
+  
+    const refundsArray = filtered.map((m, i) => ({
       memberId: m._id,
-      refund: avgRefund
+      refund: i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund
     }));
-
-    const totalArray = filtered.map(m => ({
-      memberId: m._id,
-      amount: finalAmount
-    }));
-
-    if (splitMethod === "Equally") {
-      setMemberExpenses(expensesArray);         // 原始 expense
-      setMemberRefunds(refundsArray);           // refund 分摊
-      setMemberTotalExpenses(totalArray);       // 实际应付金额
-    }
-
-    if (splitMethod === "amounts" && memberTotalExpenses.length === 0) {
+  
+    const totalArray = filtered.map((m, i) => {
+      const expense = i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense;
+      const refund = i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund;
+      return {
+        memberId: m._id,
+        amount: parseFloat((expense - refund).toFixed(2))
+      };
+    });
+  
+    const setAllArrays = () => {
       setMemberExpenses(expensesArray);
       setMemberRefunds(refundsArray);
       setMemberTotalExpenses(totalArray);
+    };
+  
+    if (splitMethod === "Equally") {
+      setAllArrays();
+    } else if (splitMethod === "amounts" && memberTotalExpenses.length === 0) {
+      setAllArrays();
     }
-  }, [expenses, refunds, splitMethod, members, selectedMemberIds]);
+  }, [isEditing, expenses, refunds, splitMethod, members, selectedMemberIds]);
+  
 
 
 
