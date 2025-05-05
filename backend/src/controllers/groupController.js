@@ -395,7 +395,11 @@ export const updateGroupInfo = async (req, res) => {
     );
 
     // Filter incoming members to identify those with and without memberId
-    const incomingMembersWithId = incomingMembers.filter((m) => m._id);
+    const incomingMembersWithId = incomingMembers.filter(m => m._id).map(m => ({
+      _id: m._id,
+      userName: m.userName,
+      isHidden: m.isHidden || false, 
+    }));    
     const incomingMembersWithoutId = incomingMembers.filter((m) => !m._id); // These are the new members from frontend preview
 
     const incomingMemberIds = new Set(
@@ -403,9 +407,7 @@ export const updateGroupInfo = async (req, res) => {
     );
 
     // Identify members marked for deletion (exist in current but not in incoming with ID)
-    const membersToDelete = currentMembers.filter(
-      (m) => !incomingMemberIds.has(m._id.toString())
-    );
+    const membersToDelete = currentMembers.filter(m => m.isHidden);  
 
     for (const memberToDelete of membersToDelete) {
       const unsettledBalances = await Balance.find({
@@ -431,10 +433,10 @@ export const updateGroupInfo = async (req, res) => {
         if (member) {
           member.isHidden = true;
         }
-        await User.updateOne(
-          { _id: memberToDelete.userId },
-          { $pull: { groupId: currentGroupId } }
-        );
+        await Group.updateOne(
+          { _id: currentGroupId, "members._id": memberToDelete._id },
+          { $set: { "members.$.isHidden": true } }
+        );        
       }
     }
 
@@ -449,6 +451,7 @@ export const updateGroupInfo = async (req, res) => {
           _id: member._id,
           userName: incoming?.userName?.trim() || member.userName,
           userId: member.userId,
+          isHidden: incoming?.isHidden ?? member.isHidden,
         });
       }
     }

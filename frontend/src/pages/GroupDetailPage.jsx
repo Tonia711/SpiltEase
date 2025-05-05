@@ -63,6 +63,7 @@ export default function GroupDetailPage() {
     try {
       const { data } = await api.get(`/groups/${groupId}`);
       setGroup(data);
+      console.log("fetch first", data);
       const iconUrl = data.iconUrl;
       const fullIconUrl = iconUrl
         ? (iconUrl.startsWith("http") ? iconUrl : `${ICON_BASE}/${iconUrl}`)
@@ -176,13 +177,14 @@ export default function GroupDetailPage() {
         }
 
         setEditedMembers(prev =>
-          prev.filter(m => {
-            if (memberToRemove._id !== undefined && memberToRemove._id !== null) {
-              return m._id !== memberToRemove._id;
-            } else if (memberToRemove.tempId !== undefined && memberToRemove.tempId !== null) {
-              return m.tempId !== memberToRemove.tempId;
+          prev.map(m => {
+            if (
+              (memberToRemove._id !== undefined && m._id === memberToRemove._id) ||
+              (memberToRemove.tempId !== undefined && m.tempId === memberToRemove.tempId)
+            ) {
+              return { ...m, isHidden: true };
             }
-            return true;
+            return m;
           })
         );
 
@@ -207,6 +209,9 @@ export default function GroupDetailPage() {
       if (m._id !== undefined) {
         member._id = m._id;
       }
+      if (m.isHidden !== undefined) {
+        member.isHidden = m.isHidden; 
+      }
       return member;
     });
 
@@ -215,6 +220,7 @@ export default function GroupDetailPage() {
       startDate: editedStartDate || null,
       members: membersToSave,
     };
+    console.log("payload", payload)
 
     try {
       const { data } = await api.put(`/groups/${groupId}/update`, payload, {
@@ -222,8 +228,9 @@ export default function GroupDetailPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      
       setGroup(data);
+      console.log("after update", data)
       setEditedGroupName("");
       setEditedStartDate("");
       setEditedMembers([]);
@@ -298,7 +305,7 @@ export default function GroupDetailPage() {
           )}
 
           <div className={styles.inviteCode}>
-            Invite Code 
+            Invite Code
             <span className={styles.codeValue}>{group.joinCode}</span>
             <Copy className={styles.copyIcon} onClick={handleCopy} />
           </div>
@@ -336,7 +343,7 @@ export default function GroupDetailPage() {
           <h4 className={styles.membersTitle}>Members</h4>
           <div className={styles.membersListContainer}>
             <ul className={styles.membersList}>
-              {(isEditing ? editedMembers : (group.members || [])).map((member) => (
+              {(isEditing ? editedMembers : (group.members || [])).filter(m => !m.isHidden).map((member) => (
                 <li key={member._id || member.userId || member.tempId} className={styles.memberItem}>
                   {member.userName || 'Unnamed'}
                   {isEditing && (
