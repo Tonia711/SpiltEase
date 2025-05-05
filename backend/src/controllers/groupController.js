@@ -439,8 +439,8 @@ export const updateGroupInfo = async (req, res) => {
         );   
         await User.updateOne(
           { _id: memberToDelete.userId },
-          { $set: { groupId: user.groupId.filter(id => id !== currentGroupId) } }
-        );        
+          { $pull: { groupId: currentGroupId } }
+        );
         const updatedUser = await User.findById(memberToDelete.userId).lean();
         console.log(`User updated immediately:`, updatedUser);        
       }
