@@ -31,6 +31,9 @@ const groupSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
       },
+      isHidden: { 
+        type: Boolean, 
+        default: false },
     },
   ],
 });

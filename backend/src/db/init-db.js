@@ -143,6 +143,7 @@ async function importData() {
             memberId: m.memberId || i,
             userName: m.userName || `user${i}`,
             isVirtual: m.userId ? false : true,
+            isHidden: m.isHidden || false,
           };
           if (m.userId === "") {
             memberDoc.userId = null;

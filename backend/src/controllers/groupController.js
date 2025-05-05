@@ -370,7 +370,7 @@ export const checkMemberdeletable = async (req, res) => {
 };
 
 export const updateGroupInfo = async (req, res) => {
-  const groupId = req.params.id;
+  const currentGroupId = req.params.id;
   const { groupName, startDate, members: incomingMembers } = req.body;
 
   if (!groupName || !incomingMembers) {
@@ -380,7 +380,7 @@ export const updateGroupInfo = async (req, res) => {
   }
 
   try {
-    const group = await Group.findById(groupId);
+    const group = await Group.findById(currentGroupId);
 
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
@@ -395,7 +395,11 @@ export const updateGroupInfo = async (req, res) => {
     );
 
     // Filter incoming members to identify those with and without memberId
-    const incomingMembersWithId = incomingMembers.filter((m) => m._id);
+    const incomingMembersWithId = incomingMembers.filter(m => m._id).map(m => ({
+      _id: m._id,
+      userName: m.userName,
+      isHidden: m.isHidden || false, 
+    }));    
     const incomingMembersWithoutId = incomingMembers.filter((m) => !m._id); // These are the new members from frontend preview
 
     const incomingMemberIds = new Set(
@@ -403,13 +407,11 @@ export const updateGroupInfo = async (req, res) => {
     );
 
     // Identify members marked for deletion (exist in current but not in incoming with ID)
-    const membersToDelete = currentMembers.filter(
-      (m) => !incomingMemberIds.has(m._id.toString())
-    );
+    const membersToDelete = currentMembers.filter(m => m.isHidden);  
 
     for (const memberToDelete of membersToDelete) {
       const unsettledBalances = await Balance.find({
-        groupId: groupId,
+        groupId: currentGroupId,
         groupBalances: {
           $elemMatch: {
             $or: [
@@ -426,6 +428,21 @@ export const updateGroupInfo = async (req, res) => {
         return res.status(400).json({
           message: `Cannot delete member '${memberToDelete.userName}' due to unsettled balances. Please settle balances before removing.`,
         });
+      } else {
+        const member = group.members.id(memberToDelete._id);
+        if (member) {
+          member.isHidden = true;
+        }
+        await Group.updateOne(
+          { _id: currentGroupId, "members._id": memberToDelete._id },
+          { $set: { "members.$.isHidden": true, "members.$.isVirtual": false } }
+        );   
+        await User.updateOne(
+          { _id: memberToDelete.userId },
+          { $pull: { groupId: currentGroupId } }
+        );
+        const updatedUser = await User.findById(memberToDelete.userId).lean();
+        console.log(`User updated immediately:`, updatedUser);        
       }
     }
 
@@ -440,6 +457,8 @@ export const updateGroupInfo = async (req, res) => {
           _id: member._id,
           userName: incoming?.userName?.trim() || member.userName,
           userId: member.userId,
+          isHidden: incoming?.isHidden ?? member.isHidden,
+          isVirtual: incoming?.isVirtual ?? member.isVirtual
         });
       }
     }
@@ -460,7 +479,7 @@ export const updateGroupInfo = async (req, res) => {
     // 6. Save the updated group document
     await group.save();
 
-    res.status(200).json(group.toObject({ virtuals: true, versionKey: false }));
+    res.status(200).json(group);
   } catch (err) {
     console.error("Error updating group:", err);
     if (err.name === "ValidationError") {
