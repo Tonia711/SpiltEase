@@ -63,7 +63,7 @@ export default function GroupDetailPage() {
     try {
       const { data } = await api.get(`/groups/${groupId}`);
       setGroup(data);
-      console.log("fetch first", data);
+      // console.log("fetch first", data);
       const iconUrl = data.iconUrl;
       const fullIconUrl = iconUrl
         ? (iconUrl.startsWith("http") ? iconUrl : `${ICON_BASE}/${iconUrl}`)
@@ -205,7 +205,10 @@ export default function GroupDetailPage() {
     setError(null);
 
     const membersToSave = editedMembers.map(m => {
-      const member = { userName: m.userName };
+      const member = { 
+        userId: m.userId,
+        userName: m.userName 
+      };
       if (m._id !== undefined) {
         member._id = m._id;
       }
@@ -220,7 +223,7 @@ export default function GroupDetailPage() {
       startDate: editedStartDate || null,
       members: membersToSave,
     };
-    console.log("payload", payload)
+    // console.log("payload", payload)
 
     try {
       const { data } = await api.put(`/groups/${groupId}/update`, payload, {
@@ -230,7 +233,7 @@ export default function GroupDetailPage() {
       });
       
       setGroup(data);
-      console.log("after update", data)
+      // console.log("after update", data)
       setEditedGroupName("");
       setEditedStartDate("");
       setEditedMembers([]);

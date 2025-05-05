@@ -16,8 +16,6 @@ export const getUserGroups = async (req, res) => {
         .json({ message: "User group information not found or invalid." });
     }
 
-    console.log("User groupId array content:", user.groupId);
-
     const groups = await Group.find({ _id: { $in: user.groupId } }).sort({
       startDate: -1,
     });
@@ -397,6 +395,7 @@ export const updateGroupInfo = async (req, res) => {
     // Filter incoming members to identify those with and without memberId
     const incomingMembersWithId = incomingMembers.filter(m => m._id).map(m => ({
       _id: m._id,
+      userId: m.userId,
       userName: m.userName,
       isHidden: m.isHidden || false, 
     }));    
@@ -407,7 +406,7 @@ export const updateGroupInfo = async (req, res) => {
     );
 
     // Identify members marked for deletion (exist in current but not in incoming with ID)
-    const membersToDelete = currentMembers.filter(m => m.isHidden);  
+    const membersToDelete = incomingMembersWithId.filter(m => m.isHidden);  
 
     for (const memberToDelete of membersToDelete) {
       const unsettledBalances = await Balance.find({
@@ -429,20 +428,12 @@ export const updateGroupInfo = async (req, res) => {
           message: `Cannot delete member '${memberToDelete.userName}' due to unsettled balances. Please settle balances before removing.`,
         });
       } else {
-        const member = group.members.id(memberToDelete._id);
-        if (member) {
-          member.isHidden = true;
-        }
-        await Group.updateOne(
-          { _id: currentGroupId, "members._id": memberToDelete._id },
-          { $set: { "members.$.isHidden": true, "members.$.isVirtual": false } }
-        );   
+        memberToDelete.isHidden = true;
+        // let updatedUser = await User.findById(memberToDelete.userId);
         await User.updateOne(
           { _id: memberToDelete.userId },
-          { $pull: { groupId: currentGroupId } }
+          { $pull: { groupId: currentGroupId } },
         );
-        const updatedUser = await User.findById(memberToDelete.userId).lean();
-        console.log(`User updated immediately:`, updatedUser);        
       }
     }
 
