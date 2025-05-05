@@ -436,7 +436,13 @@ export const updateGroupInfo = async (req, res) => {
         await Group.updateOne(
           { _id: currentGroupId, "members._id": memberToDelete._id },
           { $set: { "members.$.isHidden": true, "members.$.isVirtual": false } }
-        );              
+        );   
+        await User.updateOne(
+          { _id: memberToDelete.userId },
+          { $set: { groupId: user.groupId.filter(id => id !== currentGroupId) } }
+        );        
+        const updatedUser = await User.findById(memberToDelete.userId).lean();
+        console.log(`User updated immediately:`, updatedUser);        
       }
     }
 
