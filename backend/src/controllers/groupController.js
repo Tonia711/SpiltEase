@@ -388,9 +388,6 @@ export const updateGroupInfo = async (req, res) => {
     group.startDate = startDate ? new Date(startDate) : null;
 
     const currentMembers = group.members.toObject();
-    const currentMemberIds = new Set(
-      currentMembers.map((m) => m._id.toString())
-    );
 
     // Filter incoming members to identify those with and without memberId
     const incomingMembersWithId = incomingMembers.filter(m => m._id).map(m => ({
@@ -429,7 +426,6 @@ export const updateGroupInfo = async (req, res) => {
         });
       } else {
         memberToDelete.isHidden = true;
-        // let updatedUser = await User.findById(memberToDelete.userId);
         await User.updateOne(
           { _id: memberToDelete.userId },
           { $pull: { groupId: currentGroupId } },
@@ -479,59 +475,6 @@ export const updateGroupInfo = async (req, res) => {
     res.status(500).json({ message: "Server error updating group." });
   }
 };
-
-// export const addNewVirtualMember = async (req, res) => {
-//   const groupId = req.params.id;
-//   const { userName } = req.body;
-
-//   if (!userName) {
-//     return res.status(400).json({ message: "User name are required" });
-//   }
-
-//   try {
-//     const group = await Group.findById(groupId);
-//     if (!group) {
-//       return res.status(404).json({ message: "Group not found" });
-//     }
-
-//     const memberId =
-//       group.members.length > 0
-//         ? Math.max(...group.members.map((m) => m.memberId)) + 1
-//         : 1;
-//     const newMember = {
-//       memberId,
-//       userName,
-//     };
-
-//     group.members.push(newMember);
-//     await group.save();
-
-//     res.status(201).json(group);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-// export const deleteGroupMember = async (req, res) => {
-//   const groupId = req.params.id;
-//   const _id = req.params.memberId;
-
-//   try {
-//     const group = await Group.findByIdAndUpdate(
-//       groupId,
-//       { $pull: { members: { _id } } },
-//       { new: true }
-//     ).select("-__v");
-//     if (!group) {
-//       return res.status(404).json({ message: "Group not found" });
-//     }
-//     res.status(200).json(group);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
 
 // Helper：生成随机 joinCode
 function generateJoinCode(length = 6) {
