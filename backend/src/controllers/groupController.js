@@ -439,6 +439,7 @@ export const updateGroupInfo = async (req, res) => {
         newMembersArray.push({
           _id: member._id,
           userName: incoming?.userName?.trim() || member.userName,
+          userId: member.userId,
         });
       }
     }
@@ -469,58 +470,58 @@ export const updateGroupInfo = async (req, res) => {
   }
 };
 
-export const addNewVirtualMember = async (req, res) => {
-  const groupId = req.params.id;
-  const { userName } = req.body;
+// export const addNewVirtualMember = async (req, res) => {
+//   const groupId = req.params.id;
+//   const { userName } = req.body;
 
-  if (!userName) {
-    return res.status(400).json({ message: "User name are required" });
-  }
+//   if (!userName) {
+//     return res.status(400).json({ message: "User name are required" });
+//   }
 
-  try {
-    const group = await Group.findById(groupId);
-    if (!group) {
-      return res.status(404).json({ message: "Group not found" });
-    }
+//   try {
+//     const group = await Group.findById(groupId);
+//     if (!group) {
+//       return res.status(404).json({ message: "Group not found" });
+//     }
 
-    const memberId =
-      group.members.length > 0
-        ? Math.max(...group.members.map((m) => m.memberId)) + 1
-        : 1;
-    const newMember = {
-      memberId,
-      userName,
-    };
+//     const memberId =
+//       group.members.length > 0
+//         ? Math.max(...group.members.map((m) => m.memberId)) + 1
+//         : 1;
+//     const newMember = {
+//       memberId,
+//       userName,
+//     };
 
-    group.members.push(newMember);
-    await group.save();
+//     group.members.push(newMember);
+//     await group.save();
 
-    res.status(201).json(group);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+//     res.status(201).json(group);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
-export const deleteGroupMember = async (req, res) => {
-  const groupId = req.params.id;
-  const _id = req.params.memberId;
+// export const deleteGroupMember = async (req, res) => {
+//   const groupId = req.params.id;
+//   const _id = req.params.memberId;
 
-  try {
-    const group = await Group.findByIdAndUpdate(
-      groupId,
-      { $pull: { members: { _id } } },
-      { new: true }
-    ).select("-__v");
-    if (!group) {
-      return res.status(404).json({ message: "Group not found" });
-    }
-    res.status(200).json(group);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+//   try {
+//     const group = await Group.findByIdAndUpdate(
+//       groupId,
+//       { $pull: { members: { _id } } },
+//       { new: true }
+//     ).select("-__v");
+//     if (!group) {
+//       return res.status(404).json({ message: "Group not found" });
+//     }
+//     res.status(200).json(group);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 // Helper：生成随机 joinCode
 function generateJoinCode(length = 6) {
