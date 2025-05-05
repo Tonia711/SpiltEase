@@ -96,17 +96,7 @@ height: 220px;
 overflow-y: auto;
 }
 
-.splitHeader {
-display: flex;
-justify-content: space-between;
-font-size: 13px;
-color: #999;
-margin-bottom: 10px;
-}
 
-.splitRight {
-color: #888;
-}
 
 .memberList {
 list-style: none;
