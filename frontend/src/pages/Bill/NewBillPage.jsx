@@ -231,11 +231,14 @@ export default function NewBillPage() {
 
   return (
     <MobileFrame>
+    <div className={styles.container}>
       {showCamera && (
+      <div className={styles.cameraWrapper}>
         <CameraCapture 
           onCapture={handleCaptureComplete} 
           onClose={() => setShowCamera(false)}
         />
+      </div>
       )}
       
       {isProcessing && (
@@ -421,6 +424,7 @@ export default function NewBillPage() {
           Add
         </button>
       </form>
+    </div>
     </MobileFrame>
   );
 }
