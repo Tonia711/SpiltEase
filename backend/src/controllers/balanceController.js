@@ -24,3 +24,38 @@ export const getBalanceByGroupId = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+export const markBalanceAsFinished = async (req, res) => {
+  const { groupId } = req.params;
+  const { fromMemberId, toMemberId } = req.body;
+
+  try {
+    const result = await Balance.findOneAndUpdate(
+      { groupId: new mongoose.Types.ObjectId(groupId), 
+        "groupBalances.fromMemberId": new mongoose.Types.ObjectId(fromMemberId), 
+        "groupBalances.toMemberId": new mongoose.Types.ObjectId(toMemberId) },
+      {
+        $set: {
+          "groupBalances.$.isFinished": true,
+        },
+        $push: {
+          "groupBalances.$.finishHistory": {
+          },
+        },
+      },
+      { new: true }
+    );
+
+    console.log("✅ 更新结果：", result);
+
+    if (!result) {
+      return res.status(404).json({ message: "Balance item not found" });
+    }
+
+    res.status(200).json({ message: "Marked as paid" });
+  } catch (err) {
+    console.error("Failed to update balance:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
