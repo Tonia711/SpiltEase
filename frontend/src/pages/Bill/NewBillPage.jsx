@@ -3,12 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../../styles/Bill/NewBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
+import CameraCapture from "../../components/CameraCapture";
  
 
 export default function NewBillPage() {
   const { groupId } = useParams(); // 获取 groupId
   const navigate = useNavigate();
 
+  // Camera and OCR states
+  const [showCamera, setShowCamera] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [ocrResult, setOcrResult] = useState(null);
 
   // 界面展示的数据
   const [labels, setLabels] = useState([]);  // labels
@@ -140,6 +145,49 @@ export default function NewBillPage() {
   }, [expenses, refunds, splitMethod, members, selectedMemberIds]);
 
 
+  // Handle camera capture
+  const handleCameraClick = () => {
+    setShowCamera(true);
+  };
+
+  // Process captured image through OCR
+  const handleCaptureComplete = async (imageBlob, imagePreview) => {
+    setShowCamera(false);
+    setIsProcessing(true);
+    setError(""); // Clear any previous errors
+
+    try {
+      // Create form data for image upload
+      const formData = new FormData();
+      formData.append('image', imageBlob, 'receipt.jpg');
+
+      // Send to OCR API
+      const response = await api.post('/ocr/receipt', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log("OCR API Response:", response.data); // Debug response
+
+      // Update the expenses field with the recognized amount
+      if (response.data && response.data.success && response.data.amount) {
+        setOcrResult({
+          amount: response.data.amount,
+          timestamp: new Date().toISOString(),
+        });
+        setExpenses(response.data.amount);
+      } else {
+        setError("Could not recognize amount from receipt. Please enter manually.");
+      }
+    } catch (err) {
+      console.error('Error processing receipt:', err);
+      setError('Failed to process receipt. Please enter the amount manually.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
 
   // submit bill
   const handleAddBill = async (e) => {
@@ -183,6 +231,20 @@ export default function NewBillPage() {
 
   return (
     <MobileFrame>
+      {showCamera && (
+        <CameraCapture 
+          onCapture={handleCaptureComplete} 
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+      
+      {isProcessing && (
+        <div className={styles.processingOverlay}>
+          <div className={styles.spinner}></div>
+          <p>Processing receipt...</p>
+        </div>
+      )}
+
       <form className={styles.form} onSubmit={handleAddBill}>
         <h2 className={styles.header}>
         <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses`)}>
@@ -190,7 +252,7 @@ export default function NewBillPage() {
         </span>
         <p >Add Expense</p>
 
-        <span>📷</span>
+        <span onClick={handleCameraClick}>📷</span>
         </h2>
 
         <div className={styles.rowName}>
