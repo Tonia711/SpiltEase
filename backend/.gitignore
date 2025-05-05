@@ -10,3 +10,6 @@ logs/
 
 # Build output
 dist/
+
+# OCR training data
+eng.traineddata

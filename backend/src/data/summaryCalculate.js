@@ -88,6 +88,12 @@ export const calculateExpenseSummary = async (group, userId, billsData) => {
         continue;
       }
       
+      // Skip "Transfer" label type
+      if (labelInfo.name.toLowerCase() === "transfer") {
+        console.log(`Skipping bill ${bill.id} with Transfer label type`);
+        continue;
+      }
+      
       const labelKey = labelNumericId.toString();
       
       // Initialize label entries in the summary maps if they don't exist
