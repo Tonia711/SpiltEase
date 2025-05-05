@@ -435,8 +435,8 @@ export const updateGroupInfo = async (req, res) => {
         }
         await Group.updateOne(
           { _id: currentGroupId, "members._id": memberToDelete._id },
-          { $set: { "members.$.isHidden": true } }
-        );        
+          { $set: { "members.$.isHidden": true, "members.$.isVirtual": false } }
+        );              
       }
     }
 
@@ -452,6 +452,7 @@ export const updateGroupInfo = async (req, res) => {
           userName: incoming?.userName?.trim() || member.userName,
           userId: member.userId,
           isHidden: incoming?.isHidden ?? member.isHidden,
+          isVirtual: incoming?.isVirtual ?? member.isVirtual
         });
       }
     }
@@ -472,7 +473,7 @@ export const updateGroupInfo = async (req, res) => {
     // 6. Save the updated group document
     await group.save();
 
-    res.status(200).json(group.toObject({ virtuals: true, versionKey: false }));
+    res.status(200).json(group);
   } catch (err) {
     console.error("Error updating group:", err);
     if (err.name === "ValidationError") {
