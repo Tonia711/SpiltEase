@@ -30,6 +30,51 @@ export default function GroupExpensePage() {
 
   const myUserId = currentUser?._id?.toString() || "";
 
+  // 点击“Okay”按钮后
+  const handleConfirmMarkAsPaid = async (balanceItem) => {
+    try {
+      const { fromMemberId, toMemberId, balance: amount } = balanceItem;
+  
+      // 构造一个转账账单
+      const newBill = {
+        groupId,
+        labelId: "000000000000000000000007",
+        date: new Date().toISOString(),
+        note: "Transfer payment",
+        paidBy: fromMemberId,
+        expenses: amount,
+        refunds: 0,
+        splitWay: "Equally",
+        members: [
+          {
+            memberId: toMemberId,
+            expense: amount,
+            refund: 0,
+          },
+        ],
+      };
+  
+      await api.post("/bills", newBill);
+  
+      // TODO: 更新对应 balance 的 isFinished 为 true（你需要提供一个接口）
+      await api.put(`/balances/group/${groupId}/markPaid`, {
+        fromMemberId,
+        toMemberId,
+      });
+  
+      // 刷新 balance
+      const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
+      setBalance(balanceData.groupBalances ?? []);
+      setConfirmMarkPaidId(null);
+      setExpandedBalanceId(null);
+    } catch (err) {
+      console.error("Failed to mark as paid:", err);
+      console.error("Detailed error:", err.response?.data || err.message);
+      alert("Failed to mark as paid. Please try again.");
+    }
+  };
+  
+
   // 找到自己在 group.members 里的 _id
   const myGroupMemberObjectId = useMemo(() => {
     if (!group || !group.members || !currentUser) return null;
@@ -61,11 +106,12 @@ export default function GroupExpensePage() {
     }  
 
     if (myGroupMemberObjectId && balance.length > 0) {
-      balance.forEach(b => {
+      const unfinished = balance.filter(b => !b.isFinished);
 
+      unfinished.forEach(b => {
         const fromId = b.fromMemberId?.toString();
         const toId = b.toMemberId?.toString();
-
+    
         if (toId === myGroupMemberObjectId) {
           owedToMe += b.balance;
           myBalances.push({ ...b, direction: "incoming" });
@@ -73,13 +119,13 @@ export default function GroupExpensePage() {
           iOwe += b.balance;
           myBalances.push({ ...b, direction: "outgoing" });
         }
-
+    
         if (fromId && !memberBalanceMap[fromId]) {
           memberBalanceMap[fromId] = -b.balance;
         } else if (fromId) {
           memberBalanceMap[fromId] -= b.balance;
         }
-
+    
         if (toId && !memberBalanceMap[toId]) {
           memberBalanceMap[toId] = b.balance;
         } else if (toId) {
@@ -321,7 +367,10 @@ export default function GroupExpensePage() {
                                   A transfer will be added to group expense.
                                 </p>
                                 <div className={styles.confirmActions}>
-                                  <button className={styles.okButton}>
+                                  <button 
+                                    className={styles.okButton}
+                                    onClick={() => handleConfirmMarkAsPaid(b)}
+                                  >
                                     Okay
                                   </button>
                                   <button
@@ -347,7 +396,7 @@ export default function GroupExpensePage() {
                           </div>
                         ) : (
                           // 🔁 默认显示项
-                          <li
+                          <div
                             className={styles.memberItem}
                             onClick={() =>
                               setExpandedBalanceId(b._id === expandedBalanceId ? null : b._id)
@@ -355,7 +404,7 @@ export default function GroupExpensePage() {
                           >
                             <span>{isIncoming ? other?.userName || "Someone" : `You owe ${other?.userName || "Someone"}`}</span>
                             <span>${b.balance.toFixed(2)}</span>
-                          </li>
+                          </div>
                         )}
                     </li>
                   );
@@ -368,12 +417,15 @@ export default function GroupExpensePage() {
               {group?.members?.length > 0 ? (
                 group.members.map(member => {
                   const memberId = member._id?.toString();
+                  
                   if (!memberId) return null;
 
                   if (memberId === myGroupMemberObjectId) return null;
 
-                  const incoming = balance.filter(b => b.toMemberId?.toString() === memberId);
-                  const outgoing = balance.filter(b => b.fromMemberId?.toString() === memberId);
+                  const unfinished = balance.filter(b => !b.isFinished);
+
+                  const incoming = unfinished.filter(b => b.toMemberId?.toString() === memberId);
+                  const outgoing = unfinished.filter(b => b.fromMemberId?.toString() === memberId);
 
                   const totalOwedTo = incoming.reduce((sum, b) => sum + b.balance, 0);
                   const totalOwe = outgoing.reduce((sum, b) => sum + b.balance, 0);
@@ -383,9 +435,10 @@ export default function GroupExpensePage() {
 
                   if (total === 0) return null;
 
-                  const relatedBalances = balance.filter(b => 
-                    (isOwed && b.toMemberId?.toString() === memberId) ||
-                    (!isOwed && b.fromMemberId?.toString() === memberId)
+                  const relatedBalances = unfinished.filter(b => 
+                    !b.isFinished &&
+                    ((isOwed && b.toMemberId?.toString() === memberId) ||
+                    (!isOwed && b.fromMemberId?.toString() === memberId))
               );
 
                 return (
@@ -427,7 +480,12 @@ export default function GroupExpensePage() {
                                       A transfer will be added to group expense.
                                     </p>
                                     <div className={styles.confirmActions}>
-                                      <button className={styles.okButton}>Okay</button>
+                                      <button 
+                                        className={styles.okButton}
+                                        onClick={() => handleConfirmMarkAsPaid(b)}
+                                      >
+                                        Okay
+                                      </button>
                                       <button
                                         className={styles.cancelButton}
                                         onClick={() => setConfirmMarkPaidId(null)}
@@ -449,7 +507,7 @@ export default function GroupExpensePage() {
                                 )}
                               </div>
                             ) : (
-                              <li
+                              <div
                                 className={styles.memberItem}
                                 onClick={() =>
                                   setExpandedBalanceId(
@@ -459,7 +517,7 @@ export default function GroupExpensePage() {
                               >
                                 <span>{otherUser.userName}</span>
                                 <span>${b.balance.toFixed(2)}</span>
-                              </li>
+                              </div>
                             )}
                           </li>
                         );
