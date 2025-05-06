@@ -10,8 +10,65 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * Process a receipt image using OCR with minimal processing
- * to check Tesseract's raw recognition ability
+ * Preprocess image to improve OCR accuracy
+ * @param {string} imagePath - Path to original image
+ * @returns {Promise<string>} - Path to processed image
+ */
+const preprocessImage = async (imagePath) => {
+  try {
+    const outputPath = imagePath + '.processed.jpg';
+    
+    // Apply image preprocessing techniques to improve OCR
+    await sharp(imagePath)
+      // Convert to grayscale
+      .grayscale()
+      // Increase contrast
+      .normalize()
+      // Sharpen image
+      .sharpen({ sigma: 1.5 })
+      // Resize if needed (keeping aspect ratio but ensuring reasonable size)
+      .resize({ width: 1600, height: 2000, fit: 'inside', withoutEnlargement: true })
+      // Save processed image
+      .toFile(outputPath);
+    
+    console.log(`Image preprocessed: ${outputPath}`);
+    return outputPath;
+  } catch (error) {
+    console.error('Error preprocessing image:', error);
+    // Return original image path if preprocessing fails
+    return imagePath;
+  }
+};
+
+/**
+ * Extract total amount from OCR-processed text using a specific regex pattern
+ * @param {string} text - The OCR processed text
+ * @returns {string|null} - The extracted amount or null if not found
+ */
+const extractTotalAmount = (text) => {
+  // Clean up text: remove multiple spaces, join split lines
+  const cleanedText = text
+    .replace(/\s+/g, ' ')         // Replace multiple spaces with single space
+    .replace(/\n/g, ' ')          // Replace newlines with spaces
+    .replace(/TOTAL\s*-—\s*(\d+[\.,]\d{2})/i, 'TOTAL $1'); // Fix common misrecognition pattern
+
+  // Check for specific pattern: "TOTAL" followed by amount, possibly spread across lines
+  const totalPattern = /(?:TOTAL|Total|total)(?:[^\d$€£¥]*?(?:(?:including|incl\.?|inc\.?)?(?:\s+GST|\s+tax|:|\s+of|\s+\([^)]*\))?)?)\s+(?:NZD\s*)?[$€£¥]?\s*(\d+\.\d{2})/i;
+  
+  // Try the pattern on the cleaned text
+  const match = cleanedText.match(totalPattern);
+  if (match && match[1]) {
+    console.log("Matched amount:", match[1]);
+    return match[1];
+  }
+
+  console.log("No amount found in text with the specified pattern");
+  return null;
+};
+
+/**
+ * Process a receipt image using OCR to extract the total amount
+ * Uses Tesseract.js for OCR text recognition with optimized settings
  */
 export const processReceipt = async (req, res) => {
   try {
@@ -22,76 +79,63 @@ export const processReceipt = async (req, res) => {
 
     console.log(`Processing receipt image: ${req.file.path}`);
     
-    // Convert the image to JPG if it's not already (for better OCR compatibility)
-    // But avoid any other preprocessing to test raw Tesseract performance
-    const outputPath = req.file.path + '.simple.jpg';
+    // Preprocess the image to improve OCR accuracy
+    const processedImagePath = await preprocessImage(req.file.path);
     
-    try {
-      // Just convert to JPG without additional processing
-      await sharp(req.file.path)
-        .jpeg({ quality: 90 })
-        .toFile(outputPath);
-        
-      console.log(`Converted to JPG at: ${outputPath}`);
-    } catch (err) {
-      console.error('Error converting image:', err);
-      // If conversion fails, use original image
-      outputPath = req.file.path;
-    }
+    // Optimize Tesseract configuration for receipts
+    const tessConfig = {
+      // Use page segmentation mode 3 (fully automatic page segmentation, but no OSD)
+      tessedit_pageseg_mode: '3',
+      // Improve number recognition
+      tessedit_ocr_engine_mode: '1'  // Use LSTM neural network mode
+    };
     
-    // Use default Tesseract settings
+    // Recognize text from the image using Tesseract.js
     const result = await Tesseract.recognize(
-      outputPath,
-      'eng',  // English language
-      {
+      processedImagePath,
+      'eng', // English language
+      { 
         logger: info => {
           if (info.status === 'recognizing text') {
             console.log(`OCR progress: ${Math.round(info.progress * 100)}%`);
           }
         },
-        // No additional configuration to test default behavior
+        ...tessConfig
       }
     );
     
     console.log('OCR processing complete');
     
-    // Extract the raw recognized text
+    // Extract the recognized text
     const text = result.data.text;
-    console.log('Raw recognized text:', text);
+    console.log('Extracted text:', text);
     
-    // Look for numbers with decimal points (potential prices)
-    const amountRegex = /\$?\s*(\d+\.\d{2})/g;
-    const amounts = [];
-    let match;
+    // Extract the total amount from the recognized text
+    let amount = extractTotalAmount(text);
     
-    while ((match = amountRegex.exec(text)) !== null) {
-      amounts.push({
-        amount: parseFloat(match[1]),
-        position: match.index
+    // Send appropriate response based on whether an amount was found
+    if (amount) {
+      res.json({
+        success: true,
+        amount: amount,
+        imagePath: req.file.path,
+        recognizedText: text.substring(0, 200) + (text.length > 200 ? '...' : '')
+      });
+    } else {
+      res.json({
+        success: false,
+        error: "Could not recognize amount from receipt",
+        imagePath: req.file.path,
+        recognizedText: text.substring(0, 200) + (text.length > 200 ? '...' : '')
       });
     }
     
-    // Sort by amount (descending)
-    amounts.sort((a, b) => b.amount - a.amount);
-    
-    // Find largest amount (likely to be the total)
-    let amount = amounts.length > 0 ? amounts[0].amount.toString() : null;
-    
-    // Log all found amounts for debugging
-    console.log('Found amounts:', amounts);
-    
-    // Send response with raw text and detected amounts
-    res.json({
-      success: !!amount,
-      amount: amount,
-      imagePath: req.file.path,
-      convertedImagePath: outputPath !== req.file.path ? outputPath : null,
-      recognizedText: text,
-      allDetectedAmounts: amounts.map(a => a.amount)
-    });
-    
-    // Keep the processed images for debugging
-    
+    // Clean up processed image if it was created
+    if (processedImagePath !== req.file.path) {
+      fs.unlink(processedImagePath).catch(err => {
+        console.error('Error removing processed image:', err);
+      });
+    }
   } catch (error) {
     console.error("Error processing receipt:", error);
     res.status(500).json({ error: "Failed to process receipt image" });
