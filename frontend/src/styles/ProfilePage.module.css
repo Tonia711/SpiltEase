@@ -188,7 +188,7 @@ input::placeholder {
 
 /* 登出按钮 */
 .logoutBtn {
-  margin-top: auto;
+  margin-top: 1rem;
   padding: 0.8rem;
   width: 100%;
   border: none;
