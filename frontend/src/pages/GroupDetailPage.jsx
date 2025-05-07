@@ -242,8 +242,6 @@ export default function GroupDetailPage() {
 
     } catch (err) {
       console.error("Save group error:", err);
-      const errorMessage = err.response?.data?.message || "Failed to save group changes. Please try again.";
-      showErrorToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -423,7 +421,6 @@ export default function GroupDetailPage() {
               setIsEditing(false);
               setIsAddingMember(false);
               setNewMemberName("");
-              showToastMessage("Editing cancelled.", "success");
             }}
             disabled={isSaving}
           >
