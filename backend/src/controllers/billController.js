@@ -125,7 +125,13 @@ export const createBill = async (req, res) => {
 
     // 获取当前 group 下已有的账单数量用于 id 自增
     const existing = await Bill.findOne({ groupId });
-    const currentId = existing?.groupBills?.length || 0;
+    let currentId = 0;
+    if (existing?.groupBills?.length > 0) {
+      currentId = existing.groupBills.reduce(
+        (maxId, bill) => Math.max(maxId, bill.id ?? 0),
+        0
+      );
+    }
 
     const newGroupBill = {
       id: currentId + 1, // 自增 id
