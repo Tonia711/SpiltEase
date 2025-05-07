@@ -2,11 +2,10 @@
 
 .frame {
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #213547;
+  background-color: #242424;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
