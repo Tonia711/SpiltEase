@@ -174,6 +174,8 @@ const fetchData = async () => {
 
     await refreshBalance();
 
+    billsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     // 按日期分类账单
     const grouped = {};
     billsData.forEach((bill) => {
@@ -181,7 +183,16 @@ const fetchData = async () => {
       if (!grouped[dateKey]) grouped[dateKey] = [];
       grouped[dateKey].push(bill);
     });
-    setBills(grouped); // 现在是一个对象，key 是日期，value 是账单数组
+
+    const sortedGrouped = Object.keys(grouped)
+      .sort((a, b) => new Date(b) - new Date(a)) // 日期 key 也按降序排
+      .reduce((obj, key) => {
+        obj[key] = grouped[key];
+        return obj;
+      }, {});
+
+    setBills(sortedGrouped);
+
   } catch (err) {
     console.error("Failed to fetch group or bills:", err);
     setError("Failed to load expenses.");
