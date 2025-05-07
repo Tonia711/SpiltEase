@@ -208,8 +208,12 @@ export default function EditBillPage() {
     
   
     try {
+      setBill(null);
       await api.put(`/bills/${groupId}/bill/${billId}`, updatedBill);
-      navigate(`/groups/${groupId}/expenses/${billId}`);
+      await api.post(`/balances/group/${groupId}/recalculate`);
+      navigate(`/groups/${groupId}/expenses/${billId}`, { 
+        replace: true,
+        state: { needRefreshBalance: true } });
     } catch (err) {
       console.error("Failed to update bill:", err);
       setError("Failed to update bill. Please try again.");

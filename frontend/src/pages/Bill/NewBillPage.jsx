@@ -193,7 +193,10 @@ export default function NewBillPage() {
 
     try {
       await api.post(`/bills`, newBill);
-      navigate(`/groups/${groupId}/expenses`);
+      await api.post(`/balances/group/${groupId}/recalculate`);
+      navigate(`/groups/${groupId}/expenses`, { 
+        replace: true,
+        state: { needRefreshBalance: true } });
     } catch (err) {
       console.error("Failed to create bill:", err);
       setError("Failed to create bill. Please try again.");

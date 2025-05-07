@@ -43,8 +43,16 @@ export default function BillDetailPage() {
   
     const handleConfirmDelete = async () => {
       try {
-        navigate(`/groups/${groupId}/expenses`);
+        setBill(null);
+        
         await api.delete(`/bills/${groupId}/bill/${billId}`);
+        await api.post(`/balances/group/${groupId}/recalculate`);
+
+        navigate(`/groups/${groupId}/expenses`, { 
+          replace: true,
+          state: { needRefreshBalance: true } });
+        
+        
       } catch (err) {
         console.error("Failed to delete bill:", err);
       }
