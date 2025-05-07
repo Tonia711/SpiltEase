@@ -77,24 +77,6 @@ export default function NewBillPage() {
   }, [members]);
   
 
-
-
-  // 通过获取bill的数据来获取每个人应付的钱
-  // 这个在编辑bill界面使用
-  // useEffect(() => {
-  //   api
-  //     .get(`/bills/groups/${groupId}`)
-  //     .then(({ data }) => {
-  //       setPaidAmount(data);
-  //     })
-  //     .catch((err) => {
-  //       console.error("Failed to fetch group data:", err);
-  //     });
-  // }, [groupId, BASE_URL]);
-
-  // console.log("paidAmount", paidAmount);
-
-
   
   //通过输入的expense, refunds来计算每个人分的钱
   useEffect(() => {
