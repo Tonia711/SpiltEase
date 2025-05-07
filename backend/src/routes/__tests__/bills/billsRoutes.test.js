@@ -32,8 +32,8 @@ describe('Bill API Routes', () => {
             labelId: "000000000000000000000001",
             note: "taxi", 
             paidBy: user1, 
-            refund: 5,
-            splitway: "Equally", 
+            refunds: 5,
+            splitWay: "Equally",
             members: [
             {
                 expense: 60.5, 
