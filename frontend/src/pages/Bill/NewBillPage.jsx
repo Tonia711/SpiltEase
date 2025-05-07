@@ -17,18 +17,16 @@ export default function NewBillPage() {
 
   // 界面展示的数据
   const [labels, setLabels] = useState([]);  // labels
-  const [group, setGroup] = useState(null); //group 数据
+  // const [group, setGroup] = useState(null); //group 数据
   const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
-  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
-  // const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
-
+  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："equally" 或 "As Amounts"
 
 
   // 表单数据
   const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
   const [note, setNote] = useState("");  
-  const [expenses, setExpenses] = useState("");   //paid
-  const [refunds, setRefunds] = useState("");   //refunds
+  const [expenses, setExpenses] = useState(0);   //paid
+  const [refunds, setRefunds] = useState(0);   //refunds
   const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
   const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
@@ -58,7 +56,7 @@ export default function NewBillPage() {
     api
       .get(`/groups/${groupId}`)
       .then(({ data }) => {
-        setGroup(data);
+        // setGroup(data);
         setMembers(data.members);
         setPaidBy(data.members[0]?._id || ""); // 设置默认的 paidBy
       })
@@ -67,8 +65,6 @@ export default function NewBillPage() {
       });
   }, [groupId, BASE_URL]);
 
-  // console.log("group", group);
-  // console.log("members", members);
 
   useEffect(() => {
     if (members && members.length > 0) {
@@ -76,24 +72,6 @@ export default function NewBillPage() {
     }
   }, [members]);
   
-
-
-
-  // 通过获取bill的数据来获取每个人应付的钱
-  // 这个在编辑bill界面使用
-  // useEffect(() => {
-  //   api
-  //     .get(`/bills/groups/${groupId}`)
-  //     .then(({ data }) => {
-  //       setPaidAmount(data);
-  //     })
-  //     .catch((err) => {
-  //       console.error("Failed to fetch group data:", err);
-  //     });
-  // }, [groupId, BASE_URL]);
-
-  // console.log("paidAmount", paidAmount);
-
 
   
   //通过输入的expense, refunds来计算每个人分的钱
@@ -137,11 +115,7 @@ export default function NewBillPage() {
       setMemberTotalExpenses(totalArray);       // 实际应付金额
     }
 
-    if (splitMethod === "amounts" && memberTotalExpenses.length === 0) {
-      setMemberExpenses(expensesArray);
-      setMemberRefunds(refundsArray);
-      setMemberTotalExpenses(totalArray);
-    }
+
   }, [expenses, refunds, splitMethod, members, selectedMemberIds]);
 
 
@@ -211,7 +185,7 @@ export default function NewBillPage() {
       members: memberTotalExpenses.map(m => ({
         memberId: m.memberId,
         expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
-        refund: memberRefunds.find(r => r.memberId === m.memberId)?.refund || 0
+        refund: memberRefunds == 0? 0 : memberRefunds.find(r => r.memberId === m.memberId)?.refund
       }))
     };
   
@@ -219,7 +193,10 @@ export default function NewBillPage() {
 
     try {
       await api.post(`/bills`, newBill);
-      navigate(`/groups/${groupId}/expenses`);
+      await api.post(`/balances/group/${groupId}/recalculate`);
+      navigate(`/groups/${groupId}/expenses`, { 
+        replace: true,
+        state: { needRefreshBalance: true } });
     } catch (err) {
       console.error("Failed to create bill:", err);
       setError("Failed to create bill. Please try again.");
@@ -392,6 +369,14 @@ export default function NewBillPage() {
                               return [...prev, { memberId: m._id, amount: newAmount }];
                             }
                           });
+                          setMemberExpenses(prev => {
+                            const exists = prev.find(p => p.memberId === m._id);
+                            if (exists) {
+                              return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+                            } else {
+                              return [...prev, { memberId: m._id, amount: newAmount }];
+                            }
+                          });                          
                         }}
                         className={styles.inputAmount}
                         disabled={!checked}

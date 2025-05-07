@@ -1,16 +1,19 @@
+:root {
+  --yellow: #fbc609;
+  --bg-dark: #242424;
+  --text-white: #ffffff;
+}
+
 .container {
-  background-color: #1c1b22;
-  height: 100%;
+  background-color: var(--bg-dark);
+  min-height: 100vh;
   padding: 2rem 1rem 5rem;
   color: white;
   position: relative;
   max-width: 375px;
   margin: 0 auto;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .profile {
@@ -23,7 +26,7 @@
 .avatar {
   width: 90px;
   height: 90px;
-  margin-top: 1rem;
+  margin-top: 60px;
   border-radius: 50%;
 }
 
@@ -40,7 +43,7 @@
 }
 
 .groupCard:hover {
-  background-color: #3e3455;
+  background-color: var(--bg-dark);
 }
 
 .groupIcon {
@@ -54,36 +57,60 @@
 }
 
 .fab {
-  position: absolute;
-  bottom: 24px; /* ✅ 离底部一点，不会被裁切 */
+  position: fixed;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #ffca28;
-  color: #000;
+  background-color: var(--yellow);
+  color: black;
   font-size: 2rem;
   border: none;
   border-radius: 50%;
-  width: 64px;
-  height: 64px;
+  width: 90px;
+  height: 90px;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 100;
+  margin-bottom: 48px;
 }
 
 .options {
   position: absolute;
-  bottom: 100px;
+  bottom: 180px;
   left: 50%;
   transform: translateX(-50%);
-  background: #fff;
-  color: #333;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
+  width: 100%;
+  max-width: 325px;
+  padding: 0 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 90;
+  gap: 0.75rem;
+  z-index: 200;
+}
+
+.options button {
+  height: 50px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.options button:first-child {
+  background-color: var(--yellow);
+  color: black;
+}
+
+.options button:last-child {
+  background-color: white;
+  color: black;
+  border: 1px solid #e5e7eb;
+}
+
+.options button:hover {
+  opacity: 0.9;
 }
 
 .profile {
@@ -92,4 +119,40 @@
   align-items: center;
   margin-bottom: 0;
   cursor: pointer;
+}
+
+.welcome {
+  text-align: center;
+  margin-top: 3rem;
+  color: #d1d5db;
+}
+
+.welcomeTitle {
+  color: var(--yellow);
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.welcomeText {
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 360px) {
+  .fab {
+    width: 70px;
+    height: 70px;
+    font-size: 1.5rem;
+    bottom: 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .fab {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+    bottom: 40px;
+  }
 }

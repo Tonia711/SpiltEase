@@ -7,14 +7,16 @@
 
 .group-item {
   position: relative;
-  background-color: #2e273f;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
+  background-color: #5b566a;
+  padding: 8px 16px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
-  gap: 1rem; 
+  gap: 1rem;
   transition: background-color 0.2s ease;
   max-width: 326px;
+  min-height: 50px;
+  box-sizing: border-box;
 }
 
 .delete-btn {

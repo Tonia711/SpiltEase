@@ -1,37 +1,32 @@
-/* ProfilePage.module.css */
+:root {
+  --yellow: #fbc609;
+  --bg-dark: #242424;
+  --text-white: #ffffff;
+  --input-bg: #5b566a;
+}
 
-/* 容器整体暗色背景 */
 .container {
+  background-color: var(--bg-dark);
+  min-height: 100vh;
   max-width: 375px;
-  margin: auto;
-  padding: 2rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  color: var(--text-white);
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  position: relative;
-  background-color: #1c1b22;
-  color: #f2f2f2; /* 文字浅色 */
-  font-family: sans-serif;
+  align-items: center;
 }
 
-/* 标题栏 */
-.titleRow {
+.header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 44px;
+  width: 100%;
+  max-width: 325px;
+  margin-bottom: 0.5rem;
+  margin-top: 60px;
   position: relative;
-  margin-top: 44px;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #f2c94c; /* 黄色高亮 */
-}
-
-/* 返回按钮 */
 .backButton {
   position: absolute;
   left: 0;
@@ -39,207 +34,111 @@
   transform: translateY(-50%);
   background: none;
   border: none;
+  color: var(--text-white);
   font-size: 1.5rem;
-  color: #fff;
   cursor: pointer;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
 }
 
-.backButton:hover {
-  color: #f2c94c; /* 黄色高亮 */
-}
-
-.content {
-  width: 325px;
-  margin: 0 auto;
-  padding: 0 0 1rem;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-/* 主头像 */
 .avatar {
-  display: block;
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  margin: 1rem auto;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-  border: 2px solid #333;
+  margin: 0 auto;
 }
 
-/* 表单标签与输入框 */
-label {
-  display: block;
-  margin: 1rem 0 0.5rem;
-  color: #d1d5db;
+.name {
+  font-weight: bold;
   font-size: 14px;
+  margin-bottom: 2rem;
 }
 
-input {
+.infoBlock {
   width: 100%;
-  max-width: 326px;
-  padding: 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #444;
-  background-color: #2c2c2c;
-  color: #f2f2f2;
-}
-input::placeholder {
-  color: #888;
-}
-
-/* 头像选项区域，垂直布局 */
-.avatarOptions {
+  max-width: 325px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 1.5rem;
-}
-
-/* 头像预设：3 列网格 */
-.presetsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  justify-items: center;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
-/* 头像选项样式 */
-.option {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 2px solid transparent;
-}
-.option:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-.selected {
-  border-color: #f2c94c;
+label {
+  font-size: 12px;
+  color: var(--text-white);
 }
 
-/* 按钮区 */
-.editButtons {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
+.readonlyField {
+  background-color: var(--input-bg);
+  color: var(--yellow);
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.inputField {
+  background-color: var(--input-bg);
+  color: var(--text-white);
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.editButton,
+.saveButton,
+.cancelButton {
+  background-color: var(--yellow);
+  border: none;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 325px;
+  font-weight: bold;
+  cursor: pointer;
   margin-bottom: 1rem;
 }
-.saveBtn,
-.cancelBtn {
-  width: 120px;
-  text-align: center;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-.saveBtn {
-  background-color: #f2c94c;
-  color: #1e1e1e;
-}
-.saveBtn:hover {
-  background-color: #e0b84c;
-}
-.cancelBtn {
-  background-color: #444;
-  color: #f2f2f2;
-}
-.cancelBtn:hover {
-  background-color: #555;
+
+.cancelButton {
+  background-color: #ccc;
+  color: #333;
 }
 
-/* 错误信息 */
-.errorMessage {
-  color: #e74c3c;
-  margin-top: 0.5rem;
-}
-
-/* 编辑信息表单 */
-.infoForm {
-  margin: 1rem 0;
-}
-
-/* 编辑按钮 */
-.editBtn {
-  margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  background-color: #f2c94c;
-  color: #1e1e1e;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-.editBtn:hover {
-  background-color: #e0b84c;
-}
-
-/* 登出按钮 */
-.logoutBtn {
-  margin-top: 1rem;
-  padding: 0.8rem;
+.buttonGroup {
   width: 100%;
-  border: none;
-  border-radius: 6px;
-  background-color: #333;
-  color: #f2f2f2;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
-}
-.logoutBtn:hover {
-  background-color: #444;
-}
-
-.editInput {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.75rem;
-  border-radius: 12px;
-  border: none;
-  background-color: #f5f5f5;
-  color: #111827;
-  font-size: 16px;
-  margin-bottom: 1.5rem;
-}
-
-.editInput::placeholder {
-  color: #9ca3af;
-}
-
-.avatarWrapper {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin: 1rem auto;
-}
-
-.cameraIcon {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  transform: translate(35%, 35%);
-  width: 30px;
-  height: 30px;
-  background-color: #fcd34d;
-  color: #1e1e1e;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  max-width: 325px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.notice {
+  font-weight: bold;
+  color: var(--yellow);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logoutWrapper {
+  color: #9e9e9e;
+  font-size: 14px;
+  margin-top: auto;
+  text-align: center;
+}
+
+.logoutLink {
+  color: var(--yellow);
+  margin-left: 0.25rem;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.error {
+  color: #f87171;
+  text-align: center;
+  margin-bottom: 1rem;
 }
