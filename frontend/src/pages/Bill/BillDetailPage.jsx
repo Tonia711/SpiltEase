@@ -85,7 +85,7 @@ export default function BillDetailPage() {
 
           <div className={styles.row1}>
             <span>Refund</span>
-            <span>${bill.refunds.toFixed(2)}</span>
+            <span>${bill.refunds?.toFixed(2) || 0}</span>
           </div>
 
           <div className={styles.row1}>
