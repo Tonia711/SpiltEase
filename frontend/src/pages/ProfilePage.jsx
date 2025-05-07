@@ -10,13 +10,11 @@ export default function ProfilePage() {
   const { user, updateUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 静态资源根路径 & 默认头像
   const AVATAR_BASE = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
   const DEFAULT_AVATAR = `${AVATAR_BASE}/avatars/default.png`;
 
-  // 本地状态
   const [isInfoEditing, setIsInfoEditing] = useState(false);
   const [isAvatarEditing, setIsAvatarEditing] = useState(false);
   const [name, setName] = useState(user?.userName || "");
@@ -27,7 +25,6 @@ export default function ProfilePage() {
   );
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 当 user 更新时，初始化表单和头像列表
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -48,12 +45,10 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // 保存用户名
   const handleInfoSave = async () => {
     setErrorMessage("");
     try {
       const { data: updated } = await api.put("/users/me", { userName: name });
-      // 拼装完整头像 URL
       updated.avatarUrl = updated.avatarUrl?.startsWith("http")
         ? updated.avatarUrl
         : `${AVATAR_BASE}/${updated.avatarUrl}`;
@@ -69,7 +64,6 @@ export default function ProfilePage() {
     setIsInfoEditing(false);
   };
 
-  // 保存系统头像选择
   const handleAvatarSave = async () => {
     setErrorMessage("");
     if (!selectedAvatarId) {
@@ -116,7 +110,6 @@ export default function ProfilePage() {
         ? data.avatarUrl
         : `${AVATAR_BASE}/${data.avatarUrl}`;
 
-      // ✅ 仅更新“预览”状态，用户点 Save 后再保存
       setAvatar(uploadedUrl);
       setSelectedAvatarId(data.avatarId);
     } catch (err) {

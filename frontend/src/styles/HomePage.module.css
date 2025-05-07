@@ -1,5 +1,11 @@
+:root {
+  --yellow: #fbc609;
+  --bg-dark: #242424;
+  --text-white: #ffffff;
+}
+
 .container {
-  background-color: #1c1b22;
+  background-color: var(--bg-dark);
   height: 100%;
   padding: 2rem 1rem 5rem;
   color: white;
@@ -23,7 +29,7 @@
 .avatar {
   width: 90px;
   height: 90px;
-  margin-top: 1rem;
+  margin-top: 2.5rem;
   border-radius: 50%;
 }
 
@@ -40,7 +46,7 @@
 }
 
 .groupCard:hover {
-  background-color: #3e3455;
+  background-color: var(--bg-dark);
 }
 
 .groupIcon {
@@ -55,10 +61,10 @@
 
 .fab {
   position: absolute;
-  bottom: 24px; /* ✅ 离底部一点，不会被裁切 */
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #ffca28;
+  background-color: var(--yellow);
   color: #000;
   font-size: 2rem;
   border: none;
@@ -92,4 +98,22 @@
   align-items: center;
   margin-bottom: 0;
   cursor: pointer;
+}
+
+.welcome {
+  text-align: center;
+  margin-top: 3rem;
+  color: #d1d5db;
+}
+
+.welcomeTitle {
+  color: var(--yellow);
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.welcomeText {
+  color: #ffffff;
+  font-size: 0.9rem;
 }
