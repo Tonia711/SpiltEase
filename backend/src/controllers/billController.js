@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 //获取所有标签
 export const getAllLabels = async (req, res) => {
   try {
-    const labels = await Label.find();
+    const labels = await Label.find({ type: { $ne: "transfer" } }); // 排除 transfer 标签
     res.json(labels);
   } catch (err) {
     console.error("Failed to fetch labels:", err);
