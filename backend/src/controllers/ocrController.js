@@ -2,73 +2,24 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import Tesseract from 'tesseract.js';
 import sharp from 'sharp';
+import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-/**
- * Preprocess image to improve OCR accuracy
- * @param {string} imagePath - Path to original image
- * @returns {Promise<string>} - Path to processed image
- */
-const preprocessImage = async (imagePath) => {
-  try {
-    const outputPath = imagePath + '.processed.jpg';
-    
-    // Apply image preprocessing techniques to improve OCR
-    await sharp(imagePath)
-      // Convert to grayscale
-      .grayscale()
-      // Increase contrast
-      .normalize()
-      // Sharpen image
-      .sharpen({ sigma: 1.5 })
-      // Resize if needed (keeping aspect ratio but ensuring reasonable size)
-      .resize({ width: 1600, height: 2000, fit: 'inside', withoutEnlargement: true })
-      // Save processed image
-      .toFile(outputPath);
-    
-    console.log(`Image preprocessed: ${outputPath}`);
-    return outputPath;
-  } catch (error) {
-    console.error('Error preprocessing image:', error);
-    // Return original image path if preprocessing fails
-    return imagePath;
-  }
-};
+// Azure Form Recognizer credentials
+const endpoint = process.env.AZURE_FORM_RECOGNIZER_ENDPOINT;
+const apiKey = process.env.AZURE_FORM_RECOGNIZER_KEY;
 
 /**
- * Extract total amount from OCR-processed text using a specific regex pattern
- * @param {string} text - The OCR processed text
- * @returns {string|null} - The extracted amount or null if not found
- */
-const extractTotalAmount = (text) => {
-  // Clean up text: remove multiple spaces, join split lines
-  const cleanedText = text
-    .replace(/\s+/g, ' ')         // Replace multiple spaces with single space
-    .replace(/\n/g, ' ')          // Replace newlines with spaces
-    .replace(/TOTAL\s*-—\s*(\d+[\.,]\d{2})/i, 'TOTAL $1'); // Fix common misrecognition pattern
-
-  // Check for specific pattern: "TOTAL" followed by amount, possibly spread across lines
-  const totalPattern = /(?:TOTAL|Total|total)(?:[^\d$€£¥]*?(?:(?:including|incl\.?|inc\.?)?(?:\s+GST|\s+tax|:|\s+of|\s+\([^)]*\))?)?)\s+(?:NZD\s*)?[$€£¥]?\s*(\d+\.\d{2})/i;
-  
-  // Try the pattern on the cleaned text
-  const match = cleanedText.match(totalPattern);
-  if (match && match[1]) {
-    console.log("Matched amount:", match[1]);
-    return match[1];
-  }
-
-  console.log("No amount found in text with the specified pattern");
-  return null;
-};
-
-/**
- * Process a receipt image using OCR to extract the total amount
- * Uses Tesseract.js for OCR text recognition with optimized settings
+ * Process a receipt image using Azure Form Recognizer to extract the total amount
+ * Uses the prebuilt receipt model that is specialized for receipt analysis
  */
 export const processReceipt = async (req, res) => {
   try {
@@ -79,65 +30,115 @@ export const processReceipt = async (req, res) => {
 
     console.log(`Processing receipt image: ${req.file.path}`);
     
-    // Preprocess the image to improve OCR accuracy
-    const processedImagePath = await preprocessImage(req.file.path);
+    // Check if Azure credentials are configured
+    if (!endpoint || !apiKey) {
+      return res.status(500).json({ 
+        error: "Azure Form Recognizer credentials are not configured. Please set AZURE_FORM_RECOGNIZER_ENDPOINT and AZURE_FORM_RECOGNIZER_KEY environment variables."
+      });
+    }
+
+    // Create the Azure Form Recognizer client
+    const client = new DocumentAnalysisClient(endpoint, new AzureKeyCredential(apiKey));
+
+    // Read the image file
+    const imageBuffer = await fs.readFile(req.file.path);
     
-    // Optimize Tesseract configuration for receipts
-    const tessConfig = {
-      // Use page segmentation mode 3 (fully automatic page segmentation, but no OSD)
-      tessedit_pageseg_mode: '3',
-      // Improve number recognition
-      tessedit_ocr_engine_mode: '1'  // Use LSTM neural network mode
-    };
+    // Analyze the receipt using the prebuilt receipt model
+    console.log("Analyzing receipt with Azure Form Recognizer...");
+    const poller = await client.beginAnalyzeDocument("prebuilt-receipt", imageBuffer);
+    const result = await poller.pollUntilDone();
+
+    console.log("Receipt analysis complete");
+
+    if (!result || !result.documents || result.documents.length === 0) {
+      return res.json({
+        success: false,
+        error: "Could not recognize receipt structure",
+        imagePath: req.file.path
+      });
+    }
+
+    // Extract receipt data from the results
+    const receiptData = result.documents[0];
+    console.log("Receipt fields detected:", JSON.stringify(receiptData.fields, null, 2));
+
+    // Extract the total amount - Fixed extraction logic
+    let amount = null;
     
-    // Recognize text from the image using Tesseract.js
-    const result = await Tesseract.recognize(
-      processedImagePath,
-      'eng', // English language
-      { 
-        logger: info => {
-          if (info.status === 'recognizing text') {
-            console.log(`OCR progress: ${Math.round(info.progress * 100)}%`);
-          }
-        },
-        ...tessConfig
+    // Check for Total field
+    if (receiptData.fields.Total) {
+      if (receiptData.fields.Total.kind === 'number') {
+        amount = receiptData.fields.Total.value;
+      } else if (receiptData.fields.Total.kind === 'currency' && receiptData.fields.Total.value) {
+        amount = receiptData.fields.Total.value.amount;
+      } else if (receiptData.fields.Total.content) {
+        // Try to parse from content
+        const contentStr = receiptData.fields.Total.content;
+        const numericValue = contentStr.replace(/[^0-9.]/g, '');
+        if (numericValue) {
+          amount = parseFloat(numericValue);
+        }
       }
-    );
+    }
     
-    console.log('OCR processing complete');
+    // If no Total found, check for TotalPrice field in items
+    if (!amount && receiptData.fields.Items && receiptData.fields.Items.values) {
+      for (const item of receiptData.fields.Items.values) {
+        if (item.properties && item.properties.TotalPrice) {
+          if (item.properties.TotalPrice.kind === 'number') {
+            amount = item.properties.TotalPrice.value;
+            break;
+          } else if (item.properties.TotalPrice.content) {
+            const contentStr = item.properties.TotalPrice.content;
+            const numericValue = contentStr.replace(/[^0-9.]/g, '');
+            if (numericValue) {
+              amount = parseFloat(numericValue);
+              break;
+            }
+          }
+        }
+      }
+    }
     
-    // Extract the recognized text
-    const text = result.data.text;
-    console.log('Extracted text:', text);
-    
-    // Extract the total amount from the recognized text
-    let amount = extractTotalAmount(text);
-    
-    // Send appropriate response based on whether an amount was found
+    // Check SubTotal as backup
+    if (!amount && receiptData.fields.SubTotal) {
+      if (receiptData.fields.SubTotal.kind === 'number') {
+        amount = receiptData.fields.SubTotal.value;
+      } else if (receiptData.fields.SubTotal.kind === 'currency' && receiptData.fields.SubTotal.value) {
+        amount = receiptData.fields.SubTotal.value.amount;
+      }
+    }
+
+    // Extract text content for debugging
+    const pages = result.pages || [];
+    const recognizedText = pages.length > 0 
+      ? pages[0].lines?.map(line => line.content).join(' ').substring(0, 200) + '...'
+      : '';
+
+    // Send response
     if (amount) {
+      console.log("Extracted amount:", amount);
+      
       res.json({
         success: true,
-        amount: amount,
+        amount: amount.toString(),
         imagePath: req.file.path,
-        recognizedText: text.substring(0, 200) + (text.length > 200 ? '...' : '')
+        recognizedText,
+        merchantName: receiptData.fields.MerchantName?.value || 'Unknown',
+        transactionDate: receiptData.fields.TransactionDate?.content || null,
+        receiptType: receiptData.docType || 'receipt'
       });
     } else {
+      console.log("Failed to extract amount from receipt");
       res.json({
         success: false,
         error: "Could not recognize amount from receipt",
         imagePath: req.file.path,
-        recognizedText: text.substring(0, 200) + (text.length > 200 ? '...' : '')
-      });
-    }
-    
-    // Clean up processed image if it was created
-    if (processedImagePath !== req.file.path) {
-      fs.unlink(processedImagePath).catch(err => {
-        console.error('Error removing processed image:', err);
+        recognizedText
       });
     }
   } catch (error) {
-    console.error("Error processing receipt:", error);
+    console.error("Error processing receipt:", error.message);
     res.status(500).json({ error: "Failed to process receipt image" });
   }
 };
