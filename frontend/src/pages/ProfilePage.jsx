@@ -11,15 +11,12 @@ export default function ProfilePage() {
   const { user, updateUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 静态资源根路径 & 默认头像
   const AVATAR_BASE = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
   const DEFAULT_AVATAR = `${AVATAR_BASE}/avatars/default.png`;
 
-  // 本地状态
   const [isEditing, setIsEditing] = useState(false);
-  // const [isAvatarEditing, setIsAvatarEditing] = useState(false);
   const [name, setName] = useState(user?.userName || "");
   const [presets, setPresets] = useState([]);
   const [avatar, setAvatar] = useState(user?.avatarUrl || DEFAULT_AVATAR);
@@ -29,7 +26,6 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // 当 user 更新时，初始化表单和头像列表
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -50,12 +46,11 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // 保存用户名
   const handleInfoSave = async () => {
     setErrorMessage("");
     try {
       const { data: updated } = await api.put("/users/me", { userName: name });
-      // 拼装完整头像 URL
+
       updated.avatarUrl = updated.avatarUrl?.startsWith("http")
         ? updated.avatarUrl
         : `${AVATAR_BASE}/${updated.avatarUrl}`;
@@ -71,7 +66,6 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
-  // 保存系统头像选择
   const handleAvatarSave = async () => {
     setErrorMessage("");
     if (!selectedAvatarId) {
@@ -118,7 +112,6 @@ export default function ProfilePage() {
         ? data.avatarUrl
         : `${AVATAR_BASE}/${data.avatarUrl}`;
 
-      // ✅ 仅更新“预览”状态，用户点 Save 后再保存
       setAvatar(uploadedUrl);
       setSelectedAvatarId(data.avatarId);
     } catch (err) {
@@ -177,46 +170,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* big centred overlay (grid open) */}
-        {/* {isAvatarEditing && (
-          <div className={styles.avatarOptions}>
-            <div className={styles.presetsGrid}>
-              {presets.map((item) => {
-                const url = item.avatarUrl.startsWith("http")
-                  ? item.avatarUrl
-                  : `${AVATAR_BASE}/${item.avatarUrl}`;
-                return (
-                  <img
-                    key={item._id}
-                    src={url}
-                    alt="preset"
-                    className={`${styles.option} ${
-                      selectedAvatarId === item._id ? styles.selected : ""
-                    }`}
-                    onClick={() => {
-                      setAvatar(url);
-                      setSelectedAvatarId(item._id);
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            <div className={styles.editButtons}>
-              <button className={styles.saveBtn} onClick={handleAvatarSave}>
-                Save
-              </button>
-              <button className={styles.cancelBtn} onClick={handleAvatarCancel}>
-                Cancel
-              </button>
-            </div>
-
-            {errorMessage && (
-              <div className={styles.errorMessage}>{errorMessage}</div>
-            )}
-          </div>
-        )} */}
-
         <div className={styles.infoBlock}>
           <div className={styles.formGroup}>
             <label>Username</label>
@@ -268,10 +221,8 @@ export default function ProfilePage() {
           </span>
         </div>
       </div>
-      {/* 其余内容保持不变 —— 放在最尾部 */}
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        {/* 1. 大头像 + 中央📷 */}
         <div className={styles.modalAvatarWrapper}>
           <img
             src={avatar}
@@ -291,7 +242,6 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* 2. 预设头像网格 */}
         <div className={styles.presetsGrid}>
           {presets.map((item) => {
             const url = item.avatarUrl.startsWith("http")
@@ -314,7 +264,6 @@ export default function ProfilePage() {
           })}
         </div>
 
-        {/* 3. 按钮 */}
         <div className={styles.editButtons}>
           <button
             className={styles.saveBtn}

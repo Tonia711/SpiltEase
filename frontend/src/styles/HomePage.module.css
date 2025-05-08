@@ -33,7 +33,7 @@
 .name {
   margin-top: 0.1rem;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 14px;
 }
 
 .groupListContainer {
@@ -50,8 +50,8 @@
 }
 
 .groupName {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   color: #fff;
 }
 
@@ -70,7 +70,6 @@
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 100;
-  margin-bottom: 48px;
 }
 
 .options {
@@ -138,7 +137,7 @@
 
 .welcomeText {
   color: #ffffff;
-  font-size: 0.9rem;
+  font-size: 20px;
 }
 
 @media (max-width: 360px) {
@@ -154,7 +153,8 @@
   .fab {
     width: 100px;
     height: 100px;
-    font-size: 2.5rem;
+    font-size: 16px;
+    font-weight: 700;
     bottom: 40px;
   }
 }

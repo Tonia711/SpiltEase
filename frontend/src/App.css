@@ -1,5 +1,17 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 .logoImage {
-  height: 60px; /* 和landing page logo一样大 */
+  height: 60px;
   width: auto;
   display: block;
   margin: 0 auto;

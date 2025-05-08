@@ -67,6 +67,12 @@ export default function GroupExpensePage() {
   
       await api.post("/bills", newBill);
   
+      console.log("Marking paid", {
+        from: fromMemberId,
+        to: toMemberId,
+        groupId
+      });
+      
       // TODO: 更新对应 balance 的 isFinished 为 true（你需要提供一个接口）
       await api.put(`/balances/group/${groupId}/markPaid`, {
         fromMemberId,
@@ -165,8 +171,11 @@ const fetchData = async () => {
       api.get(`/groups/${groupId}`),
       api.get(`/bills/group/${groupId}`),
     ]);
+    const filteredBills = billsData.filter(
+      (bill) => bill.label?._id?.toString() !== "000000000000000000000007"
+    );
     setGroup(groupData);
-    setGroupBills(billsData || []);
+    setGroupBills(filteredBills);
 
     console.log("Fetched bills:", billsData);
     console.log("Current groupId:", groupId);
@@ -174,15 +183,16 @@ const fetchData = async () => {
 
     await refreshBalance();
 
-    billsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filteredBills.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     // 按日期分类账单
     const grouped = {};
-    billsData.forEach((bill) => {
-      const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
-      if (!grouped[dateKey]) grouped[dateKey] = [];
-      grouped[dateKey].push(bill);
-    });
+    filteredBills
+      .forEach((bill) => {
+        const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(bill);
+      });
 
     const sortedGrouped = Object.keys(grouped)
       .sort((a, b) => new Date(b) - new Date(a)) // 日期 key 也按降序排
@@ -250,19 +260,20 @@ const fetchData = async () => {
             <button className={styles.backButton} onClick={() => navigate("/")}>
               {"<"}
             </button>
-            <div onClick={handleGroupClick}>
+            <div>
               <img
                 src={groupIconUrl}
                 alt="Group Icon"
                 className={styles.groupIcon}
+                onClick={handleGroupClick}
               />
               <div className={styles.groupName}>{group?.groupName}</div>
-              <div
+              {/* <div
                 className="group-id"
                 style={{ fontSize: "0.7rem", color: "#888" }}
               >
                 ID: {group._id}
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -271,7 +282,7 @@ const fetchData = async () => {
               className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
               onClick={() => setActiveTab("expenses")}
             >
-              Expenses
+              Expense
             </button>
             <button
               className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
@@ -286,54 +297,58 @@ const fetchData = async () => {
               Summary
             </button>
           </div>
-      
-          <div className={styles.scrollArea}>
+
+        {activeTab === "expenses" && (
+          <div className={styles.expensesHeader}>
+            <div className={styles.expensesHeaderRow}>
+              <span>My Expenses</span>
+              <span>Total Expenses</span>
+            </div>
+            <div className={styles.expensesAmountRow}>
+              <span>${myExpenses.toFixed(2)}</span>
+              <span>${totalExpenses.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.scrollArea}>
           {activeTab === "expenses" ? (
             Object.keys(bills).length === 0 ? (
               <p>No expenses found.</p>
             ) : (
-              <>
-                <div className={styles.expensesHeader}>
-                  <div className={styles.expensesHeaderRow}>
-                    <span>My Expenses</span>
-                    <span>Total Expenses</span>
-                  </div>
-                  <div className={styles.expensesHeaderRow}>
-                    <span>${myExpenses.toFixed(2)}</span>
-                    <span>${totalExpenses.toFixed(2)}</span>
-                  </div>
-                </div>
-
-              
-              {Object.entries(bills).map(([date, billList]) => (
-                <div key={date} style={{ marginBottom: "20px" }}>
+            <>
+             {Object.entries(bills).map(([date, billList]) => (
+                <div key={date} className={styles.billGroup}>
                   <h4 className={styles.billDateTitle}>
                     {dayjs(date).format("MMM D, YYYY")}
                   </h4>
-                  <ul>
-                    {billList.map((bill) => (
-                      <li
-                        key={bill._id}
-                        className={styles.billItem}
-                        onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
-                      >
+                  <div className={styles.billListContainer}>
+                    <ul>
+                      {billList.map((bill) => (
+                        <li
+                          key={bill._id}
+                          className={styles.billItem}
+                          onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
+                        >
 
-                        {bill.label?.iconUrl && (
-                          <img
-                            src={`${BASE_URL}/${bill.label.iconUrl}`}
-                            alt={bill.label.type}
-                            className={styles.billIcon}
-                          />
-                        )}
-                        <div>
-                          <div>
-                            <strong>{bill.note}</strong>
+                          {bill.label?.iconUrl && (
+                            <img
+                              src={`${BASE_URL}/${bill.label.iconUrl}`}
+                              alt={bill.label.type}
+                              className={styles.billIcon}
+                            />
+                          )}
+
+                          <div className={styles.billContent}>
+                            <div className={styles.billTextRow}>
+                              <span className={styles.billNote}>{bill.note}</span>
+                              <span className={styles.billAmount}>${bill.expenses.toFixed(2)}</span>
+                            </div>
                           </div>
-                          <div>${bill.expenses}</div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  </div> 
                 </div>
               ))}
             </>
@@ -581,7 +596,7 @@ const fetchData = async () => {
             <button className={styles.fab} onClick={handleAddExpenseClick}>
               +
             </button>
-            <div className={styles.fabLabel}>Add Expense</div>
+            {/* <div className={styles.fabLabel}>Add Expense</div> */}
           </div>
         </div>
       </MobileFrame>
