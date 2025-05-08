@@ -67,6 +67,12 @@ export default function GroupExpensePage() {
   
       await api.post("/bills", newBill);
   
+      console.log("Marking paid", {
+        from: fromMemberId,
+        to: toMemberId,
+        groupId
+      });
+      
       // TODO: 更新对应 balance 的 isFinished 为 true（你需要提供一个接口）
       await api.put(`/balances/group/${groupId}/markPaid`, {
         fromMemberId,
@@ -165,8 +171,11 @@ const fetchData = async () => {
       api.get(`/groups/${groupId}`),
       api.get(`/bills/group/${groupId}`),
     ]);
+    const filteredBills = billsData.filter(
+      (bill) => bill.label?._id?.toString() !== "000000000000000000000007"
+    );
     setGroup(groupData);
-    setGroupBills(billsData || []);
+    setGroupBills(filteredBills);
 
     console.log("Fetched bills:", billsData);
     console.log("Current groupId:", groupId);
@@ -174,15 +183,16 @@ const fetchData = async () => {
 
     await refreshBalance();
 
-    billsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filteredBills.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     // 按日期分类账单
     const grouped = {};
-    billsData.forEach((bill) => {
-      const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
-      if (!grouped[dateKey]) grouped[dateKey] = [];
-      grouped[dateKey].push(bill);
-    });
+    filteredBills
+      .forEach((bill) => {
+        const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(bill);
+      });
 
     const sortedGrouped = Object.keys(grouped)
       .sort((a, b) => new Date(b) - new Date(a)) // 日期 key 也按降序排
