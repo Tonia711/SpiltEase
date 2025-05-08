@@ -62,7 +62,7 @@ const GroupList = () => {
                     Authorization: `Bearer ${token}`
                 }
             });
-            setGroups(groups.filter(group => group._id !== groupToDelete));
+            setGroups(groups.filter(group => group._id !== id));
             setSuccess('Group deleted successfully.');
             setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
