@@ -147,6 +147,7 @@ export default function NewBillPage() {
     setNote("");
     setExpenses(0);
     setOcrResult(null);
+    setPaidDate(new Date().toISOString().slice(0, 10)); // Reset date to current date
     setMemberTotalExpenses([]); // Reset the total split calculations
     setMemberExpenses([]); // Reset member expenses
     setMemberRefunds([]); // Reset member refunds
@@ -190,7 +191,13 @@ export default function NewBillPage() {
         setNote(response.data.merchantName);
       } else if (response.data.amountExtracted === true) {
         // Only show this message if we extracted an amount but not a merchant name
-        setError(prev => prev ? `${prev} Also, expense note wasn't extracted.` : "Expense note wasn't extracted. Please enter manually.");
+        setError(prev => prev ? `${prev} Also, expense note wasn't recognized.` : "Expense note wasn't recognized. Please enter manually.");
+      }
+      
+      // Handle transaction date extraction
+      if (response.data.transactionDate) {
+        console.log("Setting transaction date:", response.data.transactionDate);
+        setPaidDate(response.data.transactionDate);
       }
       
     } catch (err) {
@@ -201,7 +208,8 @@ export default function NewBillPage() {
       setNote("");
       setExpenses(0);
       setOcrResult(null);
-      setMemberTotalExpenses([]);
+      setPaidDate(new Date().toISOString().slice(0, 10)); // Reset date to current date
+      setMemberTotalExpenses([]); 
       setMemberExpenses([]);
       setMemberRefunds([]);
     } finally {

@@ -136,10 +136,83 @@ export const processReceipt = async (req, res) => {
 
     // Extract date if available
     if (receiptData.fields.TransactionDate) {
-      if (receiptData.fields.TransactionDate.content) {
-        extractedDate = receiptData.fields.TransactionDate.content;
+      if (receiptData.fields.TransactionDate.kind === 'date' && receiptData.fields.TransactionDate.value) {
+        // For date objects, convert to ISO string and then extract just the date part
+        extractedDate = new Date(receiptData.fields.TransactionDate.value).toISOString().split('T')[0];
+        anyFieldExtracted = true;
+      } else if (receiptData.fields.TransactionDate.content) {
+        // Try to parse and format the date from content
+        try {
+          const dateStr = receiptData.fields.TransactionDate.content;
+          console.log("Trying to parse date from:", dateStr);
+          
+          // Handle date formats like "05 May 25"
+          if (/\d{1,2}\s+[A-Za-z]+\s+\d{2,4}/.test(dateStr)) {
+            const parsedDate = new Date(dateStr);
+            if (!isNaN(parsedDate.getTime())) {
+              extractedDate = parsedDate.toISOString().split('T')[0];
+              anyFieldExtracted = true;
+              console.log("Successfully parsed word-format date:", extractedDate);
+            }
+          } 
+          // Handle formats like DD/MM/YYYY, MM/DD/YYYY, etc.
+          else {
+            const dateParts = dateStr.split(/[-\/\.]/);
+            
+            // Check if we have a recognizable date format with 3 parts (day/month/year)
+            if (dateParts.length === 3) {
+              let year, month, day;
+              
+              // Try to determine the date format
+              // Check if first part is likely a day (1-31) and third part is a 4-digit year
+              if (parseInt(dateParts[0]) <= 31 && dateParts[2].length === 4) {
+                day = parseInt(dateParts[0]);
+                month = parseInt(dateParts[1]);
+                year = parseInt(dateParts[2]);
+              } 
+              // Check if first part is likely a month (1-12) and third part is a 4-digit year
+              else if (parseInt(dateParts[0]) <= 12 && dateParts[2].length === 4) {
+                month = parseInt(dateParts[0]);
+                day = parseInt(dateParts[1]);
+                year = parseInt(dateParts[2]);
+              }
+              // If year is at the beginning (YYYY-MM-DD format)
+              else if (dateParts[0].length === 4) {
+                year = parseInt(dateParts[0]);
+                month = parseInt(dateParts[1]);
+                day = parseInt(dateParts[2]);
+              }
+              // Handle 2-digit year format (convert to 4 digits)
+              else if (dateParts[2].length === 2) {
+                // Assume 20XX for years less than 50, 19XX for years >= 50
+                year = parseInt(dateParts[2]) < 50 ? 2000 + parseInt(dateParts[2]) : 1900 + parseInt(dateParts[2]);
+                
+                // Determine if day/month or month/day based on values
+                if (parseInt(dateParts[0]) <= 12 && parseInt(dateParts[1]) > 12) {
+                  month = parseInt(dateParts[0]);
+                  day = parseInt(dateParts[1]);
+                } else {
+                  day = parseInt(dateParts[0]);
+                  month = parseInt(dateParts[1]);
+                }
+              }
+              
+              // Create date if we have valid parts
+              if (year && month && day) {
+                const date = new Date(year, month - 1, day);
+                extractedDate = date.toISOString().split('T')[0];
+                anyFieldExtracted = true;
+                console.log("Successfully parsed date parts:", extractedDate);
+              }
+            }
+          }
+        } catch (e) {
+          console.log("Failed to parse transaction date:", e);
+        }
       }
     }
+    
+    console.log("Extracted date:", extractedDate);
 
     // Extract text content for debugging
     const pages = result.pages || [];
