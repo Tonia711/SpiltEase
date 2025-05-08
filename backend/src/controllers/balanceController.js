@@ -33,19 +33,26 @@ export const markBalanceAsFinished = async (req, res) => {
 
   try {
     const result = await Balance.findOneAndUpdate(
-      { groupId: new mongoose.Types.ObjectId(groupId), 
-        "groupBalances.fromMemberId": new mongoose.Types.ObjectId(fromMemberId), 
-        "groupBalances.toMemberId": new mongoose.Types.ObjectId(toMemberId) },
+      { groupId: new mongoose.Types.ObjectId(groupId)}, 
       {
         $set: {
-          "groupBalances.$.isFinished": true,
+          "groupBalances.$[elem].isFinished": true,
         },
         $push: {
-          "groupBalances.$.finishHistory": {
+          "groupBalances.$[elem].finishHistory": {
+            date: new Date(),
           },
         },
       },
-      { new: true }
+      {
+        arrayFilters: [
+          {
+            "elem.fromMemberId": new mongoose.Types.ObjectId(fromMemberId),
+            "elem.toMemberId": new mongoose.Types.ObjectId(toMemberId)
+          }
+        ], 
+        new: true 
+      }
     );
 
     console.log("✅ 更新结果：", result);
@@ -122,5 +129,4 @@ export const recalculateGroupBalance = async (req, res) => {
     res.status(500).json({ error: "Server error during balance recalculation" });
   }
 };
-
 
