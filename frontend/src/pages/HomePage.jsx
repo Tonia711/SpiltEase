@@ -10,23 +10,38 @@ export default function HomePage() {
   const { user } = useContext(AuthContext);
   const [showOptions, setShowOptions] = useState(false);
 
-  const avatarUrl = user?.avatarUrl || "/avatars/avatar1.png"; 
+  const avatarUrl = user?.avatarUrl || "/avatars/avatar1.png";
   const username = user?.userName || "User";
+  const groups = user?.groupId || [];
 
   const handleProfileClick = () => {
-    navigate("/profile"); 
+    navigate("/profile");
   };
 
   return (
     <MobileFrame>
       <div className={styles.container}>
-        <div className={styles.profile} onClick={handleProfileClick}>
-          <img src={avatarUrl} alt="avatar" className={styles.avatar} />
+        <div className={styles.profile}>
+          <img
+            src={avatarUrl}
+            alt="avatar"
+            className={styles.avatar}
+            onClick={handleProfileClick}
+          />
           <span className={styles.name}>{username}</span>
         </div>
 
         <div className={styles.groupListContainer}>
-          <GroupList />
+          {groups.length === 0 ? (
+            <div className={styles.welcome}>
+              <h2 className={styles.welcomeTitle}>Welcome aboard, mate!</h2>
+              <p className={styles.welcomeText}>
+                Create or join a group to get started.
+              </p>
+            </div>
+          ) : (
+            <GroupList />
+          )}
         </div>
 
         <button

@@ -4,6 +4,9 @@ import styles from "../../styles/Bill/NewBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
 import CameraCapture from "../../components/CameraCapture";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/AuthContext"; // 根据你的项目路径调整
+
  
 
 export default function NewBillPage() {
@@ -17,18 +20,16 @@ export default function NewBillPage() {
 
   // 界面展示的数据
   const [labels, setLabels] = useState([]);  // labels
-  const [group, setGroup] = useState(null); //group 数据
+  // const [group, setGroup] = useState(null); //group 数据
   const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
-  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："equally" 或 "amounts"
-  // const [paidAmount, setPaidAmount] = useState([]); // 通过获取bill的数据来获取每个人应付的钱
-
+  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："equally" 或 "As Amounts"
 
 
   // 表单数据
   const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
   const [note, setNote] = useState("");  
-  const [expenses, setExpenses] = useState("");   //paid
-  const [refunds, setRefunds] = useState("");   //refunds
+  const [expenses, setExpenses] = useState(0);   //paid
+  const [refunds, setRefunds] = useState(0);   //refunds
   const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
   const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
@@ -52,23 +53,26 @@ export default function NewBillPage() {
   // get group members 通过获取group的数据来获取成员
   // paidBy 下拉列表，成员列表
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
+  const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;  
+  const user = useContext(AuthContext); // 当前登录用户
 
   useEffect(() => {
     api
       .get(`/groups/${groupId}`)
       .then(({ data }) => {
-        setGroup(data);
-        setMembers(data.members);
-        setPaidBy(data.members[0]?._id || ""); // 设置默认的 paidBy
+        const visibleMembers = data.members.filter((m) => m.isHidden === false);
+        setMembers(visibleMembers);
+
+        // paidBy默认当前用户
+        const defaultPaidBy = visibleMembers.find(m => m.userId === user.user._id)?._id;
+        setPaidBy(defaultPaidBy || visibleMembers[0]?._id || "");
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
       });
-  }, [groupId, BASE_URL]);
+  }, [groupId, BASE_URL, user]);
 
-  // console.log("group", group);
-  // console.log("members", members);
+
 
   useEffect(() => {
     if (members && members.length > 0) {
@@ -76,24 +80,6 @@ export default function NewBillPage() {
     }
   }, [members]);
   
-
-
-
-  // 通过获取bill的数据来获取每个人应付的钱
-  // 这个在编辑bill界面使用
-  // useEffect(() => {
-  //   api
-  //     .get(`/bills/groups/${groupId}`)
-  //     .then(({ data }) => {
-  //       setPaidAmount(data);
-  //     })
-  //     .catch((err) => {
-  //       console.error("Failed to fetch group data:", err);
-  //     });
-  // }, [groupId, BASE_URL]);
-
-  // console.log("paidAmount", paidAmount);
-
 
   
   //通过输入的expense, refunds来计算每个人分的钱
@@ -112,36 +98,44 @@ export default function NewBillPage() {
       return;
     }
 
-    const rawExpense = parseFloat((total / count).toFixed(2));       // 未减 refund 的金额
-    const avgRefund = parseFloat((refundTotal / count).toFixed(2));  // 每人退款
-    const finalAmount = parseFloat((rawExpense - avgRefund).toFixed(2)); // 实际应付
 
-    const expensesArray = filtered.map(m => ({
+    //大冤种
+    const rawExpense = parseFloat((total / count).toFixed(2));
+    const avgRefund = parseFloat((refundTotal / count).toFixed(2));
+  
+    const expenseDistributed = parseFloat((rawExpense * count).toFixed(2));
+    const refundDistributed = parseFloat((avgRefund * count).toFixed(2));
+    const expenseLeftover = parseFloat((total - expenseDistributed).toFixed(2));
+    const refundLeftover = parseFloat((refundTotal - refundDistributed).toFixed(2));
+  
+    const expenseRandomIndex = expenseLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
+    const refundRandomIndex = refundLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
+  
+    const expensesArray = filtered.map((m, i) => ({
       memberId: m._id,
-      amount: rawExpense
+      amount: i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense
     }));
-
-    const refundsArray = filtered.map(m => ({
+  
+    const refundsArray = filtered.map((m, i) => ({
       memberId: m._id,
-      refund: avgRefund
+      refund: i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund
     }));
-
-    const totalArray = filtered.map(m => ({
-      memberId: m._id,
-      amount: finalAmount
-    }));
-
+  
+    const totalArray = filtered.map((m, i) => {
+      const expense = i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense;
+      const refund = i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund;
+      return {
+        memberId: m._id,
+        amount: parseFloat((expense - refund).toFixed(2))
+      };
+    });
+  
     if (splitMethod === "Equally") {
-      setMemberExpenses(expensesArray);         // 原始 expense
-      setMemberRefunds(refundsArray);           // refund 分摊
-      setMemberTotalExpenses(totalArray);       // 实际应付金额
-    }
-
-    if (splitMethod === "amounts" && memberTotalExpenses.length === 0) {
       setMemberExpenses(expensesArray);
       setMemberRefunds(refundsArray);
       setMemberTotalExpenses(totalArray);
-    }
+    } 
+
   }, [expenses, refunds, splitMethod, members, selectedMemberIds]);
 
 
@@ -211,7 +205,7 @@ export default function NewBillPage() {
       members: memberTotalExpenses.map(m => ({
         memberId: m.memberId,
         expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
-        refund: memberRefunds.find(r => r.memberId === m.memberId)?.refund || 0
+        refund: memberRefunds == 0? 0 : memberRefunds.find(r => r.memberId === m.memberId)?.refund
       }))
     };
   
@@ -219,7 +213,10 @@ export default function NewBillPage() {
 
     try {
       await api.post(`/bills`, newBill);
-      navigate(`/groups/${groupId}/expenses`);
+      await api.post(`/balances/group/${groupId}/recalculate`);
+      navigate(`/groups/${groupId}/expenses`, { 
+        replace: true,
+        state: { needRefreshBalance: true } });
     } catch (err) {
       console.error("Failed to create bill:", err);
       setError("Failed to create bill. Please try again.");
@@ -392,6 +389,14 @@ export default function NewBillPage() {
                               return [...prev, { memberId: m._id, amount: newAmount }];
                             }
                           });
+                          setMemberExpenses(prev => {
+                            const exists = prev.find(p => p.memberId === m._id);
+                            if (exists) {
+                              return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+                            } else {
+                              return [...prev, { memberId: m._id, amount: newAmount }];
+                            }
+                          });                          
                         }}
                         className={styles.inputAmount}
                         disabled={!checked}
