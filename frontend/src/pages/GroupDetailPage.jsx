@@ -343,7 +343,7 @@ export default function GroupDetailPage() {
           <div className={styles.membersListContainer}>
             <ul className={styles.membersList}>
               {(isEditing ? editedMembers : (group.members || [])).filter(m => !m.isHidden).map((member) => (
-                <li key={member._id || member.userId || member.tempId} className={styles.memberItem}>
+                <li key={member._id || member.userId || member.tempId} className={`${styles.memberItem} ${!isEditing ? styles.readOnlyMember : styles.editMembers}`}>
                   {member.userName || 'Unnamed'}
                   {isEditing && (
                     <button
@@ -366,7 +366,7 @@ export default function GroupDetailPage() {
                         value={newMemberName}
                         onChange={(e) => setNewMemberName(e.target.value)}
                         placeholder="Enter name"
-                        className={styles.inputField}
+                        className={styles.newMemberName}
                         style={{ flex: 1 }}
                       />
                       <button
