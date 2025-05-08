@@ -1,12 +1,8 @@
 import { beforeEach, beforeAll, afterAll, it, expect, describe } from "vitest";
-import routes from "../../api/bills/index.js";
 import { User, Avatar, Label, Group, Icon, Bill, Balance, BalancesCalculate } from "../../../db/schema.js";
 import mongoose from "mongoose";
-import express from "express";
 import request from "supertest";
 import app from "../../../app.js"
-
-
 
 beforeAll(async () => {
     const MONGO_URI = process.env.MONGO_URI;
@@ -17,7 +13,6 @@ afterAll(async () => {
     await mongoose.disconnect()
 })
 
-  
 describe('Bill API Routes', () => {
     it('should create a new bill', async () => {
         const group = await Group.findOne({ groupName: "testGroup1" });
@@ -31,18 +26,18 @@ describe('Bill API Routes', () => {
             groupId: group._id,
             labelId: "000000000000000000000001",
             note: "taxi", 
-            paidBy: user1, 
+            paidBy: user1._id, 
             refunds: 5,
             splitWay: "Equally",
             members: [
             {
                 expense: 60.5, 
-                memberId: user2,
+                memberId: user2._id,
                 refund: 2.5
             },
             {
                 expense: 60.5, 
-                memberId: user1,
+                memberId: user1._id,
                 refund: 2.5
             }
             ]
@@ -53,12 +48,12 @@ describe('Bill API Routes', () => {
         expect(newGroupBill.note).toBe("taxi");
     })
 
-    it('should get all labels', async () => {
+    it('should get all labels except transfer', async () => {
         const res = await request(app).get('/api/bills/allLabels');
 
         expect(res.status).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
-        expect(res.body.length).toBe(7)
+        expect(res.body.length).toBe(6)
         expect(res.body[0]).toHaveProperty('type');
     })
 
