@@ -4,6 +4,10 @@
   color: white;
   background: #312D3C;
   min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .section {
@@ -61,6 +65,7 @@
   display: block;
   width: 325px;
   box-sizing: border-box;
+  outline: none;
 }
 
 @keyframes shake {
@@ -97,7 +102,7 @@
   width: 325px;
   height: 50px;
   padding: 16px;
-  margin-top: 60px;
+  margin-top: 20px;
   background: #ffca28;
   color: #000;
   border: none;
@@ -112,6 +117,14 @@
 .joinButton:disabled {
   background: #5b566a;
   cursor: not-allowed;
+}
+
+.rejoinContainer{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .error {

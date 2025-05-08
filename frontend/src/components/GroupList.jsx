@@ -53,9 +53,11 @@ const GroupList = () => {
         setConfirmDeleteGroupId(id);
     };
 
-    const confirmDelete = async () => {
+    const confirmDelete = async (id) => {
+        setConfirmDeleteGroupId(null);
+
         try {
-            await api.delete(`/groups/${groupToDelete}`, {
+            await api.delete(`/groups/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -67,7 +69,6 @@ const GroupList = () => {
             setError('Failed to delete group.');
             setTimeout(() => setError(null), 3000);
         } finally {
-            setConfirmDeleteGroupId(null);
         }
     };
 
