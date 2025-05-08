@@ -299,7 +299,7 @@
 .labelRow {
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: center;
 }
 
 .inlineError {

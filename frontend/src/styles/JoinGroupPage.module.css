@@ -7,7 +7,6 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .section {
@@ -28,6 +27,12 @@
   margin: 3rem auto 2rem auto;
 }
 
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .label {
   display: block;
   margin: 0;
@@ -36,7 +41,6 @@
 .labelRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
 .inlineError {
@@ -119,7 +123,7 @@
   cursor: not-allowed;
 }
 
-.rejoinContainer{
+.rejoinContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
