@@ -44,6 +44,27 @@ export function AuthProvider({ children }) {
       return { ok: true };
     } catch (err) {
       console.error("Login error", err);
+
+      if (err.response?.status === 401) {
+        try {
+          const check = await api.get(
+            `/users/check?field=email&value=${email}`
+          );
+          if (!check.data.exists) {
+            return { ok: false, field: "email", error: "Email not found" };
+          } else {
+            return {
+              ok: false,
+              field: "password",
+              error: "Incorrect password",
+            };
+          }
+        } catch (checkErr) {
+          console.error("Email check failed:", checkErr);
+          return { ok: false, error: "Login failed" };
+        }
+      }
+
       return { ok: false, error: err.response?.data?.error || err.message };
     }
   };
