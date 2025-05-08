@@ -1,9 +1,7 @@
 .container {
-  background-color: var(--bg-dark);
   min-height: 100vh;
-  max-width: 375px;
-  margin: 0 auto;
-  padding: 0 1rem;
+  width: 325px;
+  margin: 0 32.5px;
   color: var(--text-white);
   display: flex;
   flex-direction: column;
@@ -17,7 +15,6 @@
   width: 100%;
   max-width: 326px;
   margin-top: 60px;
-  margin-bottom: 2rem;
   position: relative;
   z-index: 2;
 }
@@ -27,7 +24,6 @@
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  margin: 0 auto 1rem;
 }
 
 .backButton {
@@ -55,17 +51,17 @@
 }
 
 .groupIcon {
-  width: 110px;
-  height: 110px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  margin: 1.5rem auto 0.3rem;
   display: block;
   object-fit: cover;
 }
 
 .infoSection {
-  width: 300px;
-  margin: 0 auto 10px auto;
+  width: 325px;
+  height:70px;
+  padding-bottom: 20px;
 }
 
 .label {
@@ -82,7 +78,7 @@
 .membersListContainer {
   max-height: 260px;
   overflow-y: auto;
-  width: 300px;
+  width: 325px;
   border-radius: 8px;
 }
 
@@ -93,18 +89,21 @@
 }
 
 .membersList li {
-  background: #9e9e9e;
-  padding: 0.6rem 1rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: #5B566a;
+  color:#FBC609;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 16px 18px;
 }
 
 .inputField {
-  padding: 0.6rem;
+  padding: 16px 18px;
   border-radius: 8px;
-  font-size: 1.2rem;
-  font-weight: 540;
-  width: 90%;
+  font-size: 14px;
+  font-weight: bold;
+  width: 287.5px;
   background-color: #9e9e9e;
+  
 }
 
 .inputField.readOnly {
@@ -117,18 +116,22 @@
 .cancelEditButton {
   text-align: center;
   border: none;
-  padding: 0.8rem 1rem;
+  padding: 17px 1rem;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
-  margin: 1.5rem auto 3px auto;
-  display: block;
-  width: 300px;
+  font-size: 16px;
+  font-weight: bold;
+  width: 325px;
 }
 
 .editButton{
   background-color: #ffca28;
   color: white;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; 
 }
 
 .editButton:hover {
@@ -143,14 +146,15 @@
 
 .groupIconContainer {
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
 }
 
 .cameraIcon {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background-color: rgba(255, 255, 255, 0.8);
+  bottom: 10px;
+  right: -5px;
+  background-color: #FBC609;
   border-radius: 50%;
   padding: 1px;
   cursor: pointer;
@@ -233,14 +237,14 @@
 }
 
 .membersSection {
-  width: 300px;
+  width: 325px;
   margin: 0 auto 1.5rem auto;
 }
 
 .memberItem {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  /* align-items: center; */
   background-color: #9e9e9e;
   border: none;
   border-bottom: 1px solid #ccc;
