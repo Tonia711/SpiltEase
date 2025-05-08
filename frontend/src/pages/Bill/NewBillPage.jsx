@@ -34,7 +34,7 @@ export default function NewBillPage() {
   const [memberExpenses, setMemberExpenses] = useState([]);  //每个人实际的expense array
   const [memberRefunds, setMemberRefunds] = useState([]); //每个人的refund array
   const [error, setError] = useState("");
-
+  const [warning, setWarning] = useState(""); // New state for warning messages
 
   // get all labels 获取所有labels，labcel下拉列表
   useEffect(() => {
@@ -142,6 +142,7 @@ export default function NewBillPage() {
     setShowCamera(false);
     setIsProcessing(true);
     setError(""); // Clear any previous errors
+    setWarning(""); // Clear any previous warnings
     
     // Reset all form fields and calculations when starting a new capture
     setNote("");
@@ -173,31 +174,47 @@ export default function NewBillPage() {
         return;
       }
 
-      // Handle amount extraction - explicitly check the flags in the response
-      if (response.data.amountExtracted === true && response.data.amount) {
+      // Track what was extracted and what was missing
+      const hasAmount = response.data.amountExtracted === true && response.data.amount;
+      const hasMerchantName = response.data.merchantNameExtracted === true && response.data.merchantName;
+      const hasDate = response.data.transactionDate !== undefined;
+      
+      // Apply values that were successfully extracted
+      if (hasAmount) {
         console.log("Setting amount:", response.data.amount);
         setExpenses(response.data.amount);
         setOcrResult({
           amount: response.data.amount,
           timestamp: new Date().toISOString(),
         });
-      } else {
-        setError("Could not recognize total amount from receipt. Please enter manually.");
       }
       
-      // Handle merchant name extraction - explicitly check the flags in the response
-      if (response.data.merchantNameExtracted === true && response.data.merchantName) {
+      if (hasMerchantName) {
         console.log("Setting merchant name:", response.data.merchantName);
         setNote(response.data.merchantName);
-      } else if (response.data.amountExtracted === true) {
-        // Only show this message if we extracted an amount but not a merchant name
-        setError(prev => prev ? `${prev} Also, expense note wasn't recognized.` : "Expense note wasn't recognized. Please enter manually.");
       }
       
-      // Handle transaction date extraction
-      if (response.data.transactionDate) {
+      if (hasDate) {
         console.log("Setting transaction date:", response.data.transactionDate);
         setPaidDate(response.data.transactionDate);
+      }
+      
+      // Generate appropriate error message based on what's missing
+      const missingFields = [];
+      if (!hasAmount) missingFields.push("total amount");
+      if (!hasMerchantName) missingFields.push("expense note");
+      
+      if (missingFields.length > 0) {
+        // Use warning state for partial extractions
+        let message;
+        if (missingFields.length === 1) {
+          message = `${missingFields[0]} not extracted. Please enter manually.`;
+        } else {
+          const lastField = missingFields.pop();
+          message = `${missingFields.join(', ')} and ${lastField} not extracted. Please enter manually.`;
+        }
+        
+        setWarning(message);
       }
       
     } catch (err) {
@@ -221,7 +238,8 @@ export default function NewBillPage() {
   // submit bill
   const handleAddBill = async (e) => {
     e.preventDefault();
-    setError("");  // 清空之前的错误
+    setError("");  // Clear any previous errors
+    setWarning(""); // Clear any previous warnings
   
     if (!selectedLabelId || !note || !expenses || !paidBy || !paidDate || memberTotalExpenses.length === 0) {
       setError("Please fill in all required fields.");
@@ -458,6 +476,7 @@ export default function NewBillPage() {
           </div>
         </div>
 
+        {warning && <div className={styles.warning}>{warning}</div>}
         {error && <div className={styles.error}>{error}</div>}
 
         <button type="submit" className={styles.addButton}>
