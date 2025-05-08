@@ -135,7 +135,7 @@ export default function GroupJoinPage() {
         joinCode: inviteCode.trim(),
       });
 
-      navigate(`/groups/${group._id}`);
+      navigate(`/groups/${group._id}/expenses`);
     } catch (e) {
       console.error(e);
       setError("Failed to join. Please try again.");
