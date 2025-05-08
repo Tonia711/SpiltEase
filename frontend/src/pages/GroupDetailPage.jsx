@@ -269,7 +269,7 @@ export default function GroupDetailPage() {
       )}
 
       <div className={styles.container}>
-        <div className={styles.header}>
+        <div className={styles.groupHeader}>
           <button type="button" className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
             {"<"}
           </button>
