@@ -1,8 +1,10 @@
 .group-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding-top: 1rem;
+  gap: 16px;
+  padding-top: 16px;
+  height: 400px;
+  overflow: scroll;
 }
 
 .group-item {
