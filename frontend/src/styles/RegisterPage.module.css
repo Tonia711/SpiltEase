@@ -1,6 +1,6 @@
 :root {
   --yellow: #fbc609;
-  --bg-dark: #242424;
+  --bg-dark: #312d3c;
   --text-white: #ffffff;
 }
 .pageWrapper {
@@ -41,6 +41,7 @@
 .inputGroup {
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .label {
@@ -76,8 +77,16 @@
 }
 
 .error {
-  color: #f87171;
+  color: #ef5780;
   text-align: center;
+}
+
+.inputError {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 12px;
+  color: #ef5780;
 }
 
 .footer {

@@ -11,18 +11,22 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setErrors({});
 
     const result = await login(email, password);
 
     if (result.ok) {
       navigate("/");
     } else {
-      setError(result.error || "Login failed.");
+      if (result.field) {
+        setErrors({ [result.field]: result.error });
+      } else {
+        setErrors({ general: result.error || "Login failed." });
+      }
     }
   };
 
@@ -42,10 +46,14 @@ export default function LoginPage() {
             <div className={styles.inputGroup}>
               <div className={styles.labelRow}>
                 <label className={styles.label}>Email address</label>
-                {error && <span className={styles.errorInline}>{error}</span>}
+                {errors.email && (
+                  <span className={styles.errorInline}>{errors.email}</span>
+                )}
               </div>
               <input
-                className={`${styles.input} ${error ? styles.inputError : ""}`}
+                className={`${styles.input} ${
+                  errors.email ? styles.inputError : ""
+                }`}
                 type="email"
                 value={email}
                 placeholder="Enter email address"
@@ -55,9 +63,16 @@ export default function LoginPage() {
             </div>
 
             <div className={styles.inputGroup}>
-              <label className={styles.label}>Password</label>
+              <div className={styles.labelRow}>
+                <label className={styles.label}>Password</label>
+                {errors.password && (
+                  <span className={styles.errorInline}>{errors.password}</span>
+                )}
+              </div>
               <input
-                className={styles.input}
+                className={`${styles.input} ${
+                  errors.password ? styles.inputError : ""
+                }`}
                 type="password"
                 value={password}
                 placeholder="Enter password"
@@ -65,7 +80,7 @@ export default function LoginPage() {
                 required
               />
               <div className={styles.forgot}>
-                <Link to="/forgot-password" className={styles.forgotLink}>
+                <Link to="/login" className={styles.forgotLink}>
                   Forgot Password?
                 </Link>
               </div>
@@ -75,7 +90,9 @@ export default function LoginPage() {
               Sign in
             </button>
 
-            {/* {error && <div className={styles.error}>{error}</div>} */}
+            {errors.general && (
+              <div className={styles.error}>{errors.general}</div>
+            )}
           </form>
         </div>
 

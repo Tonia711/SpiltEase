@@ -51,17 +51,19 @@ export default function EditBillPage() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
 
+
   useEffect(() => {
     api
       .get(`/groups/${groupId}`)
       .then(({ data }) => {
-        // setGroup(data);
-        setMembers(data.members);
+        const visibleMembers = data.members.filter((m) => m.isHidden === false);
+        setMembers(visibleMembers);
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
       });
   }, [groupId, BASE_URL]);
+  
 
   useEffect(() => {
     if (members && members.length > 0) {

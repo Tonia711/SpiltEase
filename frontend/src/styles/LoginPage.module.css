@@ -1,7 +1,7 @@
 /* LoginPage.module.css */
 :root {
   --yellow: #fbc609;
-  --bg-dark: #242424;
+  --bg-dark: #312d3c;
   --text-white: #ffffff;
 }
 .pageWrapper {
@@ -70,7 +70,7 @@
 
 .forgotLink {
   color: #c7d2fe;
-  font-size: 13px;
+  font-size: 12px;
   text-decoration: underline;
 }
 

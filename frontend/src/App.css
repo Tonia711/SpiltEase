@@ -1,7 +1,7 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  /* padding: 2rem; */
   /* text-align: center; */
 }
 
@@ -27,7 +27,7 @@ body {
 } */
 
 .logoImage {
-  height: 60px;   /* 和landing page logo一样大 */
+  height: 60px; /* 和landing page logo一样大 */
   width: auto;
   display: block;
   margin: 0 auto;

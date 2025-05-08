@@ -80,3 +80,20 @@ export const searchUsers = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+export const checkFieldExists = async (req, res) => {
+  const { field, value } = req.query;
+
+  if (!["email", "userName"].includes(field)) {
+    return res.status(400).json({ error: "Invalid field" });
+  }
+
+  try {
+    const exists = await User.exists({ [field]: value });
+    res.json({ exists: !!exists });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to check field", detail: err.message });
+  }
+};

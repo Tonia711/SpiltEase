@@ -1,6 +1,6 @@
 :root {
   --yellow: #fbc609;
-  --bg-dark: #242424;
+  --bg-dark: #312d3c;
   --text-white: #ffffff;
 }
 
@@ -26,7 +26,7 @@
 .avatar {
   width: 90px;
   height: 90px;
-  margin-top: 60px;
+  margin-top: 80px;
   border-radius: 50%;
 }
 
@@ -38,7 +38,6 @@
 
 .groupListContainer {
   width: 326px;
-  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
@@ -75,13 +74,12 @@
 }
 
 .options {
-  position: absolute;
+  position: fixed;
   bottom: 180px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 325px;
-  padding: 0 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -89,6 +87,9 @@
 }
 
 .options button {
+  width: 100%;
+  max-width: 325px;
+  padding: 0;
   height: 50px;
   font-size: 1rem;
   font-weight: bold;
@@ -125,6 +126,7 @@
   text-align: center;
   margin-top: 3rem;
   color: #d1d5db;
+  cursor: default;
 }
 
 .welcomeTitle {
