@@ -17,6 +17,7 @@ export default function NewGroupPage() {
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [success, setSuccess] = useState(false);
+  const [memberError, setMemberError] = useState("");
 
   useEffect(() => {
     if (user && (user.id || user._id) && user.userName) {
@@ -81,7 +82,11 @@ export default function NewGroupPage() {
           <h1 className={styles.title}>New Group</h1>
         </div>
 
-        <form className={styles.form} onSubmit={handleCreateGroup}>
+        <form
+          id="createForm"
+          className={styles.form}
+          onSubmit={handleCreateGroup}
+        >
           <div className={styles.inputGroup}>
             <label>Group Name</label>
             <input
@@ -104,11 +109,17 @@ export default function NewGroupPage() {
           </div>
 
           <div className={styles.inputGroup}>
-            <label>Members</label>
+            <div className={styles.labelRow}>
+              <label>Members</label>
+              {memberError && (
+                <span className={styles.memberError}>{memberError}</span>
+              )}
+            </div>
+
             <ul className={styles.membersList}>
               {members.map((member, index) => (
                 <li key={index} className={styles.memberItem}>
-                  {member.userName} {member.isCreator ? "(You)" : "(Virtual)"}
+                  {member.userName} {member.isCreator && "(You)"}
                   {!member.isCreator && (
                     <button
                       type="button"
@@ -136,13 +147,28 @@ export default function NewGroupPage() {
                       type="button"
                       className={`${styles.iconBtn} ${styles.grayBtn}`}
                       onClick={() => {
-                        if (!newMemberName.trim()) return;
+                        const trimmed = newMemberName.trim();
+                        if (!trimmed) {
+                          setMemberError("Enter a name");
+                          return;
+                        }
+
+                        const duplicate = members.some(
+                          (m) =>
+                            m.userName.toLowerCase() === trimmed.toLowerCase()
+                        );
+                        if (duplicate) {
+                          setMemberError("Already in the group");
+                          return;
+                        }
+
                         setMembers([
                           ...members,
                           { userName: newMemberName.trim(), isVirtual: true },
                         ]);
                         setNewMemberName("");
                         setIsAddingMember(false);
+                        setMemberError("");
                       }}
                     >
                       ✔
@@ -172,10 +198,6 @@ export default function NewGroupPage() {
               )}
             </ul>
           </div>
-
-          {/* <button type="submit" className={styles.createButton}>
-            Create
-          </button> */}
 
           {success && (
             <div className={styles.success}>Group created successfully!</div>

@@ -18,6 +18,9 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: #312d3c;
+  overflow-x: hidden;
+  height: 100%;
+  padding: 0;
 }
 
 .btn {
