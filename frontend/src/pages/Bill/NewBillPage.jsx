@@ -4,6 +4,9 @@ import styles from "../../styles/Bill/NewBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
 import CameraCapture from "../../components/CameraCapture";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/AuthContext"; // 根据你的项目路径调整
+
  
 
 export default function NewBillPage() {
@@ -50,7 +53,8 @@ export default function NewBillPage() {
   // get group members 通过获取group的数据来获取成员
   // paidBy 下拉列表，成员列表
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
+  const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;  
+  const user = useContext(AuthContext); // 当前登录用户
 
   useEffect(() => {
     api
@@ -58,13 +62,16 @@ export default function NewBillPage() {
       .then(({ data }) => {
         const visibleMembers = data.members.filter((m) => m.isHidden === false);
         setMembers(visibleMembers);
-        setPaidBy(visibleMembers[0]?._id || ""); // 设置默认的 paidBy
+
+        // paidBy默认当前用户
+        const defaultPaidBy = visibleMembers.find(m => m.userId === user.user._id)?._id;
+        setPaidBy(defaultPaidBy || visibleMembers[0]?._id || "");
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
       });
-  }, [groupId, BASE_URL]);
-  
+  }, [groupId, BASE_URL, user]);
+
 
 
   useEffect(() => {
