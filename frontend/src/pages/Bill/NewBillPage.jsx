@@ -142,6 +142,14 @@ export default function NewBillPage() {
     setShowCamera(false);
     setIsProcessing(true);
     setError(""); // Clear any previous errors
+    
+    // Reset all form fields and calculations when starting a new capture
+    setNote("");
+    setExpenses(0);
+    setOcrResult(null);
+    setMemberTotalExpenses([]); // Reset the total split calculations
+    setMemberExpenses([]); // Reset member expenses
+    setMemberRefunds([]); // Reset member refunds
 
     try {
       // Create form data for image upload
@@ -157,19 +165,45 @@ export default function NewBillPage() {
 
       console.log("OCR API Response:", response.data); // Debug response
 
-      // Update the expenses field with the recognized amount
-      if (response.data && response.data.success && response.data.amount) {
+      // For robust handling, check if the response has the expected structure
+      if (!response.data || response.data.success === false) {
+        // Nothing useful was extracted
+        setError("Could not extract any information from receipt. Please enter details manually.");
+        return;
+      }
+
+      // Handle amount extraction - explicitly check the flags in the response
+      if (response.data.amountExtracted === true && response.data.amount) {
+        console.log("Setting amount:", response.data.amount);
+        setExpenses(response.data.amount);
         setOcrResult({
           amount: response.data.amount,
           timestamp: new Date().toISOString(),
         });
-        setExpenses(response.data.amount);
       } else {
-        setError("Could not recognize amount from receipt. Please enter manually.");
+        setError("Could not recognize total amount from receipt. Please enter manually.");
       }
+      
+      // Handle merchant name extraction - explicitly check the flags in the response
+      if (response.data.merchantNameExtracted === true && response.data.merchantName) {
+        console.log("Setting merchant name:", response.data.merchantName);
+        setNote(response.data.merchantName);
+      } else if (response.data.amountExtracted === true) {
+        // Only show this message if we extracted an amount but not a merchant name
+        setError(prev => prev ? `${prev} Also, expense note wasn't extracted.` : "Expense note wasn't extracted. Please enter manually.");
+      }
+      
     } catch (err) {
       console.error('Error processing receipt:', err);
-      setError('Failed to process receipt. Please enter the amount manually.');
+      setError('Failed to process receipt. Please enter details manually.');
+      
+      // Reset fields on error
+      setNote("");
+      setExpenses(0);
+      setOcrResult(null);
+      setMemberTotalExpenses([]);
+      setMemberExpenses([]);
+      setMemberRefunds([]);
     } finally {
       setIsProcessing(false);
     }

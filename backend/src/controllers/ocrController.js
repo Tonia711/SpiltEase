@@ -18,7 +18,7 @@ const endpoint = process.env.AZURE_FORM_RECOGNIZER_ENDPOINT;
 const apiKey = process.env.AZURE_FORM_RECOGNIZER_KEY;
 
 /**
- * Process a receipt image using Azure Form Recognizer to extract the total amount
+ * Process a receipt image using Azure Form Recognizer to extract the total amount and merchant name
  * Uses the prebuilt receipt model that is specialized for receipt analysis
  */
 export const processReceipt = async (req, res) => {
@@ -62,37 +62,45 @@ export const processReceipt = async (req, res) => {
     const receiptData = result.documents[0];
     console.log("Receipt fields detected:", JSON.stringify(receiptData.fields, null, 2));
 
-    // Extract the total amount - Fixed extraction logic
-    let amount = null;
+    // Extract data - initialize result values
+    let extractedAmount = null;
+    let extractedMerchantName = null;
+    let extractedDate = null;
+    let anyFieldExtracted = false;
     
-    // Check for Total field
+    // Extract the total amount
     if (receiptData.fields.Total) {
       if (receiptData.fields.Total.kind === 'number') {
-        amount = receiptData.fields.Total.value;
+        extractedAmount = receiptData.fields.Total.value;
+        anyFieldExtracted = true;
       } else if (receiptData.fields.Total.kind === 'currency' && receiptData.fields.Total.value) {
-        amount = receiptData.fields.Total.value.amount;
+        extractedAmount = receiptData.fields.Total.value.amount;
+        anyFieldExtracted = true;
       } else if (receiptData.fields.Total.content) {
         // Try to parse from content
         const contentStr = receiptData.fields.Total.content;
         const numericValue = contentStr.replace(/[^0-9.]/g, '');
         if (numericValue) {
-          amount = parseFloat(numericValue);
+          extractedAmount = parseFloat(numericValue);
+          anyFieldExtracted = true;
         }
       }
     }
     
     // If no Total found, check for TotalPrice field in items
-    if (!amount && receiptData.fields.Items && receiptData.fields.Items.values) {
+    if (!extractedAmount && receiptData.fields.Items && receiptData.fields.Items.values) {
       for (const item of receiptData.fields.Items.values) {
         if (item.properties && item.properties.TotalPrice) {
           if (item.properties.TotalPrice.kind === 'number') {
-            amount = item.properties.TotalPrice.value;
+            extractedAmount = item.properties.TotalPrice.value;
+            anyFieldExtracted = true;
             break;
           } else if (item.properties.TotalPrice.content) {
             const contentStr = item.properties.TotalPrice.content;
             const numericValue = contentStr.replace(/[^0-9.]/g, '');
             if (numericValue) {
-              amount = parseFloat(numericValue);
+              extractedAmount = parseFloat(numericValue);
+              anyFieldExtracted = true;
               break;
             }
           }
@@ -101,11 +109,35 @@ export const processReceipt = async (req, res) => {
     }
     
     // Check SubTotal as backup
-    if (!amount && receiptData.fields.SubTotal) {
+    if (!extractedAmount && receiptData.fields.SubTotal) {
       if (receiptData.fields.SubTotal.kind === 'number') {
-        amount = receiptData.fields.SubTotal.value;
+        extractedAmount = receiptData.fields.SubTotal.value;
+        anyFieldExtracted = true;
       } else if (receiptData.fields.SubTotal.kind === 'currency' && receiptData.fields.SubTotal.value) {
-        amount = receiptData.fields.SubTotal.value.amount;
+        extractedAmount = receiptData.fields.SubTotal.value.amount;
+        anyFieldExtracted = true;
+      }
+    }
+
+    console.log("Extracted amount:", extractedAmount);
+
+    // Extract the merchant name
+    if (receiptData.fields.MerchantName) {
+      if (receiptData.fields.MerchantName.kind === 'string') {
+        extractedMerchantName = receiptData.fields.MerchantName.value;
+        anyFieldExtracted = true;
+      } else if (receiptData.fields.MerchantName.content) {
+        extractedMerchantName = receiptData.fields.MerchantName.content;
+        anyFieldExtracted = true;
+      }
+    }
+    
+    console.log("Extracted merchant name:", extractedMerchantName);
+
+    // Extract date if available
+    if (receiptData.fields.TransactionDate) {
+      if (receiptData.fields.TransactionDate.content) {
+        extractedDate = receiptData.fields.TransactionDate.content;
       }
     }
 
@@ -115,30 +147,52 @@ export const processReceipt = async (req, res) => {
       ? pages[0].lines?.map(line => line.content).join(' ').substring(0, 200) + '...'
       : '';
 
-    // Send response
-    if (amount) {
-      console.log("Extracted amount:", amount);
-      
-      res.json({
+    // Format response based on what was extracted
+    if (anyFieldExtracted) {
+      // Create a standard response object with explicit fields
+      const responseData = {
         success: true,
-        amount: amount.toString(),
         imagePath: req.file.path,
         recognizedText,
-        merchantName: receiptData.fields.MerchantName?.value || 'Unknown',
-        transactionDate: receiptData.fields.TransactionDate?.content || null,
-        receiptType: receiptData.docType || 'receipt'
-      });
+        amountExtracted: extractedAmount !== null,
+        merchantNameExtracted: extractedMerchantName !== null
+      };
+      
+      // Add amount if extracted
+      if (extractedAmount !== null) {
+        responseData.amount = extractedAmount.toString();
+      }
+      
+      // Add merchant name if extracted
+      if (extractedMerchantName !== null) {
+        responseData.merchantName = extractedMerchantName;
+      }
+      
+      // Add date if available
+      if (extractedDate !== null) {
+        responseData.transactionDate = extractedDate;
+      }
+      
+      // Add debugging log to verify response structure
+      console.log("Sending OCR response:", JSON.stringify(responseData, null, 2));
+      
+      res.json(responseData);
     } else {
-      console.log("Failed to extract amount from receipt");
-      res.json({
+      // Nothing useful was extracted
+      const errorResponse = {
         success: false,
-        error: "Could not recognize amount from receipt",
+        error: "Could not extract any useful information from receipt",
         imagePath: req.file.path,
         recognizedText
-      });
+      };
+      console.log("Sending error response:", JSON.stringify(errorResponse, null, 2));
+      res.json(errorResponse);
     }
   } catch (error) {
     console.error("Error processing receipt:", error.message);
-    res.status(500).json({ error: "Failed to process receipt image" });
+    // In case of error, return error message
+    res.status(500).json({ 
+      error: "Failed to process receipt image"
+    });
   }
 };
