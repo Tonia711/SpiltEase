@@ -1,9 +1,11 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
 import styles from "../styles/RegisterPage.module.css";
 import MobileFrame from "../components/MobileFrame";
 import "../App.css";
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useContext(AuthContext);
@@ -14,30 +16,145 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
-  const [errorMessage, setErrorMessage] = useState("");
+
+  const [errors, setErrors] = useState({});
+  const [emailDebounceTimer, setEmailDebounceTimer] = useState(null);
+  const [usernameDebounceTimer, setUsernameDebounceTimer] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setErrors((prev) => {
+      const { [name]: _, ...rest } = prev;
+      return rest;
     });
+
+    // === 邮箱格式 + 查重（延迟）===
+    if (name === "email") {
+      if (emailDebounceTimer) clearTimeout(emailDebounceTimer);
+
+      const timer = setTimeout(() => {
+        if (!value.includes("@")) {
+          setErrors((prev) => ({
+            ...prev,
+            email: "Invalid email format",
+          }));
+        } else {
+          checkAvailability("email", value);
+        }
+      }, 800);
+      setEmailDebounceTimer(timer);
+    }
+
+    // === 用户名查重 ===
+    if (name === "userName") {
+      if (usernameDebounceTimer) clearTimeout(usernameDebounceTimer);
+
+      const timer = setTimeout(() => {
+        checkAvailability("userName", value);
+      }, 500);
+      setUsernameDebounceTimer(timer);
+    }
+
+    // === 密码强度即时校验 ===
+    if (name === "password") {
+      if (value.length < 6) {
+        setErrors((prev) => ({
+          ...prev,
+          password: "At least 6 characters",
+        }));
+      } else {
+        setErrors((prev) => {
+          const { password, ...rest } = prev;
+          return rest;
+        });
+      }
+
+      // 同步检查确认密码是否匹配
+      if (formData.confirmPassword && value !== formData.confirmPassword) {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Passwords do not match",
+        }));
+      } else {
+        setErrors((prev) => {
+          const { confirmPassword, ...rest } = prev;
+          return rest;
+        });
+      }
+    }
+
+    // === 确认密码即时匹配校验 ===
+    if (name === "confirmPassword") {
+      if (value !== formData.password) {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Passwords do not match",
+        }));
+      } else {
+        setErrors((prev) => {
+          const { confirmPassword, ...rest } = prev;
+          return rest;
+        });
+      }
+    }
+  };
+
+  const checkAvailability = async (field, value) => {
+    if (!value) return;
+    try {
+      const res = await api.get(`/users/check?field=${field}&value=${value}`);
+
+      if (res.data.exists) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: `${field === "email" ? "Email" : "Username"} already taken`,
+        }));
+      } else {
+        setErrors((prev) => {
+          const { [field]: _, ...rest } = prev;
+          return rest;
+        });
+      }
+    } catch (err) {
+      console.error("Check error:", err);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
+    const newErrors = {};
+
+    if (formData.userName.trim() === "") {
+      newErrors.userName = "Username is required";
+    }
+
+    if (!formData.email.includes("@")) {
+      newErrors.email = "Invalid email";
+    }
+
+    if (formData.password.length < 6) {
+      newErrors.password = "At least 6 characters";
+    }
 
     if (formData.password !== formData.confirmPassword) {
-      setErrorMessage("Passwords do not match");
-      return;
+      newErrors.confirmPassword = "Passwords do not match";
     }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     const result = await register(formData);
     if (result.ok) {
       navigate("/");
     } else {
-      setErrorMessage(result.error || "Registration failed");
+      if (result.field) {
+        setErrors({ [result.field]: result.error });
+      } else {
+        setErrors({ general: result.error || "Registration failed" });
+      }
     }
   };
 
@@ -67,6 +184,9 @@ export default function RegisterPage() {
                 placeholder="Enter username"
                 required
               />
+              {errors.userName && (
+                <div className={styles.inputError}>{errors.userName}</div>
+              )}
             </div>
 
             <div className={styles.inputGroup}>
@@ -80,6 +200,9 @@ export default function RegisterPage() {
                 placeholder="Enter email"
                 required
               />
+              {errors.email && (
+                <div className={styles.inputError}>{errors.email}</div>
+              )}
             </div>
 
             <div className={styles.inputGroup}>
@@ -93,6 +216,9 @@ export default function RegisterPage() {
                 placeholder="Minimum 6 characters"
                 required
               />
+              {errors.password && (
+                <div className={styles.inputError}>{errors.password}</div>
+              )}
             </div>
 
             <div className={styles.inputGroup}>
@@ -106,6 +232,11 @@ export default function RegisterPage() {
                 placeholder="Confirm password"
                 required
               />
+              {errors.confirmPassword && (
+                <div className={styles.inputError}>
+                  {errors.confirmPassword}
+                </div>
+              )}
             </div>
 
             <div className={styles.inputGroup}>
@@ -113,8 +244,6 @@ export default function RegisterPage() {
                 Sign Up
               </button>
             </div>
-
-            {errorMessage && <div className={styles.error}>{errorMessage}</div>}
           </form>
         </div>
 
