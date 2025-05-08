@@ -15,6 +15,7 @@ export default function GroupDetailPage() {
   const [groupIconUrl, setGroupIconUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [alert, setAlert] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editedGroupName, setEditedGroupName] = useState("");
   const [editedStartDate, setEditedStartDate] = useState("");
@@ -51,11 +52,9 @@ export default function GroupDetailPage() {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
   };
 
   const showErrorToast = (message) => showToastMessage(message, "error");
-  const showSuccessToast = (message) => showToastMessage(message, "success");
 
   const fetchGroupData = async () => {
     setLoading(true);
@@ -74,7 +73,7 @@ export default function GroupDetailPage() {
       console.error("Failed to fetch group data:", err);
       showErrorToast("Failed to load group details.");
       setLoading(false);
-      setError("Failed to load group details."); // Set persistent error state
+      setError("Failed to load group details.");
       return null;
     }
   };
@@ -88,12 +87,22 @@ export default function GroupDetailPage() {
     if (showToast) {
       timer = setTimeout(() => {
         setShowToast(false);
-      }, 3000);
+      }, 30000);
     }
     return () => {
       clearTimeout(timer);
     };
   }, [showToast]);
+
+  useEffect(() => {
+    if (alert) {
+      const timer = setTimeout(() => {
+        setAlert("");
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [alert]);
 
   useEffect(() => {
     if (group) {
@@ -135,7 +144,6 @@ export default function GroupDetailPage() {
         ? data.iconUrl
         : `${ICON_BASE}/${data.iconUrl}`;
       setGroupIconUrl(uploadedUrl);
-      showSuccessToast("Group icon updated successfully!");
     } catch (err) {
       console.error(err);
       showErrorToast("Upload failed. Please try again.");
@@ -144,7 +152,7 @@ export default function GroupDetailPage() {
 
   const handlePreviewNewMember = () => {
     if (!newMemberName.trim()) {
-      showErrorToast("Please enter a member name.");
+      setAlert("Please enter a name.");
       return;
     }
 
@@ -187,10 +195,10 @@ export default function GroupDetailPage() {
           })
         );
 
-        showToastMessage(`${memberToRemove.userName || memberToRemove.name} removed from list. Save to confirm.`, 'success');
+        setAlert("Save to confirm.");
       }
       catch (err) {
-        showErrorToast("Failed to delete this member.");
+        setAlert("Delete when balance is 0!");
       }
       finally {
         setShowConfirmModal(false);
@@ -204,15 +212,15 @@ export default function GroupDetailPage() {
     setError(null);
 
     const membersToSave = editedMembers.map(m => {
-      const member = { 
+      const member = {
         userId: m.userId,
-        userName: m.userName 
+        userName: m.userName
       };
       if (m._id !== undefined) {
         member._id = m._id;
       }
       if (m.isHidden !== undefined) {
-        member.isHidden = m.isHidden; 
+        member.isHidden = m.isHidden;
       }
       return member;
     });
@@ -229,21 +237,16 @@ export default function GroupDetailPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       setGroup(data);
       setEditedGroupName("");
       setEditedStartDate("");
       setEditedMembers([]);
       setIsAddingMember(false);
       setNewMemberName("");
-
       setIsEditing(false);
-      showSuccessToast("Group updated successfully!");
-
     } catch (err) {
       console.error("Save group error:", err);
-      const errorMessage = err.response?.data?.message || "Failed to save group changes. Please try again.";
-      showErrorToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -260,11 +263,10 @@ export default function GroupDetailPage() {
       {showConfirmModal && memberToRemove && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <h4>Confirm Removal</h4>
             <p>Are you sure you want to remove {memberToRemove.userName || 'this member'} from the group?</p>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.cancelMoalButton} onClick={handleCancelRemove}>Cancel</button>
               <button type="button" className={styles.deleteMemberBtn} onClick={handleConfirmRemove}>Remove</button>
+              <button type="button" className={styles.cancelMoalButton} onClick={handleCancelRemove}>Cancel</button>
             </div>
           </div>
         </div>
@@ -295,21 +297,22 @@ export default function GroupDetailPage() {
               />
             </div>
           </div>
-
-          {showCropper && rawImage && (
-            <CropperModal
-              imageSrc={rawImage}
-              onClose={() => setShowCropper(false)}
-              onCropDone={handleCroppedUpload}
-            />
-          )}
-
-          <div className={styles.inviteCode}>
-            Invite Code
-            <span className={styles.codeValue}>{group.joinCode}</span>
-            <Copy className={styles.copyIcon} onClick={handleCopy} />
-          </div>
         </div>
+
+        {showCropper && rawImage && (
+          <CropperModal
+            imageSrc={rawImage}
+            onClose={() => setShowCropper(false)}
+            onCropDone={handleCroppedUpload}
+          />
+        )}
+
+        <div className={styles.inviteCode}>
+          Invite Code
+          <span className={styles.codeValue}>{group.joinCode}</span>
+          <Copy className={styles.copyIcon} onClick={handleCopy} />
+        </div>
+
 
         <section className={styles.infoSection}>
           <label htmlFor="groupName" className={styles.label}>Group Name</label>
@@ -340,11 +343,17 @@ export default function GroupDetailPage() {
         </section>
 
         <section className={styles.membersSection}>
-          <h4 className={styles.membersTitle}>Members</h4>
+          <div className={styles.labelRow}>
+            <p className={styles.membersTitle}>Members</p>
+            {alert && (
+              <span className={styles.inlineError}>{alert}</span>
+            )}
+          </div>
+
           <div className={styles.membersListContainer}>
             <ul className={styles.membersList}>
               {(isEditing ? editedMembers : (group.members || [])).filter(m => !m.isHidden).map((member) => (
-                <li key={member._id || member.userId || member.tempId} className={styles.memberItem}>
+                <li key={member._id || member.userId || member.tempId} className={`${styles.memberItem} ${!isEditing ? styles.readOnlyMember : styles.editMembers}`}>
                   {member.userName || 'Unnamed'}
                   {isEditing && (
                     <button
@@ -367,7 +376,7 @@ export default function GroupDetailPage() {
                         value={newMemberName}
                         onChange={(e) => setNewMemberName(e.target.value)}
                         placeholder="Enter name"
-                        className={styles.inputField}
+                        className={styles.newMemberName}
                         style={{ flex: 1 }}
                       />
                       <button
@@ -423,7 +432,6 @@ export default function GroupDetailPage() {
               setIsEditing(false);
               setIsAddingMember(false);
               setNewMemberName("");
-              showToastMessage("Editing cancelled.", "success");
             }}
             disabled={isSaving}
           >

@@ -17,7 +17,11 @@ export default function LandingPage() {
             Mates don't let mates do the math
           </h2>
           <h1 className={styles.landingTitle}>
-            <img src="/images/logo-splitmate.png" alt="SplitMate" className={styles.logoImage} />
+            <img
+              src="/images/logo-splitmate.png"
+              alt="SplitMate"
+              className={styles.logoImage}
+            />
             <span className={`${styles.titleYellow} ${styles.smallRight}`}>
               does
             </span>
@@ -26,13 +30,13 @@ export default function LandingPage() {
 
         <div className={styles.landingButtons}>
           <button
-            className={`${styles.btn} ${styles.loginBtn}`}
+            className={`btn ${styles.btn} ${styles.loginBtn}`}
             onClick={goToLogin}
           >
             Login
           </button>
           <button
-            className={`${styles.btn} ${styles.signupBtn}`}
+            className={`btn ${styles.btn} ${styles.signupBtn}`}
             onClick={goToSignup}
           >
             Sign Up

@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import { AuthContext } from "../contexts/AuthContext";
 import { useMemo } from "react";
 import GroupSummary from "../components/GroupSummary";
+import { useLocation } from "react-router-dom";
 
 export default function GroupExpensePage() {
   const { groupId } = useParams();
@@ -22,6 +23,16 @@ export default function GroupExpensePage() {
   const [expandedBalanceId, setExpandedBalanceId] = useState(null);
   const [confirmMarkPaidId, setConfirmMarkPaidId] = useState(null);
 
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.needRefreshBalance) {
+      console.log("Refresh triggered"); //
+      fetchData();
+      // 清除 state，避免重复触发
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
@@ -56,6 +67,12 @@ export default function GroupExpensePage() {
   
       await api.post("/bills", newBill);
   
+      console.log("Marking paid", {
+        from: fromMemberId,
+        to: toMemberId,
+        groupId
+      });
+      
       // TODO: 更新对应 balance 的 isFinished 为 true（你需要提供一个接口）
       await api.put(`/balances/group/${groupId}/markPaid`, {
         fromMemberId,
@@ -136,37 +153,65 @@ export default function GroupExpensePage() {
     return { owedToMe, iOwe, myBalances, myExpenses, totalExpenses };
 }, [balance, myUserId, groupBills, myGroupMemberObjectId]);
 
+const refreshBalance = async () => {
+  console.log("refreshBalance() called");
+  try {
+    const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
+    console.log("Balance refreshed:", balanceData);
+    setBalance(balanceData.groupBalances ?? []);
+  } catch (err) {
+    console.error("Failed to refresh balance:", err);
+    setBalance([]);
+  }
+};
+
+const fetchData = async () => {
+  try {
+    const [{ data: groupData }, { data: billsData }] = await Promise.all([
+      api.get(`/groups/${groupId}`),
+      api.get(`/bills/group/${groupId}`),
+    ]);
+    const filteredBills = billsData.filter(
+      (bill) => bill.label?._id?.toString() !== "000000000000000000000007"
+    );
+    setGroup(groupData);
+    setGroupBills(filteredBills);
+
+    console.log("Fetched bills:", billsData);
+    console.log("Current groupId:", groupId);
+    console.log("My current user ID:", currentUser?._id);
+
+    await refreshBalance();
+
+    filteredBills.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // 按日期分类账单
+    const grouped = {};
+    filteredBills
+      .forEach((bill) => {
+        const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(bill);
+      });
+
+    const sortedGrouped = Object.keys(grouped)
+      .sort((a, b) => new Date(b) - new Date(a)) // 日期 key 也按降序排
+      .reduce((obj, key) => {
+        obj[key] = grouped[key];
+        return obj;
+      }, {});
+
+    setBills(sortedGrouped);
+
+  } catch (err) {
+    console.error("Failed to fetch group or bills:", err);
+    setError("Failed to load expenses.");
+  } finally {
+    setLoading(false);
+  }
+}
+
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [{ data: groupData }, { data: billsData }] = await Promise.all([
-          api.get(`/groups/${groupId}`),
-          api.get(`/bills/group/${groupId}`),
-        ]);
-        setGroup(groupData);
-        setGroupBills(billsData || []);
-
-        console.log("Fetched bills:", billsData);
-        console.log("Current groupId:", groupId);
-
-        console.log("My current user ID:", currentUser?._id);
-      
-
-        // 按日期分类账单
-        const grouped = {};
-        billsData.forEach((bill) => {
-          const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
-          if (!grouped[dateKey]) grouped[dateKey] = [];
-          grouped[dateKey].push(bill);
-        });
-        setBills(grouped); // 现在是一个对象，key 是日期，value 是账单数组
-      } catch (err) {
-        console.error("Failed to fetch group or bills:", err);
-        setError("Failed to load expenses.");
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
   }, [groupId]);
 
@@ -215,19 +260,20 @@ export default function GroupExpensePage() {
             <button className={styles.backButton} onClick={() => navigate("/")}>
               {"<"}
             </button>
-            <div onClick={handleGroupClick}>
+            <div>
               <img
                 src={groupIconUrl}
                 alt="Group Icon"
                 className={styles.groupIcon}
+                onClick={handleGroupClick}
               />
               <div className={styles.groupName}>{group?.groupName}</div>
-              <div
+              {/* <div
                 className="group-id"
                 style={{ fontSize: "0.7rem", color: "#888" }}
               >
                 ID: {group._id}
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -236,7 +282,7 @@ export default function GroupExpensePage() {
               className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
               onClick={() => setActiveTab("expenses")}
             >
-              Expenses
+              Expense
             </button>
             <button
               className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
@@ -251,54 +297,58 @@ export default function GroupExpensePage() {
               Summary
             </button>
           </div>
-      
-          <div className={styles.scrollArea}>
+
+        {activeTab === "expenses" && (
+          <div className={styles.expensesHeader}>
+            <div className={styles.expensesHeaderRow}>
+              <span>My Expenses</span>
+              <span>Total Expenses</span>
+            </div>
+            <div className={styles.expensesAmountRow}>
+              <span>${myExpenses.toFixed(2)}</span>
+              <span>${totalExpenses.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.scrollArea}>
           {activeTab === "expenses" ? (
             Object.keys(bills).length === 0 ? (
               <p>No expenses found.</p>
             ) : (
-              <>
-                <div className={styles.expensesHeader}>
-                  <div className={styles.expensesHeaderRow}>
-                    <span>My Expenses</span>
-                    <span>Total Expenses</span>
-                  </div>
-                  <div className={styles.expensesHeaderRow}>
-                    <span>${myExpenses.toFixed(2)}</span>
-                    <span>${totalExpenses.toFixed(2)}</span>
-                  </div>
-                </div>
-
-              
-              {Object.entries(bills).map(([date, billList]) => (
-                <div key={date} style={{ marginBottom: "20px" }}>
+            <>
+             {Object.entries(bills).map(([date, billList]) => (
+                <div key={date} className={styles.billGroup}>
                   <h4 className={styles.billDateTitle}>
                     {dayjs(date).format("MMM D, YYYY")}
                   </h4>
-                  <ul>
-                    {billList.map((bill) => (
-                      <li
-                        key={bill._id}
-                        className={styles.billItem}
-                        onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
-                      >
+                  <div className={styles.billListContainer}>
+                    <ul>
+                      {billList.map((bill) => (
+                        <li
+                          key={bill._id}
+                          className={styles.billItem}
+                          onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
+                        >
 
-                        {bill.label?.iconUrl && (
-                          <img
-                            src={`${BASE_URL}/${bill.label.iconUrl}`}
-                            alt={bill.label.type}
-                            className={styles.billIcon}
-                          />
-                        )}
-                        <div>
-                          <div>
-                            <strong>{bill.note}</strong>
+                          {bill.label?.iconUrl && (
+                            <img
+                              src={`${BASE_URL}/${bill.label.iconUrl}`}
+                              alt={bill.label.type}
+                              className={styles.billIcon}
+                            />
+                          )}
+
+                          <div className={styles.billContent}>
+                            <div className={styles.billTextRow}>
+                              <span className={styles.billNote}>{bill.note}</span>
+                              <span className={styles.billAmount}>${bill.expenses.toFixed(2)}</span>
+                            </div>
                           </div>
-                          <div>${bill.expenses}</div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  </div> 
                 </div>
               ))}
             </>
@@ -546,7 +596,7 @@ export default function GroupExpensePage() {
             <button className={styles.fab} onClick={handleAddExpenseClick}>
               +
             </button>
-            <div className={styles.fabLabel}>Add Expense</div>
+            {/* <div className={styles.fabLabel}>Add Expense</div> */}
           </div>
         </div>
       </MobileFrame>

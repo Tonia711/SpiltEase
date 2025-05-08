@@ -1,14 +1,49 @@
 .container {
-  background-color: #1c1b22;
-  height: 100%;
-  color: white;
-  padding: 2rem;
   min-height: 100vh;
+  width: 325px;
+  margin: 0 auto;
+  color: var(--text-white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 326px;
+  margin-top: 60px;
+  position: relative;
+  z-index: 2;
+}
+
+.groupIconWrapper{
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+}
+
+.backButton {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--text-white);
+  cursor: pointer;
 }
 
 .inviteCode {
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0;
   text-align: center;
 }
 
@@ -22,30 +57,32 @@
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  margin: 1.5rem auto 0.3rem;
   display: block;
   object-fit: cover;
 }
 
 .infoSection {
-  width: 300px;
-  margin: 0 auto 1.5rem auto;
+  width: 325px;
+  height:70px;
+  padding-bottom: 20px;
 }
 
 .label {
   color: white;
-  margin-bottom: 3px;
+  height: 18px;
 }
 
 .membersTitle {
+  font-size: 12px;
   margin-bottom: 5px;
+  margin: 0;
 }
 
 .membersListContainer {
   max-height: 260px;
   overflow-y: auto;
-  width: 300px;
-  border-radius: 5%;
+  width: 325px;
+  border-radius: 8px;
 }
 
 .membersList {
@@ -55,18 +92,29 @@
 }
 
 .membersList li {
-  background: #9e9e9e;
-  padding: 0.6rem 1rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: #5B566a;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 14.5px 18px;
+  height: 20.49px;
 }
 
-.inputField {
-  padding: 0.6rem;
-  border-radius: 6px;
-  font-size: 1.2rem;
-  font-weight: 540;
-  width: 90%;
-  background-color: #9e9e9e;
+.readOnlyMember{
+  color:#FBC609;
+}
+
+.editMembers{
+  color: white;
+}
+
+.inputField,
+.newMemberName {
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: white;
+  border: none;
+  outline: none; 
 }
 
 .inputField.readOnly {
@@ -75,22 +123,39 @@
   pointer-events: none;
 }
 
+.inputField{
+  padding: 14.5px 18px;
+  width: 289.01px; 
+  height: 21.01px;
+}
+
+.newMemberName{
+  padding: 8px 18px;
+  width: 180px;
+  height: 15px;
+}
+
 .editButton,
 .cancelEditButton {
   text-align: center;
   border: none;
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
+  padding: 17px 18px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
-  margin: 1.5rem auto 3px auto;
-  display: block;
-  width: 300px;
+  font-size: 16px;
+  font-weight: bold;
+  width: 325px;
+  height: 50px;
 }
 
 .editButton{
   background-color: #ffca28;
   color: white;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; 
 }
 
 .editButton:hover {
@@ -99,30 +164,21 @@
   transition: all 0.3s ease;
 }
 
-.backButton {
-  position: absolute;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #fff;
-  cursor: pointer;
-  padding: 0 1rem;
-}
-
 .backButton:hover {
   color: #ffca28;
 }
 
 .groupIconContainer {
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
 }
 
 .cameraIcon {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background-color: rgba(255, 255, 255, 0.8);
+  bottom: 10px;
+  right: -5px;
+  background-color: #FBC609;
   border-radius: 50%;
   padding: 1px;
   cursor: pointer;
@@ -153,7 +209,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 1rem 1.5rem;
-  border-radius: 10px;
+  border-radius: 8px;
   color: white;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -180,7 +236,7 @@
 .addMemberButton {
   background: none;
   border: none;
-  color: #ffca28;
+  color: #FBC609;
   font-weight: bold;
   cursor: pointer;
   padding: 4px;
@@ -191,25 +247,36 @@
 .cancelButton {
   color: white;
   border: none;
-  padding: 4px 8px;
+  padding: 4px 7px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .saveButton {
-  background-color: #ffca28;
+  background-color: #FBC609;
 }
 
 .cancelButton {
   background-color: #ccc;
 }
 
+.membersSection {
+  width: 325px;
+  height: 250px;
+  margin: 0 auto 1.5rem auto;
+}
+
+.membersListContainer {
+  height: 240px;
+}
+
 .memberItem {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  overflow: scroll;
   background-color: #9e9e9e;
-  border: 1px solid #ccc;
+  border: none;
+  border-bottom: 1px solid #ccc;
 }
 
 .deleteBtn {
@@ -231,8 +298,22 @@
   color: black;
 }
 
-/* Add these styles to your GroupDetailPage.module.css */
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
 
+.inlineError {
+  color: #e74c3c;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  height: 18px;
+}
+
+/* Add these styles to your GroupDetailPage.module.css */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -262,7 +343,7 @@
 }
 
 .modalContent p {
-  margin-bottom: 20px;
+  font-size: 14;
   word-wrap: break-word;
 }
 
@@ -277,9 +358,11 @@
   flex: 1;
   padding: 10px 15px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 16;
+  font-weight: bold;
+  height: 50px;
 }
 
 .cancelMoalButton {
@@ -292,7 +375,7 @@
 }
 
 .deleteMemberBtn {
-  background-color: #f44336;
+  background-color: #EF5780;
   color: white;
 }
 

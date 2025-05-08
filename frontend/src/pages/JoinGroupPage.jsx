@@ -79,7 +79,7 @@ export default function GroupJoinPage() {
         setError("Wrong Code!");
       } else {
         setError(
-          "An error occurred during validation. Please try again later."
+          "Please try again."
         );
       }
       setShowInputError(true);
@@ -101,7 +101,7 @@ export default function GroupJoinPage() {
   const handleJoinAsNewUser = () => {
     if (!user || !user.userName) {
       setError(
-        "Could not retrieve your username. Please try logging in again."
+        "Username not Found."
       );
       return;
     }
@@ -135,7 +135,7 @@ export default function GroupJoinPage() {
         joinCode: inviteCode.trim(),
       });
 
-      navigate(`/groups/${group._id}`);
+      navigate(`/groups/${group._id}/expenses`);
     } catch (e) {
       console.error(e);
       setError("Failed to join. Please try again.");

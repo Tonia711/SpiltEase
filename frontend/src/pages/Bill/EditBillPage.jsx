@@ -13,7 +13,7 @@ export default function EditBillPage() {
   // 界面展示的数据
   const [bill, setBill] = useState();  
   const [labels, setLabels] = useState([]);  // labels
-  const [group, setGroup] = useState(null); //group 数据
+  // const [group, setGroup] = useState(null); //group 数据
   const [members, setMembers] = useState(""); //下拉列表，成员列表
   const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："Equally" 或 "As Amounts"
 
@@ -21,8 +21,8 @@ export default function EditBillPage() {
   // 表单数据
   const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
   const [note, setNote] = useState("");     //note
-  const [expenses, setExpenses] = useState("");   //paid 总钱数
-  const [refunds, setRefunds] = useState("");   //refunds
+  const [expenses, setExpenses] = useState(0);   //paid 总钱数
+  const [refunds, setRefunds] = useState(0);   //refunds
   const [paidBy, setPaidBy] = useState(""); // paidBy  member_id
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
   const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
@@ -51,20 +51,19 @@ export default function EditBillPage() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
 
+
   useEffect(() => {
     api
       .get(`/groups/${groupId}`)
       .then(({ data }) => {
-        setGroup(data);
-        setMembers(data.members);
+        const visibleMembers = data.members.filter((m) => m.isHidden === false);
+        setMembers(visibleMembers);
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
       });
   }, [groupId, BASE_URL]);
-
-  // console.log("group", group);
-  // console.log("members", members);
+  
 
   useEffect(() => {
     if (members && members.length > 0) {
@@ -72,7 +71,6 @@ export default function EditBillPage() {
     }
   }, [members]);
   
-
 
 
   // 通过获取bill的数据来获取界面显示的数据
@@ -99,7 +97,7 @@ export default function EditBillPage() {
         })));
         setMemberTotalExpenses(data.members.map(m => ({
           memberId: m.memberId,
-          amount: parseFloat(m.expense.toFixed(2))
+          amount: parseFloat((m.expense - m.refund).toFixed(2))
         })));
       })
       .catch((err) => {
@@ -108,6 +106,7 @@ export default function EditBillPage() {
   }, [groupId, BASE_URL]);
 
   
+  //确保 paidBy（付款人）在成员列表中可选，哪怕他不在当前 group.members 里
   useEffect(() => {
     if (members && members.length > 0 && bill) {
       setPaidBy(bill.paidBy);
@@ -119,8 +118,6 @@ export default function EditBillPage() {
     }
   }, [members, bill]);
   
-  // console.log("bill", bill);
-  // console.log("paidBy", paidBy);
 
   
   //通过输入的expense, refunds来计算每个人分的钱
@@ -144,6 +141,7 @@ export default function EditBillPage() {
       return;
     }
   
+    //大冤种
     const rawExpense = parseFloat((total / count).toFixed(2));
     const avgRefund = parseFloat((refundTotal / count).toFixed(2));
   
@@ -174,17 +172,11 @@ export default function EditBillPage() {
       };
     });
   
-    const setAllArrays = () => {
+    if (splitMethod === "Equally") {
       setMemberExpenses(expensesArray);
       setMemberRefunds(refundsArray);
       setMemberTotalExpenses(totalArray);
-    };
-  
-    if (splitMethod === "Equally") {
-      setAllArrays();
-    } else if (splitMethod === "amounts" && memberTotalExpenses.length === 0) {
-      setAllArrays();
-    }
+    } 
   }, [isEditing, expenses, refunds, splitMethod, members, selectedMemberIds]);
   
 
@@ -199,7 +191,8 @@ export default function EditBillPage() {
       setError("Please fill in all required fields.");
       return;
     }
-  
+    console.log(memberRefunds);
+
     const updatedBill = {
       labelId: selectedLabelId,
       date: paidDate,
@@ -210,21 +203,27 @@ export default function EditBillPage() {
       splitWay: splitMethod,
       members: memberTotalExpenses.map(m => ({
         memberId: m.memberId,
-        expense: m.amount,
-        refund: memberRefunds.find(r => r.memberId === m.memberId)?.refund || 0
+        expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
+        refund: memberRefunds == 0? 0 : memberRefunds.find(r => r.memberId === m.memberId)?.refund
       }))
     };
     
   
     try {
+      setBill(null);
       await api.put(`/bills/${groupId}/bill/${billId}`, updatedBill);
-      navigate(`/groups/${groupId}/expenses/${billId}`);
+      await api.post(`/balances/group/${groupId}/recalculate`);
+      navigate(`/groups/${groupId}/expenses/${billId}`, { 
+        replace: true,
+        state: { needRefreshBalance: true } });
     } catch (err) {
       console.error("Failed to update bill:", err);
       setError("Failed to update bill. Please try again.");
     }
   };
-  
+
+
+  //修改分钱的人
   function handleChangeCheckBox(e, m) {
     const checked = e.target.checked;
     let newSelected;
@@ -273,7 +272,8 @@ export default function EditBillPage() {
     }
   }
   
-  
+
+  //As Amounts修改金额
   function handleChangeAmount(e, m) {
     const newAmount = parseFloat(e.target.value) || 0;
     setMemberTotalExpenses(prev => {
@@ -284,16 +284,25 @@ export default function EditBillPage() {
         return [...prev, { memberId: m._id, amount: newAmount }];
       }
     });
+    setMemberExpenses(prev => {
+      const exists = prev.find(p => p.memberId === m._id);
+      if (exists) {
+        return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+      } else {
+        return [...prev, { memberId: m._id, amount: newAmount }];
+      }
+    });    
+    setMemberRefunds([]);
   
-    // 同时更新 refund
-    const newSelected = [...selectedMemberIds];
-    const refundTotal = parseFloat(refunds) || 0;
-    const count = newSelected.length;
-    const avgRefund = count > 0 ? parseFloat((refundTotal / count).toFixed(2)) : 0;
-    setMemberRefunds(newSelected.map(id => ({
-      memberId: id,
-      refund: avgRefund
-    })));
+    // // 同时更新 refund
+    // const newSelected = [...selectedMemberIds];
+    // const refundTotal = parseFloat(refunds) || 0;
+    // const count = newSelected.length;
+    // const avgRefund = count > 0 ? parseFloat((refundTotal / count).toFixed(2)) : 0;
+    // setMemberRefunds(newSelected.map(id => ({
+    //   memberId: id,
+    //   refund: avgRefund
+    // })));
   }
   
 

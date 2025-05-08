@@ -1,5 +1,3 @@
-//账本
-//给members加了memberId
 const groups = [
   {
     id: 1,

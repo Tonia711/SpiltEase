@@ -263,22 +263,29 @@ function getMinimalTransfers(bills) {
     const balances = [];
   
     for (const group of bills) {
-      const netBalance = {};
-  
+        console.log("📦 group.groupId:", group.groupId);
+        console.log("📄 group.groupBills.length:", group.groupBills?.length);
+      
+        const netBalance = {};
+
       // Step 1: 计算每个成员的净资产（支付 - 消费，不考虑 refund）
       for (const bill of group.groupBills) {
-        const paidBy = bill.paidBy;
+        console.log("🧾 Processing bill:", JSON.stringify(bill, null, 2));
+
+        const paidBy = String(bill.paidBy);
         const amountPaid = bill.expenses; // 忽略 refunds
   
         netBalance[paidBy] = (netBalance[paidBy] || 0) + amountPaid;
   
         for (const member of bill.members) {
-          const memberId = member.memberId;
-          const expense = member.expense; // 只用 expense，不用 refund
-          netBalance[memberId] = (netBalance[memberId] || 0) - expense;
-        }
+            const memberId = String(member.memberId);
+            const expense = member.expense; // 只用 expense，不用 refund
+            netBalance[memberId] = (netBalance[memberId] || 0) - expense;
+            }
       }
   
+      console.log("✅ Final netBalance per group:", JSON.stringify(netBalance, null, 2));
+
       // Step 2: 分成 creditors 和 debtors
       const creditors = [];
       const debtors = [];
@@ -287,9 +294,9 @@ function getMinimalTransfers(bills) {
         const rounded = Math.round(balance * 100) / 100;
         if (Math.abs(rounded) < 0.01) continue;
         if (rounded > 0) {
-          creditors.push({ memberId: Number(memberId), balance: rounded });
+          creditors.push({ memberId, balance: rounded });
         } else {
-          debtors.push({ memberId: Number(memberId), balance: -rounded });
+          debtors.push({ memberId, balance: -rounded });
         }
       }
   
@@ -318,7 +325,8 @@ function getMinimalTransfers(bills) {
   
       balances.push({
         groupId: group.groupId,
-        groupBalances
+        groupBalances,
+        recalculatedAt: new Date().toISOString()
       });
     }
   
@@ -326,7 +334,7 @@ function getMinimalTransfers(bills) {
   }
   
   
-const result = getMinimalTransfers(bills);
+// const result = getMinimalTransfers(bills);
 // console.log(JSON.stringify(result, null, 2));
 
 export default getMinimalTransfers;
