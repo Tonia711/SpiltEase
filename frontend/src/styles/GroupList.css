@@ -5,6 +5,7 @@
   padding-top: 16px;
   height: 330px;
   overflow: scroll;
+  scrollbar-width: none; 
 }
 
 .group-item {
