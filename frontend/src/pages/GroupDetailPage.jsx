@@ -190,7 +190,7 @@ export default function GroupDetailPage() {
         showToastMessage(`${memberToRemove.userName || memberToRemove.name} removed from list. Save to confirm.`, 'success');
       }
       catch (err) {
-        showErrorToast("Failed to delete this member.");
+        showErrorToast("Failed to delete this member. Balance must be 0!");
       }
       finally {
         setShowConfirmModal(false);
