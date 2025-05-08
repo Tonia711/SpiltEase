@@ -6,13 +6,14 @@
     color: white;
     padding: 20px;
     box-sizing: border-box;
-    padding-top: 80px;
+    padding-top: 62px;
 }
 
 .groupName {
-    font-size: 1rem;
+    font-size: 14px;
     margin-bottom: 1rem;
     text-align: center ;
+    font-weight: bold;
 }
 
 .groupIcon {
@@ -43,7 +44,9 @@
   .backButton {
     position: absolute;
     top: 10px;
-    left: 10px;
+    left: 50%;
+    transform: translateX(-162.5px);
+    height: 90px;
     background: none;
     border: none;
     font-size: 1.5rem;
@@ -52,97 +55,154 @@
   }
 
 .backButton:hover {
-    color: #ffca28; 
+  color: #ffca28; 
 }
 
 .fab {
     position: absolute;
-    bottom: 24px; /* ✅ 离底部一点，不会被裁切 */
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
     background-color: #ffca28;
     color: #000;
-    font-size: 2rem;
+    font-size: 64px;
     border: none;
     border-radius: 50%;
-    width: 64px;
-    height: 64px;
+    width: 90px;
+    height: 90px;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 100;
 }
 
 .fabContainer {
-    position: fixed;
-    bottom: 16px;
+    position: absolute;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
   }
   
-  .fabLabel {
+  /* .fabLabel {
     margin-top: 4px;
     font-size: 0.9rem;
-    color: #ccc;
-  }
+    color: #fff;
+  } */
 
   .scrollArea {
     flex: 1;
     overflow-y: auto;
     padding-bottom: 100px;
     margin-top: 10px;
-    margin-bottom: 70px;
+    margin-bottom: 100px;
   }
 
   .billItem {
     display: flex;
+    width: 100%;
+    height: 50px;
+    font-size: 14px;
     align-items: center;
-    margin-bottom: 8px;
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: #2a2933;
+    border: none;
+    padding: 0 10px;
+    border-radius: 0;
+    background-color: #5B566A;
+    box-sizing: border-box;
+    border-bottom: 1px solid #9E9E9E;
+    margin-top: 0; 
+    margin-bottom: 0;
   }
   
   .billIcon {
-    width: 45px;
-    height: 45px;
+    width: 37px;
+    height: 36px;
     margin-right: 10px;
     object-fit: cover;
   }
 
+  .billContent {
+    flex: 1;
+  }
+
+  .billTextRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .billNote {
+    font-size: 14px;
+    color: white;
+  }
+  
+  .billAmount {
+    font-size: 14px;
+    color: white;
+  }
+
   .billDateTitle {
-    font-size: 1rem;
+    font-size: 12px;
     font-weight: bold;
-    color: #ccc;
-    margin: 16px 0 8px;
+    color: white;
+    margin: 18px 0 1px 0;
+    text-align: left; 
+  }
+
+  .billGroup {
+    width: 325px;
+    margin: 0 auto;
+  }
+
+  .billListContainer {
+    background-color: #5B566A;
+    border: 1px solid #9E9E9E;
+    border-radius: 6px;
+    overflow: hidden;
+    width: 325px;
+    margin: 0 auto;
+  }
+
+  .billItem:last-child {
+    border-bottom: none;
   }
   
   .tabContainer {
     display: flex;
     justify-content: center;
+    width: 325px;
+    height: 50px;
+    margin: 10px auto;
     margin-top: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 2px;
+    background-color: #5B566A;
+    ;
+    border-radius: 6px;
+    overflow: hidden;
   }
   
   .tabButton {
-    padding: 8px 16px;
-    background-color: #2a2933;
+    flex: 1;
+    background-color: transparent;
     color: white;
     border: none;
-    font-size: 1rem;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s;
-    border-radius: 10px 0 0 10px;
+    height: 100%;
+  }
+
+  .tabButton:first-child {
+    border-radius: 6px 0 0 6px;
   }
 
   .tabButton:last-child {
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 6px 6px 0;
   }
   
   .activeTab {
     background-color: #ffca28;
     color: black;
+    font-weight: bold;
   }
 
   .memberSection {
@@ -212,7 +272,10 @@
   }
 
   .expensesHeader {
-    margin-bottom: 20px;
+    width: 325px;
+    margin: 0 auto;
+    margin-top: 0px;
+    align-items: center;
     padding: 0 10px;
   }
   
@@ -220,10 +283,25 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: white;
-    font-size: 1rem;
+    color: #9E9E9E;
+    font-size: 12px;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 0;
+  }
+
+  .expensesAmountRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 0;
+  }
+
+  .billGroup ul {
+    padding: 0;
+    margin: 0;
   }
   
   .confirmActions {
@@ -234,7 +312,7 @@
   }
   
   .okButton {
-    background-color: #e86f6f;
+    background-color: #ef5780;
     color: white;
     border: none;
     padding: 6px 16px;
@@ -243,7 +321,7 @@
   }
   
   .cancelButton {
-    background-color: grey;
+    background-color: #9e9e9e;
     color: white;
     border: none;
     padding: 6px 16px;
@@ -285,10 +363,11 @@
     right: 0;
     top: 0;
     font-size: 0.9rem;
-    color: grey;
+    color: #9E9E9E;
     font-weight: bold;
     background: none;
     border: none;
     cursor: pointer;
   }
+
   
