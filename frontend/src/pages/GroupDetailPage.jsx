@@ -98,7 +98,7 @@ export default function GroupDetailPage() {
     if (alert) {
       const timer = setTimeout(() => {
         setAlert("");
-      }, 3000); 
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
@@ -263,11 +263,10 @@ export default function GroupDetailPage() {
       {showConfirmModal && memberToRemove && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <h4>Confirm Removal</h4>
             <p>Are you sure you want to remove {memberToRemove.userName || 'this member'} from the group?</p>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.cancelMoalButton} onClick={handleCancelRemove}>Cancel</button>
               <button type="button" className={styles.deleteMemberBtn} onClick={handleConfirmRemove}>Remove</button>
+              <button type="button" className={styles.cancelMoalButton} onClick={handleCancelRemove}>Cancel</button>
             </div>
           </div>
         </div>
@@ -350,7 +349,7 @@ export default function GroupDetailPage() {
               <span className={styles.inlineError}>{alert}</span>
             )}
           </div>
-          
+
           <div className={styles.membersListContainer}>
             <ul className={styles.membersList}>
               {(isEditing ? editedMembers : (group.members || [])).filter(m => !m.isHidden).map((member) => (
