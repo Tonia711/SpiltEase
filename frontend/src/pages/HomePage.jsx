@@ -21,8 +21,13 @@ export default function HomePage() {
   return (
     <MobileFrame>
       <div className={styles.container}>
-        <div className={styles.profile} onClick={handleProfileClick}>
-          <img src={avatarUrl} alt="avatar" className={styles.avatar} />
+        <div className={styles.profile}>
+          <img
+            src={avatarUrl}
+            alt="avatar"
+            className={styles.avatar}
+            onClick={handleProfileClick}
+          />
           <span className={styles.name}>{username}</span>
         </div>
 

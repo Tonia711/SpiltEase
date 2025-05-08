@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
+  cursor: pointer;
 }
 
 .group-item {
@@ -15,6 +16,7 @@
   gap: 1rem;
   transition: background-color 0.2s ease;
   max-width: 326px;
+  cursor: pointer;
 }
 
 .delete-btn {

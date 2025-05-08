@@ -1,6 +1,6 @@
 :root {
   --yellow: #fbc609;
-  --bg-dark: #242424;
+  --bg-dark: #312d3c;
   --text-white: #ffffff;
 }
 
@@ -38,7 +38,7 @@
 
 .groupListContainer {
   width: 326px;
-  cursor: pointer;
+  /* cursor: pointer; */
   transition: background-color 0.2s ease;
 }
 
@@ -125,6 +125,7 @@
   text-align: center;
   margin-top: 3rem;
   color: #d1d5db;
+  cursor: default;
 }
 
 .welcomeTitle {
