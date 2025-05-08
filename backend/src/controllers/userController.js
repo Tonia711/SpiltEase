@@ -1,5 +1,7 @@
 // File: src/controllers/userController.js
+import mongoose from "mongoose";
 import User from "../models/userModel.js";
+import Group from "../models/groupModel.js";
 
 export const getMe = async (req, res) => {
   try {
@@ -36,6 +38,18 @@ export const updateMe = async (req, res) => {
       .populate({ path: "avatarId", select: "avatarUrl" });
 
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (updates.userName) {
+      const userIdObj = new mongoose.Types.ObjectId(req.user.id);
+
+      const result = await Group.updateMany(
+        { "members.userId": userIdObj },
+        { $set: { "members.$[elem].userName": updates.userName } },
+        {
+          arrayFilters: [{ "elem.userId": userIdObj }],
+        }
+      );
+    }
 
     const userObj = user.toObject();
     userObj.avatarUrl = userObj.avatarId?.avatarUrl;
