@@ -79,7 +79,7 @@ export default function GroupJoinPage() {
         setError("Wrong Code!");
       } else {
         setError(
-          "An error occurred during validation. Please try again later."
+          "Please try again."
         );
       }
       setShowInputError(true);
@@ -101,7 +101,7 @@ export default function GroupJoinPage() {
   const handleJoinAsNewUser = () => {
     if (!user || !user.userName) {
       setError(
-        "Could not retrieve your username. Please try logging in again."
+        "Username not Found."
       );
       return;
     }

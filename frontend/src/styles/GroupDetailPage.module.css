@@ -298,6 +298,21 @@
   color: black;
 }
 
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.inlineError {
+  color: #e74c3c;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  height: 18px;
+}
+
 /* Add these styles to your GroupDetailPage.module.css */
 .modalOverlay {
   position: fixed;
