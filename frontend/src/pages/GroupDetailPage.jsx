@@ -190,7 +190,7 @@ export default function GroupDetailPage() {
         showToastMessage(`${memberToRemove.userName || memberToRemove.name} removed from list. Save to confirm.`, 'success');
       }
       catch (err) {
-        showErrorToast("Failed to delete this member.");
+        showErrorToast("Failed to delete this member. Balance must be 0!");
       }
       finally {
         setShowConfirmModal(false);
@@ -242,8 +242,6 @@ export default function GroupDetailPage() {
 
     } catch (err) {
       console.error("Save group error:", err);
-      const errorMessage = err.response?.data?.message || "Failed to save group changes. Please try again.";
-      showErrorToast(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -423,7 +421,6 @@ export default function GroupDetailPage() {
               setIsEditing(false);
               setIsAddingMember(false);
               setNewMemberName("");
-              showToastMessage("Editing cancelled.", "success");
             }}
             disabled={isSaving}
           >

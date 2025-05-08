@@ -206,6 +206,11 @@ export const joinGroupByCode = async (req, res) => {
           $addToSet: { groupId: group._id },
         });
 
+        await Group.updateOne(
+          { _id: group._id, "members.userId": currentUserId },
+          { $set: { "members.$.isHidden": false } }
+        );
+
         return res.status(200).json({
           message:
             "You were previously a member of this group. Your membership has been restored.",
