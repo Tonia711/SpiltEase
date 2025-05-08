@@ -1,6 +1,6 @@
 /* File: src/styles/GroupJoinPage.module.css */
 .container {
-  padding: 2rem;
+  padding: 0 2rem;
   color: white;
   background: #1c1b22;
   min-height: 100vh;
@@ -8,14 +8,14 @@
 
 .section {
   margin: 0 auto;
-  padding: 15px 0;
+  padding-bottom: 15px;
   border-radius: 8px;
 }
 
 .sectionTitle {
   margin-top: 0;
   margin-bottom: 10px;
-  font-size: 1em;
+  font-size: 16px;
 }
 
 .title {
@@ -37,11 +37,11 @@
 
 .inlineError {
   color: #e74c3c;
-  font-size: 0.9em;
+  font-size: 14px;
   margin: 0;
   padding: 0;
   font-weight: bold;
-  line-height: 3;
+  height: 18px;
 }
 
 .inputError {
@@ -95,13 +95,15 @@
 
 .joinButton {
   width: 325px;
-  margin: 1rem auto 2rem auto;
+  height: 50px;
   padding: 0.8rem;
   background: #ffca28;
   color: #000;
   border: none;
   border-radius: 6px;
-  font-size: 1.1rem;
+  font-size: 16px;
+  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   display: block;
 }
@@ -117,13 +119,12 @@
 }
 
 .membersListContainer {
-  width: 300px;
-  max-height: 300px;
+  width: 325px;
+  height: 300px;
   overflow-y: scroll;
   scrollbar-width: none;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  margin: auto;
+  border-radius: 8px;
+  border: 2px solid #ccc;
 }
 
 .membersList {
@@ -135,11 +136,14 @@
 .memberItem,
 .memberItemSelected,
 .memberItemReal {
-  padding: 0.8rem 1rem;
-  border: 2px solid #ccc;
-  border-radius: 4px;
-  background: #5b566a;
+  padding: 16px 18px;
+  font-size: 14px;
+  border-bottom: 2px solid #ccc;
+  background-color: #5b566a;
+  height: 16.45px;
   transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
 }
 
 .memberItem {
@@ -161,7 +165,8 @@
 }
 
 .memberItemSelected {
-  background: #ffca28;
+  background-color: #ffca28;
+  color: #000;
   font-weight: bold;
   transition: all 0.2s ease;
 }
@@ -178,13 +183,14 @@
   background: none;
   border: none;
   color: #ffca28;
-  font-size: 1.5rem;
+  font-size: 14px;
   cursor: pointer;
 }
 
 .joinAsNewButton {
   display: block;
-  width: 100%;
+  height: 50px;
+  width: 325px;
   box-sizing: border-box;
   padding: 12px 20px;
   background-color: #5b566a;
@@ -192,7 +198,7 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1em;
+  font-size: 14px;
   text-align: center;
   transition: background-color 0.2s ease;
 }
@@ -208,7 +214,9 @@
 
 .memberItemSelected.joinAsNewButton {
   background-color: #ffca28;
+  color: #000;
   font-weight: bold;
+  height: 50px;
 }
 
 .backButton {
@@ -227,7 +235,7 @@
 
 .inputErrorBelow {
   color: red;
-  font-size: 0.9rem;
+  font-size: 14px;
   margin-top: 5px;
   margin-bottom: 0;
   text-align: left;
