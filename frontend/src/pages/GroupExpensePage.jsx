@@ -250,19 +250,20 @@ const fetchData = async () => {
             <button className={styles.backButton} onClick={() => navigate("/")}>
               {"<"}
             </button>
-            <div onClick={handleGroupClick}>
+            <div>
               <img
                 src={groupIconUrl}
                 alt="Group Icon"
                 className={styles.groupIcon}
+                onClick={handleGroupClick}
               />
               <div className={styles.groupName}>{group?.groupName}</div>
-              <div
+              {/* <div
                 className="group-id"
                 style={{ fontSize: "0.7rem", color: "#888" }}
               >
                 ID: {group._id}
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -271,7 +272,7 @@ const fetchData = async () => {
               className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
               onClick={() => setActiveTab("expenses")}
             >
-              Expenses
+              Expense
             </button>
             <button
               className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
@@ -286,54 +287,58 @@ const fetchData = async () => {
               Summary
             </button>
           </div>
-      
-          <div className={styles.scrollArea}>
+
+        {activeTab === "expenses" && (
+          <div className={styles.expensesHeader}>
+            <div className={styles.expensesHeaderRow}>
+              <span>My Expenses</span>
+              <span>Total Expenses</span>
+            </div>
+            <div className={styles.expensesAmountRow}>
+              <span>${myExpenses.toFixed(2)}</span>
+              <span>${totalExpenses.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.scrollArea}>
           {activeTab === "expenses" ? (
             Object.keys(bills).length === 0 ? (
               <p>No expenses found.</p>
             ) : (
-              <>
-                <div className={styles.expensesHeader}>
-                  <div className={styles.expensesHeaderRow}>
-                    <span>My Expenses</span>
-                    <span>Total Expenses</span>
-                  </div>
-                  <div className={styles.expensesHeaderRow}>
-                    <span>${myExpenses.toFixed(2)}</span>
-                    <span>${totalExpenses.toFixed(2)}</span>
-                  </div>
-                </div>
-
-              
-              {Object.entries(bills).map(([date, billList]) => (
-                <div key={date} style={{ marginBottom: "20px" }}>
+            <>
+             {Object.entries(bills).map(([date, billList]) => (
+                <div key={date} className={styles.billGroup}>
                   <h4 className={styles.billDateTitle}>
                     {dayjs(date).format("MMM D, YYYY")}
                   </h4>
-                  <ul>
-                    {billList.map((bill) => (
-                      <li
-                        key={bill._id}
-                        className={styles.billItem}
-                        onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
-                      >
+                  <div className={styles.billListContainer}>
+                    <ul>
+                      {billList.map((bill) => (
+                        <li
+                          key={bill._id}
+                          className={styles.billItem}
+                          onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
+                        >
 
-                        {bill.label?.iconUrl && (
-                          <img
-                            src={`${BASE_URL}/${bill.label.iconUrl}`}
-                            alt={bill.label.type}
-                            className={styles.billIcon}
-                          />
-                        )}
-                        <div>
-                          <div>
-                            <strong>{bill.note}</strong>
+                          {bill.label?.iconUrl && (
+                            <img
+                              src={`${BASE_URL}/${bill.label.iconUrl}`}
+                              alt={bill.label.type}
+                              className={styles.billIcon}
+                            />
+                          )}
+
+                          <div className={styles.billContent}>
+                            <div className={styles.billTextRow}>
+                              <span className={styles.billNote}>{bill.note}</span>
+                              <span className={styles.billAmount}>${bill.expenses.toFixed(2)}</span>
+                            </div>
                           </div>
-                          <div>${bill.expenses}</div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  </div> 
                 </div>
               ))}
             </>
@@ -581,7 +586,7 @@ const fetchData = async () => {
             <button className={styles.fab} onClick={handleAddExpenseClick}>
               +
             </button>
-            <div className={styles.fabLabel}>Add Expense</div>
+            {/* <div className={styles.fabLabel}>Add Expense</div> */}
           </div>
         </div>
       </MobileFrame>
