@@ -50,18 +50,76 @@ const CameraCapture = ({ onCapture, onClose }) => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      const scanArea = document.querySelector(`.${styles.scanArea}`);
+
+      if (!scanArea) return;
       
-      // Set canvas dimensions to match video
+      // Get dimensions
+      const videoRect = video.getBoundingClientRect();
+      const scanRect = scanArea.getBoundingClientRect();
+      
+      // Step 1: Set temporary canvas to video's intrinsic dimensions
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      // Draw the current video frame to the canvas
+      // Step 2: Draw the full video frame
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Convert canvas to image data URL
-      const imageDataUrl = canvas.toDataURL('image/jpeg');
-      setCapturedImage(imageDataUrl);
+      // Step 3: Calculate exact position of scan area within the video element
+      // This accounts for object-fit: cover which may crop parts of the video
+      const videoAspect = video.videoWidth / video.videoHeight;
+      const containerAspect = videoRect.width / videoRect.height;
+      
+      let videoDisplayWidth, videoDisplayHeight, offsetX = 0, offsetY = 0;
+      
+      // Calculate how the video is displayed with object-fit: cover
+      if (videoAspect > containerAspect) {
+        // Video is wider than container - height matches, width is centered
+        videoDisplayHeight = videoRect.height;
+        videoDisplayWidth = videoRect.height * videoAspect;
+        offsetX = (videoRect.width - videoDisplayWidth) / 2;
+      } else {
+        // Video is taller than container - width matches, height is centered
+        videoDisplayWidth = videoRect.width;
+        videoDisplayHeight = videoRect.width / videoAspect;
+        offsetY = (videoRect.height - videoDisplayHeight) / 2;
+      }
+      
+      // Calculate scan area's position relative to the actual displayed video
+      const adjustedLeft = (scanRect.left - videoRect.left - offsetX) / videoDisplayWidth;
+      const adjustedTop = (scanRect.top - videoRect.top - offsetY) / videoDisplayHeight;
+      const adjustedWidth = scanRect.width / videoDisplayWidth;
+      const adjustedHeight = scanRect.height / videoDisplayHeight;
+      
+      // Map these proportions to the original video dimensions
+      const cropX = adjustedLeft * video.videoWidth;
+      const cropY = adjustedTop * video.videoHeight;
+      const cropWidth = adjustedWidth * video.videoWidth;
+      const cropHeight = adjustedHeight * video.videoHeight;
+      
+      // Create a new canvas for the cropped image with exact dimensions
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = cropWidth;
+      croppedCanvas.height = cropHeight;
+      const croppedContext = croppedCanvas.getContext('2d');
+      
+      // Draw only the scan area portion to the new canvas
+      croppedContext.drawImage(
+        canvas,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        cropWidth,
+        cropHeight
+      );
+      
+      // Convert to image data URL and set state
+      const croppedImageDataUrl = croppedCanvas.toDataURL('image/jpeg', 0.95);
+      setCapturedImage(croppedImageDataUrl);
       setIsCapturing(false);
       
       // Stop the camera stream after capturing
