@@ -96,7 +96,8 @@
 .joinButton {
   width: 325px;
   height: 50px;
-  padding: 0.8rem;
+  padding: 16px;
+  margin-top: 60px;
   background: #ffca28;
   color: #000;
   border: none;
@@ -124,11 +125,11 @@
   overflow-y: scroll;
   scrollbar-width: none;
   border-radius: 8px;
-  border: 2px solid #ccc;
 }
 
 .membersList {
   list-style: none;
+  border: 2px solid #ccc;
   padding: 0;
   margin: 0;
 }
