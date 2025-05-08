@@ -1,9 +1,45 @@
 .container {
-  background-color: #1c1b22;
-  height: 100%;
-  color: white;
-  padding: 2rem;
+  background-color: var(--bg-dark);
   min-height: 100vh;
+  max-width: 375px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  color: var(--text-white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 326px;
+  margin-top: 60px;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.groupIconWrapper{
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+}
+
+.backButton {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-white);
+  cursor: pointer;
 }
 
 .inviteCode {
@@ -19,8 +55,8 @@
 }
 
 .groupIcon {
-  width: 90px;
-  height: 90px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   margin: 1.5rem auto 0.3rem;
   display: block;
@@ -29,7 +65,7 @@
 
 .infoSection {
   width: 300px;
-  margin: 0 auto 1.5rem auto;
+  margin: 0 auto 10px auto;
 }
 
 .label {
@@ -38,7 +74,9 @@
 }
 
 .membersTitle {
+  font-size: 12px;
   margin-bottom: 5px;
+  margin: 0;
 }
 
 .membersListContainer {
@@ -97,15 +135,6 @@
   color: black;
   font-size: bolder;
   transition: all 0.3s ease;
-}
-
-.backButton {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #fff;
-  cursor: pointer;
-  padding: 0 1rem;
 }
 
 .backButton:hover {

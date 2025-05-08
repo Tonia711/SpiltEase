@@ -204,15 +204,15 @@ export default function GroupDetailPage() {
     setError(null);
 
     const membersToSave = editedMembers.map(m => {
-      const member = { 
+      const member = {
         userId: m.userId,
-        userName: m.userName 
+        userName: m.userName
       };
       if (m._id !== undefined) {
         member._id = m._id;
       }
       if (m.isHidden !== undefined) {
-        member.isHidden = m.isHidden; 
+        member.isHidden = m.isHidden;
       }
       return member;
     });
@@ -229,7 +229,7 @@ export default function GroupDetailPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       setGroup(data);
       setEditedGroupName("");
       setEditedStartDate("");
@@ -269,7 +269,7 @@ export default function GroupDetailPage() {
       )}
 
       <div className={styles.container}>
-        <div className={styles.groupHeader}>
+        <div className={styles.header}>
           <button type="button" className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
             {"<"}
           </button>
@@ -293,21 +293,22 @@ export default function GroupDetailPage() {
               />
             </div>
           </div>
-
-          {showCropper && rawImage && (
-            <CropperModal
-              imageSrc={rawImage}
-              onClose={() => setShowCropper(false)}
-              onCropDone={handleCroppedUpload}
-            />
-          )}
-
-          <div className={styles.inviteCode}>
-            Invite Code
-            <span className={styles.codeValue}>{group.joinCode}</span>
-            <Copy className={styles.copyIcon} onClick={handleCopy} />
-          </div>
         </div>
+
+        {showCropper && rawImage && (
+          <CropperModal
+            imageSrc={rawImage}
+            onClose={() => setShowCropper(false)}
+            onCropDone={handleCroppedUpload}
+          />
+        )}
+
+        <div className={styles.inviteCode}>
+          Invite Code
+          <span className={styles.codeValue}>{group.joinCode}</span>
+          <Copy className={styles.copyIcon} onClick={handleCopy} />
+        </div>
+
 
         <section className={styles.infoSection}>
           <label htmlFor="groupName" className={styles.label}>Group Name</label>
@@ -338,7 +339,7 @@ export default function GroupDetailPage() {
         </section>
 
         <section className={styles.membersSection}>
-          <h4 className={styles.membersTitle}>Members</h4>
+          <p className={styles.membersTitle}>Members</p>
           <div className={styles.membersListContainer}>
             <ul className={styles.membersList}>
               {(isEditing ? editedMembers : (group.members || [])).filter(m => !m.isHidden).map((member) => (
