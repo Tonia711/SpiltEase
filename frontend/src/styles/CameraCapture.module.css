@@ -54,10 +54,29 @@
 }
 
 .scanArea {
-  width: 80%;
-  height: 60%;
+  width: 60%; /* Reduced from 80% to ensure height doesn't overflow on most screens */
+  aspect-ratio: 3/5; /* Changed to 3:5 aspect ratio as requested */
   border: 2px dashed #fbc02d;
   position: relative;
+  max-height: 80vh; /* Prevent exceeding viewport height */
+}
+
+/* Responsive adjustments for different screen sizes */
+@media (max-height: 600px) {
+  .scanArea {
+    width: 45%; /* Even smaller width on very short screens to maintain 3:5 ratio without overflow */
+  }
+}
+
+@media (max-width: 500px) {
+  .scanArea {
+    width: 70%; /* Allow wider scan area on small screens */
+  }
+}
+
+/* Add a utility class for crop calculations */
+.hidden {
+  display: none;
 }
 
 .scannerCorner {
@@ -119,8 +138,10 @@
 }
 
 .previewImage {
-  max-width: 100%;
-  max-height: 100%;
+  height: 95%; 
+  width: auto; /* Maintain aspect ratio */
+  max-width: 100%; 
+  object-fit: contain; /* Ensure the image is displayed fully */
 }
 
 .actionButtons {
