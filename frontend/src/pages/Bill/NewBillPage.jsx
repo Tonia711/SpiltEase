@@ -56,14 +56,15 @@ export default function NewBillPage() {
     api
       .get(`/groups/${groupId}`)
       .then(({ data }) => {
-        // setGroup(data);
-        setMembers(data.members);
-        setPaidBy(data.members[0]?._id || ""); // 设置默认的 paidBy
+        const visibleMembers = data.members.filter((m) => m.isHidden === false);
+        setMembers(visibleMembers);
+        setPaidBy(visibleMembers[0]?._id || ""); // 设置默认的 paidBy
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
       });
   }, [groupId, BASE_URL]);
+  
 
 
   useEffect(() => {
