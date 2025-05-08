@@ -61,7 +61,7 @@ export default function BillDetailPage() {
     const handleCancelDelete = () => {
       setShowConfirm(false); // 取消删除
     };
-  
+   
     // console.log("BillinDetail", bill);
     
     return (

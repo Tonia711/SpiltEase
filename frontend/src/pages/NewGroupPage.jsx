@@ -106,83 +106,90 @@ export default function NewGroupPage() {
           <div className={styles.inputGroup}>
             <label>Members</label>
             <ul className={styles.membersList}>
-              {members.length > 0 ? (
-                members.map((member, index) => (
-                  <li key={index} className={styles.memberItem}>
-                    {member.userName} {member.isCreator ? "(You)" : "(Virtual)"}
-                    {!member.isCreator && (
-                      <button
-                        type="button"
-                        className={styles.deleteButton}
-                        onClick={() => handleRemoveMember(index)}
-                      >
-                        ✖
-                      </button>
-                    )}
-                  </li>
-                ))
+              {members.map((member, index) => (
+                <li key={index} className={styles.memberItem}>
+                  {member.userName} {member.isCreator ? "(You)" : "(Virtual)"}
+                  {!member.isCreator && (
+                    <button
+                      type="button"
+                      className={`${styles.iconBtn} ${styles.grayBtn}`}
+                      onClick={() => handleRemoveMember(index)}
+                    >
+                      ✖
+                    </button>
+                  )}
+                </li>
+              ))}
+
+              {isAddingMember ? (
+                <li className={styles.memberItem}>
+                  <input
+                    type="text"
+                    value={newMemberName}
+                    onChange={(e) => setNewMemberName(e.target.value)}
+                    placeholder="Enter member name"
+                    className={styles.memberInput}
+                    autoFocus
+                  />
+                  <div className={styles.inlineButtons}>
+                    <button
+                      type="button"
+                      className={`${styles.iconBtn} ${styles.grayBtn}`}
+                      onClick={() => {
+                        if (!newMemberName.trim()) return;
+                        setMembers([
+                          ...members,
+                          { userName: newMemberName.trim(), isVirtual: true },
+                        ]);
+                        setNewMemberName("");
+                        setIsAddingMember(false);
+                      }}
+                    >
+                      ✔
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.iconBtn} ${styles.grayBtn}`}
+                      onClick={() => {
+                        setIsAddingMember(false);
+                        setNewMemberName("");
+                      }}
+                    >
+                      ✖
+                    </button>
+                  </div>
+                </li>
               ) : (
-                <li className={styles.emptyItem}>No members yet</li>
+                <li>
+                  <button
+                    type="button"
+                    className={styles.addMemberButton}
+                    onClick={() => setIsAddingMember(true)}
+                  >
+                    Add another member
+                  </button>
+                </li>
               )}
             </ul>
-
-            {isAddingMember ? (
-              <div style={{ display: "flex", gap: "8px", marginTop: "0.8rem" }}>
-                <input
-                  type="text"
-                  value={newMemberName}
-                  onChange={(e) => setNewMemberName(e.target.value)}
-                  placeholder="Enter virtual member name"
-                  className={styles.memberInput}
-                />
-                <button
-                  type="button"
-                  className={styles.saveButton}
-                  onClick={() => {
-                    if (!newMemberName.trim()) return;
-                    setMembers([
-                      ...members,
-                      {
-                        userName: newMemberName.trim(),
-                        isVirtual: true,
-                      },
-                    ]);
-                    setNewMemberName("");
-                    setIsAddingMember(false);
-                  }}
-                >
-                  ✔
-                </button>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={() => {
-                    setIsAddingMember(false);
-                    setNewMemberName("");
-                  }}
-                >
-                  ✖
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className={styles.addMemberButton}
-                onClick={() => setIsAddingMember(true)}
-              >
-                Add another member
-              </button>
-            )}
           </div>
 
-          <button type="submit" className={styles.createButton}>
+          {/* <button type="submit" className={styles.createButton}>
             Create
-          </button>
+          </button> */}
 
           {success && (
             <div className={styles.success}>Group created successfully!</div>
           )}
         </form>
+        <div className={styles.footer}>
+          <button
+            type="submit"
+            form="createForm"
+            className={styles.createButton}
+          >
+            Create
+          </button>
+        </div>
       </div>
     </MobileFrame>
   );
