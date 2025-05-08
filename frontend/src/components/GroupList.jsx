@@ -59,9 +59,9 @@ const GroupList = () => {
         try {
             const res = await api.delete(`/groups/${groupToDelete}`, {
                 headers: {
-                  Authorization: `Bearer ${token}` 
+                    Authorization: `Bearer ${token}`
                 }
-              });
+            });
             setGroups(groups.filter(group => group._id !== groupToDelete));
             setSuccess('Group deleted successfully.');
 
@@ -97,13 +97,11 @@ const GroupList = () => {
                 groups.map(group => {
                     return (
                         <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}/expenses`)}>
-                            <div>
-                                <img
-                                    src={group.iconUrl ? `${GROUP_BASE}/${group.iconUrl}` : DEFAULT_ICON}
-                                    alt=""
-                                    className="group-icon"
-                                />
-                            </div>
+                            <img
+                                src={group.iconUrl ? `${GROUP_BASE}/${group.iconUrl}` : DEFAULT_ICON}
+                                alt=""
+                                className="group-icon"
+                            />
 
                             <div className="group-info">
                                 <div className="group-name">{group.groupName}</div>
