@@ -17,8 +17,17 @@ export const registerUser = async (req, res) => {
   try {
     const { userName, email, password, avatarId } = req.body;
 
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(409).json({ error: "Email already exists" });
+    const emailExists = await User.findOne({ email });
+    if (emailExists)
+      return res
+        .status(409)
+        .json({ field: "email", error: "Email already exists" });
+
+    const userNameExists = await User.findOne({ userName });
+    if (userNameExists)
+      return res
+        .status(409)
+        .json({ field: "userName", error: "Username already taken" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
