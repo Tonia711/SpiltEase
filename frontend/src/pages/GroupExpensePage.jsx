@@ -350,7 +350,7 @@ const fetchData = async () => {
             </>
           )
       ) : activeTab === "balance" ? (
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <div>
           <div className={styles.memberNameRow}>
             {owedToMe > 0 ? (
               <>
@@ -371,10 +371,10 @@ const fetchData = async () => {
                 </span>
               </>
             ) : (
-              <>
+              <div className={styles.rowLayout}>
                 <span className={styles.memberNameLeft}>No balances</span>
                 <span className={styles.memberNameRight}>$0.00</span>
-              </>
+              </div>
             )}
           </div>
              
@@ -391,51 +391,50 @@ const fetchData = async () => {
                     <li key={index}>
                         {/* 展开详情卡片 */}
                         {expandedBalanceId === b._id ? (
-                          <div className={styles.balanceDetailBox}>
+                          <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
                             <div className={styles.balanceLineTop}>
-                            {isIncoming
-                              ? `${other?.userName || "Someone"} owes ${currentUser.userName} (me)`
-                              : `${currentUser.userName} (me) owes ${other?.userName || "Someone"}`}
-
+                              <span className={styles.balanceTopText}>
+                                {isIncoming
+                                  ? `${other?.userName || "Someone"} owes ${currentUser.userName} (me)`
+                                  : `${currentUser.userName} (me) owes ${other?.userName || "Someone"}`}
+                              </span>
                               <button 
                                 className={styles.balanceCloseBtn} 
                                 onClick={() => setExpandedBalanceId(null)}
                               >
                                 x
                               </button>
-                            </div>  
+                            </div>
+
+                            <div className={styles.balanceLineBottom}>
+                              <p className={styles.balanceAmount}>${b.balance.toFixed(2)}</p>
+                              <button
+                                className={styles.markPaidText} 
+                                onClick={() => setConfirmMarkPaidId(b._id)}
+                              >
+                                Mark as paid
+                              </button> 
+                            </div>
                           
                             {/* ✅ 如果点击了 Mark as paid，就显示 Okay 和 Cancel */}
-                            {confirmMarkPaidId === b._id ? (
-                              <>
-                                <p style={{ fontSize: "0.85rem", color: "grey" }}>
+                            {confirmMarkPaidId === b._id && (
+                              <div className={styles.confirmRow}>
+                                <span className={styles.confirmText}>
                                   A transfer will be added to group expense.
-                                </p>
-                                <div className={styles.confirmActions}>
-                                  <button 
-                                    className={styles.okButton}
-                                    onClick={() => handleConfirmMarkAsPaid(b)}
-                                  >
-                                    Okay
-                                  </button>
-                                  <button
-                                    className={styles.cancelButton}
-                                    onClick={() => setConfirmMarkPaidId(null)}
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </>
-                            ) : (
-                              <div className={styles.balanceLineBottom}>
-                                <strong>${b.balance.toFixed(2)}</strong>
-                                <button
-                                  className={styles.markPaidText} 
-                                  onClick={() => setConfirmMarkPaidId(b._id)}
+                                </span>
+                                <button 
+                                  className={styles.okButton}
+                                  onClick={() => handleConfirmMarkAsPaid(b)}
                                 >
-                                  Mark as paid
-                                </button> 
-                              </div>
+                                  Okay
+                                </button>
+                                <button
+                                  className={styles.cancelButton}
+                                  onClick={() => setConfirmMarkPaidId(null)}
+                                >
+                                  Cancel
+                                </button>
+                              </div>  
                             )}
                           </div>
                         ) : (
@@ -506,11 +505,13 @@ const fetchData = async () => {
                         return (
                           <li key={index}>
                             {expandedBalanceId === b._id ? (
-                              <div className={styles.balanceDetailBox}>
+                              <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
                                 <div className={styles.balanceLineTop}>
-                                  {isOwed
-                                    ? `${otherUser.userName} owes ${member.userName}`
-                                    : `${member.userName} owes ${otherUser.userName}`}
+                                  <span>
+                                    {isOwed
+                                      ? `${otherUser.userName} owes ${member.userName}`
+                                      : `${member.userName} owes ${otherUser.userName}`}
+                                  </span>
                                   <button
                                     className={styles.balanceCloseBtn}
                                     onClick={() => setExpandedBalanceId(null)}
@@ -519,37 +520,35 @@ const fetchData = async () => {
                                   </button>
                                 </div>
 
+                                <div className={styles.balanceLineBottom}>
+                                  <p className={styles.balanceAmount}>${b.balance.toFixed(2)}</p>
+                                  <button
+                                    className={styles.markPaidText}
+                                    onClick={() => setConfirmMarkPaidId(b._id)}
+                                  >
+                                    Mark as paid
+                                  </button>
+                                </div>
+
                                 {/* 新增确认逻辑 */}
-                                {confirmMarkPaidId === b._id ? (
-                                  <>
-                                    <p style={{ fontSize: "0.85rem", color: "grey" }}>
+                                {confirmMarkPaidId === b._id && (
+                                  <div className={styles.confirmRow}>
+                                    <span className={styles.confirmText}>
                                       A transfer will be added to group expense.
-                                    </p>
-                                    <div className={styles.confirmActions}>
-                                      <button 
-                                        className={styles.okButton}
-                                        onClick={() => handleConfirmMarkAsPaid(b)}
-                                      >
-                                        Okay
-                                      </button>
-                                      <button
-                                        className={styles.cancelButton}
-                                        onClick={() => setConfirmMarkPaidId(null)}
-                                      >
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <div className={styles.balanceLineBottom}>
-                                    <strong>${b.balance.toFixed(2)}</strong>
-                                    <button
-                                      className={styles.markPaidText}
-                                      onClick={() => setConfirmMarkPaidId(b._id)}
+                                    </span>
+                                    <button 
+                                      className={styles.okButton}
+                                      onClick={() => handleConfirmMarkAsPaid(b)}
                                     >
-                                      Mark as paid
+                                      Okay
                                     </button>
-                                  </div>
+                                    <button
+                                      className={styles.cancelButton}
+                                      onClick={() => setConfirmMarkPaidId(null)}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>      
                                 )}
                               </div>
                             ) : (
