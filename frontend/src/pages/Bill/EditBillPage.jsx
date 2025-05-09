@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../../styles/Bill/EditBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
- 
+
 
 export default function EditBillPage() {
   const { groupId, billId } = useParams();  // 获取 groupId
@@ -11,7 +11,7 @@ export default function EditBillPage() {
 
 
   // 界面展示的数据
-  const [bill, setBill] = useState();  
+  const [bill, setBill] = useState();
   const [labels, setLabels] = useState([]);  // labels
   // const [group, setGroup] = useState(null); //group 数据
   const [members, setMembers] = useState(""); //下拉列表，成员列表
@@ -44,7 +44,7 @@ export default function EditBillPage() {
       console.error("Failed to fetch labels:", err);
     });
   }, []);
-  
+
 
   // get group members 通过获取group的数据来获取成员
   // paidBy 下拉列表，成员列表
@@ -63,14 +63,14 @@ export default function EditBillPage() {
         console.error("Failed to fetch group data:", err);
       });
   }, [groupId, BASE_URL]);
-  
+
 
   useEffect(() => {
     if (members && members.length > 0) {
       setSelectedMemberIds(members.map(m => m._id));
     }
   }, [members]);
-  
+
 
 
   // 通过获取bill的数据来获取界面显示的数据
@@ -105,25 +105,25 @@ export default function EditBillPage() {
       });
   }, [groupId, BASE_URL]);
 
-  
+
   //确保 paidBy（付款人）在成员列表中可选，哪怕他不在当前 group.members 里
   useEffect(() => {
     if (members && members.length > 0 && bill) {
       setPaidBy(bill.paidBy);
-  
+
       const exist = members.some(m => m._id === bill.paidBy);
       if (!exist) {
         setMembers(prev => [...prev, { _id: bill.paidBy, userName: "Unknown User" }]);
       }
     }
   }, [members, bill]);
-  
 
-  
+
+
   //通过输入的expense, refunds来计算每个人分的钱
   useEffect(() => {
     if (!isEditing) return;
-  
+
     const total = parseFloat(expenses);
     const refundTotal = parseFloat(refunds || 0);
     if (
@@ -131,7 +131,7 @@ export default function EditBillPage() {
       !selectedMemberIds || selectedMemberIds.length === 0 ||
       isNaN(total)
     ) return;
-  
+
     const filtered = members.filter(m => selectedMemberIds.includes(m._id));
     const count = filtered.length;
     if (count === 0) {
@@ -140,29 +140,29 @@ export default function EditBillPage() {
       setMemberTotalExpenses([]);
       return;
     }
-  
+
     //大冤种
     const rawExpense = parseFloat((total / count).toFixed(2));
     const avgRefund = parseFloat((refundTotal / count).toFixed(2));
-  
+
     const expenseDistributed = parseFloat((rawExpense * count).toFixed(2));
     const refundDistributed = parseFloat((avgRefund * count).toFixed(2));
     const expenseLeftover = parseFloat((total - expenseDistributed).toFixed(2));
     const refundLeftover = parseFloat((refundTotal - refundDistributed).toFixed(2));
-  
+
     const expenseRandomIndex = expenseLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
     const refundRandomIndex = refundLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
-  
+
     const expensesArray = filtered.map((m, i) => ({
       memberId: m._id,
       amount: i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense
     }));
-  
+
     const refundsArray = filtered.map((m, i) => ({
       memberId: m._id,
       refund: i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund
     }));
-  
+
     const totalArray = filtered.map((m, i) => {
       const expense = i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense;
       const refund = i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund;
@@ -171,14 +171,14 @@ export default function EditBillPage() {
         amount: parseFloat((expense - refund).toFixed(2))
       };
     });
-  
+
     if (splitMethod === "Equally") {
       setMemberExpenses(expensesArray);
       setMemberRefunds(refundsArray);
       setMemberTotalExpenses(totalArray);
-    } 
+    }
   }, [isEditing, expenses, refunds, splitMethod, members, selectedMemberIds]);
-  
+
 
 
 
@@ -186,7 +186,7 @@ export default function EditBillPage() {
   const handleSaveBill = async (e) => {
     e.preventDefault();
     setError("");
-  
+
     if (!selectedLabelId || !note || !expenses || !paidBy || !paidDate || memberTotalExpenses.length === 0) {
       setError("Please fill in all required fields.");
       return;
@@ -204,18 +204,19 @@ export default function EditBillPage() {
       members: memberTotalExpenses.map(m => ({
         memberId: m.memberId,
         expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
-        refund: memberRefunds == 0? 0 : memberRefunds.find(r => r.memberId === m.memberId)?.refund
+        refund: memberRefunds == 0 ? 0 : memberRefunds.find(r => r.memberId === m.memberId)?.refund
       }))
     };
-    
-  
+
+
     try {
       setBill(null);
       await api.put(`/bills/${groupId}/bill/${billId}`, updatedBill);
       await api.post(`/balances/group/${groupId}/recalculate`);
-      navigate(`/groups/${groupId}/expenses/${billId}`, { 
+      navigate(`/groups/${groupId}/expenses/${billId}`, {
         replace: true,
-        state: { needRefreshBalance: true } });
+        state: { needRefreshBalance: true }
+      });
     } catch (err) {
       console.error("Failed to update bill:", err);
       setError("Failed to update bill. Please try again.");
@@ -227,34 +228,34 @@ export default function EditBillPage() {
   function handleChangeCheckBox(e, m) {
     const checked = e.target.checked;
     let newSelected;
-    
+
     if (checked) {
       newSelected = [...selectedMemberIds, m._id];
     } else {
       newSelected = selectedMemberIds.filter(id => id !== m._id);
     }
     setSelectedMemberIds(newSelected);
-  
+
     if (splitMethod === "Equally") {
       const total = parseFloat(expenses) || 0;
       const refundTotal = parseFloat(refunds) || 0;
       const count = newSelected.length;
-  
+
       if (count > 0) {
         const rawExpense = parseFloat((total / count).toFixed(2));
         const avgRefund = parseFloat((refundTotal / count).toFixed(2));
         const finalAmount = parseFloat((rawExpense - avgRefund).toFixed(2));
-  
+
         setMemberExpenses(newSelected.map(id => ({
           memberId: id,
           amount: rawExpense
         })));
-  
+
         setMemberRefunds(newSelected.map(id => ({
           memberId: id,
           refund: avgRefund
         })));
-  
+
         setMemberTotalExpenses(newSelected.map(id => ({
           memberId: id,
           amount: finalAmount
@@ -271,7 +272,7 @@ export default function EditBillPage() {
       }
     }
   }
-  
+
 
   //As Amounts修改金额
   function handleChangeAmount(e, m) {
@@ -291,9 +292,9 @@ export default function EditBillPage() {
       } else {
         return [...prev, { memberId: m._id, amount: newAmount }];
       }
-    });    
+    });
     setMemberRefunds([]);
-  
+
     // // 同时更新 refund
     // const newSelected = [...selectedMemberIds];
     // const refundTotal = parseFloat(refunds) || 0;
@@ -304,7 +305,7 @@ export default function EditBillPage() {
     //   refund: avgRefund
     // })));
   }
-  
+
 
 
 
@@ -312,26 +313,28 @@ export default function EditBillPage() {
     <MobileFrame>
       <form className={styles.form} onSubmit={handleSaveBill}>
         <h2 className={styles.header}>
-        <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)}>
+          <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)}>
             {"<"}
-        </span>
-        <p >Edit Expense</p>
+          </span>
+          <div className={styles.headerTitle}>
+            <img
+              src={`${IMG_URL}/${labels.find(label => label._id === selectedLabelId)?.iconUrl}`}
+              alt={labels.find(label => label._id === selectedLabelId)?.type || "label icon"}
+              className={styles.labelIcon}
+            />
+            <p >Edit Expense</p>
+          </div>
 
-        <span>📷</span>
+          {/* <span>📷</span> */}
+          <img src="/images/camera.png" alt="camera icon" className={styles.cameraIcon} />
         </h2>
 
         <div className={styles.rowName}>
-            <p>Category</p>
-            <p>Note</p>
+          <p>Category</p>
+          <p>Note</p>
         </div>
 
         <div className={styles.row1}>
-          <img
-            src={`${IMG_URL}/${labels.find(label => label._id === selectedLabelId)?.iconUrl}`}
-            alt={labels.find(label => label._id === selectedLabelId)?.type || "label icon"}
-            className={styles.labelIcon}
-          />
-
           <select
             value={selectedLabelId}
             onChange={(e) => setSelectedLabelId(e.target.value)}
@@ -355,8 +358,8 @@ export default function EditBillPage() {
 
 
         <div className={styles.rowName}>
-            <p>Paid</p>
-            <p>Refund</p>
+          <p>Paid Amount</p>
+          <p>Refund</p>
         </div>
         <div className={styles.row2}>
           <input
@@ -364,11 +367,12 @@ export default function EditBillPage() {
             placeholder="$ 0.00"
             value={expenses}
             onChange={(e) => {
-                setExpenses(e.target.value);
-                setIsEditing(true);}}
+              setExpenses(e.target.value);
+              setIsEditing(true);
+            }}
             className={styles.inputHalf}
           />
-         
+
           <input
             type="number"
             placeholder="$ 0.00"
@@ -382,8 +386,8 @@ export default function EditBillPage() {
         </div>
 
         <div className={styles.rowName}>
-            <p>Paid By</p>
-            <p>Paid Date</p>
+          <p>Paid By</p>
+          <p>Paid Date</p>
         </div>
         <div className={styles.row3}>
           <select
@@ -406,57 +410,57 @@ export default function EditBillPage() {
           />
         </div>
 
-        <div className={styles.rowName}>
-        <label htmlFor="splitMethod" >Split Method</label>
-            <select
-                id="splitMethod"
-                value={splitMethod}
-                onChange={(e) => {
-                  setSplitMethod(e.target.value);
-                  setIsEditing(true);
-                }}
-                className={styles.select}
-            >
-                <option value="Equally">Equally</option>
-                <option value="As Amounts">As Amounts</option>
-            </select>
+        <div className={styles.row4}>
+          <label className={styles.rowName} htmlFor="splitMethod" >Split Method</label>
+          <select
+            id="splitMethod"
+            value={splitMethod}
+            onChange={(e) => {
+              setSplitMethod(e.target.value);
+              setIsEditing(true);
+            }}
+            className={styles.splitMethodSelect}
+          >
+            <option value="Equally">Equally</option>
+            <option value="As Amounts">As Amounts</option>
+          </select>
         </div>
 
         <div className={styles.splitBox}>
-        <ul className={styles.memberList}>
-          {(members || []).map((m, i) => {
-            const checked = selectedMemberIds.includes(m._id);
-            const current = memberTotalExpenses.find(me => me.memberId === m._id) || { amount: 0 };
+          <ul className={styles.memberList}>
+            {(members || []).map((m, i) => {
+              const checked = selectedMemberIds.includes(m._id);
+              const current = memberTotalExpenses.find(me => me.memberId === m._id) || { amount: 0 };
 
-            return (
-              <li key={m._id} className={styles.memberListItem}>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => {handleChangeCheckBox(e, m)}}
-                  className={styles.memberIcon}
-                />
-                <div className={styles.memberItem}>
-                  <div className={styles.memberName}>{m.userName}</div>
+              return (
+                <li key={m._id} className={styles.memberListItem}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => { handleChangeCheckBox(e, m) }}
+                    className={styles.memberIcon}
+                  />
+                  <div className={styles.memberItem}>
+                    <div className={styles.memberName}>{m.userName}</div>
 
-                  <div>
-                    {splitMethod === "As Amounts" ? (
-                      <input
-                        type="number"
-                        value={current.amount}
-                        onChange={(e) => {handleChangeAmount(e, m)}}
-                        className={styles.inputAmount}
-                        disabled={!checked}
-                      />
-                    ) : (
-                      <span>{current.amount.toFixed(2)}</span>
-                    )}
+                    <div>
+                      {splitMethod === "As Amounts" ? (
+                        <input
+                          type="number"
+                          value={current.amount}
+                          onChange={(e) => { handleChangeAmount(e, m) }}
+                          className={styles.inputAmount}
+                          disabled={!checked}
+                        />
+                      ) : (
+                        <span>{current.amount.toFixed(2)}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         <div className={styles.rowSummary}>
