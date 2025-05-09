@@ -55,8 +55,6 @@ export const markBalanceAsFinished = async (req, res) => {
       }
     );
 
-    console.log("✅ 更新结果：", result);
-
     if (!result) {
       return res.status(404).json({ message: "Balance item not found" });
     }
@@ -70,9 +68,6 @@ export const markBalanceAsFinished = async (req, res) => {
 
 // POST /api/balances/group/:groupId/recalculate
 export const recalculateGroupBalance = async (req, res) => {
-  console.log("recalculateGroupBalance called with groupId:", req.params.groupId);
-
-
   const { groupId } = req.params;
 
   try {
@@ -80,19 +75,14 @@ export const recalculateGroupBalance = async (req, res) => {
       return res.status(400).json({ error: "Invalid groupId format" });
     }
 
-  
     // 查询该 group 的所有账单
     const billDocs = await Bill.find({ 
       groupId: new mongoose.Types.ObjectId(groupId)
     }).lean(); 
 
     const allGroupBills = billDocs.flatMap(doc => doc.groupBills);
-
-    console.log("🔍 groupBills for recalculation:", JSON.stringify(allGroupBills, null, 2));
-
     const filteredBills = allGroupBills.filter(b => b.labelId?.toString() !== "000000000000000000000007");
 
-    
     const inputData = [
       {
         groupId,
@@ -107,14 +97,9 @@ export const recalculateGroupBalance = async (req, res) => {
       }
     ];
 
-    console.log("🧾 Input data to getMinimalTransfers:", JSON.stringify(inputData, null, 2));
-
     // 重新计算最简转账
     const result = getMinimalTransfers(inputData);
     const groupResult = result.find(g => g.groupId.toString() === groupId.toString());
-
-    console.log("📊 Result of getMinimalTransfers:", JSON.stringify(result, null, 2));
-    console.log("📌 groupResult:", JSON.stringify(groupResult, null, 2));
 
     // 更新数据库中的 balance（覆盖）
     const updated = await Balance.findOneAndUpdate(
@@ -129,4 +114,3 @@ export const recalculateGroupBalance = async (req, res) => {
     res.status(500).json({ error: "Server error during balance recalculation" });
   }
 };
-

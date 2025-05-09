@@ -27,7 +27,6 @@ export default function GroupExpensePage() {
 
   useEffect(() => {
     if (location.state?.needRefreshBalance) {
-      console.log("Refresh triggered"); //
       fetchData();
       // 清除 state，避免重复触发
       navigate(location.pathname, { replace: true, state: {} });
@@ -45,13 +44,19 @@ export default function GroupExpensePage() {
   const handleConfirmMarkAsPaid = async (balanceItem) => {
     try {
       const { fromMemberId, toMemberId, balance: amount } = balanceItem;
+      
+      const fromUser = group.members.find(m => m._id?.toString() === fromMemberId)?.userName || "Someone";
+      const toUser = group.members.find(m => m._id?.toString() === toMemberId)?.userName || "Someone";
+
+      const fromDisplay = fromMemberId === myGroupMemberObjectId ? "You" : fromUser;
+      const toDisplay = toMemberId === myGroupMemberObjectId ? "You" : toUser;
   
       // 构造一个转账账单
       const newBill = {
         groupId,
         labelId: "000000000000000000000007",
         date: new Date().toISOString(),
-        note: "Transfer payment",
+        note: `${fromDisplay} paid ${toDisplay}`,
         paidBy: fromMemberId,
         expenses: amount,
         refunds: 0,
@@ -66,18 +71,13 @@ export default function GroupExpensePage() {
       };
   
       await api.post("/bills", newBill);
-  
-      console.log("Marking paid", {
-        from: fromMemberId,
-        to: toMemberId,
-        groupId
-      });
       
       // TODO: 更新对应 balance 的 isFinished 为 true（你需要提供一个接口）
       await api.put(`/balances/group/${groupId}/markPaid`, {
         fromMemberId,
         toMemberId,
       });
+      await fetchData();
   
       // 刷新 balance
       const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
@@ -110,6 +110,8 @@ export default function GroupExpensePage() {
 
     if (groupBills && groupBills.length > 0) {
       groupBills.forEach(bill => {
+        if (bill.label?._id?.toString() === "000000000000000000000007") return;
+
         totalExpenses += (bill.expenses || 0) - (bill.refunds || 0);
     
         if (bill.members && bill.members.length > 0) {
@@ -154,10 +156,8 @@ export default function GroupExpensePage() {
 }, [balance, myUserId, groupBills, myGroupMemberObjectId]);
 
 const refreshBalance = async () => {
-  console.log("refreshBalance() called");
   try {
     const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
-    console.log("Balance refreshed:", balanceData);
     setBalance(balanceData.groupBalances ?? []);
   } catch (err) {
     console.error("Failed to refresh balance:", err);
@@ -171,23 +171,17 @@ const fetchData = async () => {
       api.get(`/groups/${groupId}`),
       api.get(`/bills/group/${groupId}`),
     ]);
-    const filteredBills = billsData.filter(
-      (bill) => bill.label?._id?.toString() !== "000000000000000000000007"
-    );
-    setGroup(groupData);
-    setGroupBills(filteredBills);
 
-    console.log("Fetched bills:", billsData);
-    console.log("Current groupId:", groupId);
-    console.log("My current user ID:", currentUser?._id);
+    setGroup(groupData);
+    setGroupBills(billsData);
 
     await refreshBalance();
 
-    filteredBills.sort((a, b) => new Date(b.date) - new Date(a.date));
+    billsData.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     // 按日期分类账单
     const grouped = {};
-    filteredBills
+    billsData
       .forEach((bill) => {
         const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
         if (!grouped[dateKey]) grouped[dateKey] = [];
@@ -219,17 +213,12 @@ const fetchData = async () => {
     async function fetchBalance() {
       try {
         const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
-        console.log("Fetched balanceData:", balanceData);
-
-        console.log("Balance data:", balanceData);
-        console.log("Group balances:", balanceData.groupBalances);
 
         setBalance(balanceData.groupBalances ?? []);
       } catch (err) {
         console.error("Failed to fetch balance:", err);
         setBalance([]);
       }
-
     }
 
     if (activeTab === "balance") {
@@ -268,12 +257,6 @@ const fetchData = async () => {
                 onClick={handleGroupClick}
               />
               <div className={styles.groupName}>{group?.groupName}</div>
-              {/* <div
-                className="group-id"
-                style={{ fontSize: "0.7rem", color: "#888" }}
-              >
-                ID: {group._id}
-              </div> */}
             </div>
           </div>
 
@@ -393,7 +376,7 @@ const fetchData = async () => {
                   
                   return (
                     <li key={index}>
-                        {/* ✅ 展开详情卡片 */}
+                        {/* 展开详情卡片 */}
                         {expandedBalanceId === b._id ? (
                           <div className={styles.balanceDetailBox}>
                             <div className={styles.balanceLineTop}>
@@ -409,7 +392,6 @@ const fetchData = async () => {
                               </button>
                             </div>  
                           
-
                             {/* ✅ 如果点击了 Mark as paid，就显示 Okay 和 Cancel */}
                             {confirmMarkPaidId === b._id ? (
                               <>
@@ -439,13 +421,12 @@ const fetchData = async () => {
                                   onClick={() => setConfirmMarkPaidId(b._id)}
                                 >
                                   Mark as paid
-                                </button>
-                                
+                                </button> 
                               </div>
                             )}
                           </div>
                         ) : (
-                          // 🔁 默认显示项
+                          // 默认显示项
                           <div
                             className={styles.memberItem}
                             onClick={() =>
@@ -523,7 +504,7 @@ const fetchData = async () => {
                                   </button>
                                 </div>
 
-                                {/* ✅ 新增确认逻辑 */}
+                                {/* 新增确认逻辑 */}
                                 {confirmMarkPaidId === b._id ? (
                                   <>
                                     <p style={{ fontSize: "0.85rem", color: "grey" }}>
@@ -591,12 +572,10 @@ const fetchData = async () => {
         )}
       </div>
 
-    
           <div className={styles.fabContainer}>
             <button className={styles.fab} onClick={handleAddExpenseClick}>
               +
             </button>
-            {/* <div className={styles.fabLabel}>Add Expense</div> */}
           </div>
         </div>
       </MobileFrame>
