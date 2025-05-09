@@ -274,9 +274,9 @@ export default function GroupDetailPage() {
 
       <div className={styles.container}>
         <div className={styles.header}>
-          <button type="button" className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
+          <span type="button" className={styles.backButton} onClick={() => navigate(`/groups/${group._id}/expenses`)}>
             {"<"}
-          </button>
+          </span>
 
           <div className={styles.groupIconWrapper}>
             <div className={styles.groupIconContainer}>
