@@ -14,9 +14,8 @@ const GroupList = () => {
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [groupToDelete, setGroupToDelete] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState(null);
 
     const { token } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -51,26 +50,25 @@ const GroupList = () => {
     }, [token]);
 
     const handleDeleteClick = (id) => {
-        setGroupToDelete(id);
-        setShowConfirm(true);
+        setConfirmDeleteGroupId(id);
     };
 
-    const confirmDelete = async () => {
+    const confirmDelete = async (id) => {
+        setConfirmDeleteGroupId(null);
+
         try {
-            const res = await api.delete(`/groups/${groupToDelete}`, {
+            await api.delete(`/groups/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            setGroups(groups.filter(group => group._id !== groupToDelete));
+            setGroups(groups.filter(group => group._id !== id));
             setSuccess('Group deleted successfully.');
-
             setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
             setError('Failed to delete group.');
+            setTimeout(() => setError(null), 3000);
         } finally {
-            setShowConfirm(false);
-            setGroupToDelete(null);
         }
     };
 
@@ -96,44 +94,44 @@ const GroupList = () => {
             {groups.length > 0 ? (
                 groups.map(group => {
                     return (
-                        <div key={group._id} className="group-item" onClick={() => navigate(`/groups/${group._id}/expenses`)}>
-                            <img
-                                src={group.iconUrl ? `${GROUP_BASE}/${group.iconUrl}` : DEFAULT_ICON}
-                                alt=""
-                                className="group-icon"
-                            />
+                        <div key={group._id}>
+                            <div className="group-item" onClick={() => navigate(`/groups/${group._id}/expenses`)}>
+                                <img
+                                    src={group.iconUrl ? `${GROUP_BASE}/${group.iconUrl}` : DEFAULT_ICON}
+                                    alt=""
+                                    className="group-icon"
+                                />
 
-                            <div className="group-info">
-                                <div className="group-name">{group.groupName}</div>
-                                <div className="group-date">
-                                    {group.startDate ? format(new Date(group.startDate), 'd MMM yyyy') : 'No date'}
+                                <div className="group-info">
+                                    <div className="group-name">{group.groupName}</div>
+                                    <div className="group-date">
+                                        {group.startDate ? format(new Date(group.startDate), 'd MMM yyyy') : 'No date'}
+                                    </div>
                                 </div>
+                                <button
+                                    className="delete-btn"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        handleDeleteClick(group._id)
+                                    }}
+                                > X
+                                </button>
                             </div>
-                            <button
-                                className="delete-btn"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleDeleteClick(group._id)
-                                }}
-                            > X
-                            </button>
+
+                            {confirmDeleteGroupId === group._id && (
+                                <div className="group-card confirm-card">
+                                    <div className="confirm-text">Are you sure you want to leave this group?</div>
+                                    <div className="confirm-buttons">
+                                        <button className="confirm-btn yes" onClick={() => confirmDelete(group._id)}>Delete</button>
+                                        <button className="confirm-btn no" onClick={() => setConfirmDeleteGroupId(null)}>Cancel</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     );
                 })
             ) : (
                 <div>No groups found.</div>
-            )}
-
-            {showConfirm && (
-                <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
-                        <p>Are you sure you want to delete this group?</p>
-                        <div className="modal-buttons">
-                            <button onClick={confirmDelete} className="confirm">Yes</button>
-                            <button onClick={() => setShowConfirm(false)} className="cancel">Cancel</button>
-                        </div>
-                    </div>
-                </div>
             )}
         </div>
     );

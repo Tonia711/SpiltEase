@@ -2,8 +2,12 @@
 .container {
   padding: 0 2rem;
   color: white;
-  background: #1c1b22;
+  background: #312D3C;
   min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .section {
@@ -24,6 +28,12 @@
   margin: 3rem auto 2rem auto;
 }
 
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .label {
   display: block;
   margin: 0;
@@ -32,7 +42,6 @@
 .labelRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
 .inlineError {
@@ -61,6 +70,7 @@
   display: block;
   width: 325px;
   box-sizing: border-box;
+  outline: none;
 }
 
 @keyframes shake {
@@ -96,7 +106,8 @@
 .joinButton {
   width: 325px;
   height: 50px;
-  padding: 0.8rem;
+  padding: 16px;
+  margin-top: 20px;
   background: #ffca28;
   color: #000;
   border: none;
@@ -113,6 +124,14 @@
   cursor: not-allowed;
 }
 
+.rejoinContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
 .error {
   color: #f66;
   text-align: center;
@@ -124,11 +143,11 @@
   overflow-y: scroll;
   scrollbar-width: none;
   border-radius: 8px;
-  border: 2px solid #ccc;
 }
 
 .membersList {
   list-style: none;
+  border: 2px solid #ccc;
   padding: 0;
   margin: 0;
 }
