@@ -60,7 +60,7 @@ export default function NewGroupPage() {
       const response = await api.post("/groups/create", payload);
       setSuccess(true);
       setTimeout(() => {
-        navigate("/groups");
+        navigate("/");
       }, 1000);
     } catch (error) {
       console.error("Failed to create group:", error);
