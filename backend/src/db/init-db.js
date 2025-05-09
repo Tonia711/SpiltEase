@@ -6,7 +6,6 @@ const { Types } = mongoose;
 
 // 引入数据
 import avatars from "../data/avatars.js";
-import balances from "../data/balances.js";
 import bills from "../data/bills.js";
 import groups from "../data/groups.js";
 import icons from "../data/icons.js";

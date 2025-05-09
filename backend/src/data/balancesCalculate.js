@@ -263,14 +263,10 @@ function getMinimalTransfers(bills) {
     const balances = [];
   
     for (const group of bills) {
-        console.log("📦 group.groupId:", group.groupId);
-        console.log("📄 group.groupBills.length:", group.groupBills?.length);
-      
         const netBalance = {};
 
       // Step 1: 计算每个成员的净资产（支付 - 消费，不考虑 refund）
       for (const bill of group.groupBills) {
-        console.log("🧾 Processing bill:", JSON.stringify(bill, null, 2));
 
         const paidBy = String(bill.paidBy);
         const amountPaid = bill.expenses; // 忽略 refunds
@@ -283,8 +279,6 @@ function getMinimalTransfers(bills) {
             netBalance[memberId] = (netBalance[memberId] || 0) - expense;
             }
       }
-  
-      console.log("✅ Final netBalance per group:", JSON.stringify(netBalance, null, 2));
 
       // Step 2: 分成 creditors 和 debtors
       const creditors = [];
@@ -332,9 +326,5 @@ function getMinimalTransfers(bills) {
   
     return balances;
   }
-  
-  
-// const result = getMinimalTransfers(bills);
-// console.log(JSON.stringify(result, null, 2));
 
 export default getMinimalTransfers;
