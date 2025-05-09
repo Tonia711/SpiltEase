@@ -5,7 +5,7 @@
   padding-top: 16px;
   height: 330px;
   overflow: scroll;
-  scrollbar-width: none; 
+  scrollbar-width: none;
 }
 
 .group-item {
@@ -23,10 +23,10 @@
 }
 
 .delete-btn {
-  position:absolute;
+  position: absolute;
   top: 25%;
   right: 3%;
-  background-color:rgba(255, 255, 255, 0);
+  background-color: rgba(255, 255, 255, 0);
   border: none;
   color: white;
   width: 24px;
@@ -41,7 +41,7 @@
 }
 
 .delete-btn:hover {
-  color: #EF5780;
+  color: #ef5780;
 }
 
 .group-icon {
@@ -68,7 +68,7 @@
 
 .group-name {
   font-size: 14px;
-  font-weight:bold;
+  font-weight: bold;
   color: #fff;
 }
 
@@ -104,7 +104,7 @@
 }
 
 .confirm-btn.yes {
-  background-color: #EF5780;
+  background-color: #ef5780;
   color: white;
 }
 
@@ -165,4 +165,23 @@
   border-radius: 50%;
   margin: 1.5rem auto 0.3rem;
   display: block;
+}
+
+.welcome {
+  text-align: center;
+  margin-top: 3rem;
+  color: #d1d5db;
+  cursor: default;
+}
+
+.welcome-title {
+  color: var(--yellow);
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.welcome-text {
+  color: #ffffff;
+  font-size: 16px;
 }
