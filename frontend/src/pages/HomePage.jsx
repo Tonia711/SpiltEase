@@ -54,10 +54,26 @@ export default function HomePage() {
         {showOptions && (
           <div className={styles.options}>
             <button onClick={() => navigate("/create-group")}>
-              ➕ Create Group
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3.5" stroke="currentColor" style={{
+                width: '1em',
+                height: '1em',
+                verticalAlign: 'middle',
+                marginRight: '0.25em',
+              }}>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Create Group
             </button>
             <button onClick={() => navigate("/groups/join")}>
-              🔍 Join Group
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3.5} stroke="currentColor" style={{
+                width: '1em',
+                height: '1em',
+                verticalAlign: 'middle',
+                marginRight: '0.25em',
+              }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              Join Group
             </button>
           </div>
         )}
