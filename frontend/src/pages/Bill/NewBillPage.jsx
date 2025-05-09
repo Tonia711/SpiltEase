@@ -354,7 +354,7 @@ export default function NewBillPage() {
 
 
           <div className={styles.rowName}>
-            <p>Paid</p>
+            <p>Paid Amount</p>
             <p>Refund</p>
           </div>
           <div className={styles.row2}>
@@ -496,6 +496,6 @@ export default function NewBillPage() {
           </button>
         </form>
       </div>
-    </MobileFrame>
+    </MobileFrame> 
   );
 }

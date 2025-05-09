@@ -246,9 +246,9 @@ const fetchData = async () => {
       <MobileFrame>
         <div className={styles.container}>
           <div className={styles.header}>
-            <button className={styles.backButton} onClick={() => navigate("/")}>
+            <span className={styles.backButton} onClick={() => navigate("/")}>
               {"<"}
-            </button>
+            </span>
             <div>
               <img
                 src={groupIconUrl}
