@@ -342,7 +342,7 @@ const fetchData = async () => {
                           <div className={styles.billContent}>
                             <div className={styles.billTextRow}>
                               <span className={styles.billNote}>{bill.note}</span>
-                              <span className={styles.billAmount}>${bill.expenses.toFixed(2)}</span>
+                              <span className={styles.billAmount}>${(bill.expenses - bill.refunds).toFixed(2)}</span>
                             </div>
                           </div>
                         </li>

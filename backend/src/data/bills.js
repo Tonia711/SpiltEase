@@ -303,23 +303,6 @@ const bills = [
                         refund: 25
                     }
                 ]
-            },
-            {
-                id: 3,
-                labelId: 7,
-                date: new Date("2025-03-03"),
-                note: "transfer1",
-                paidBy: 3,
-                expenses: 400,
-                refunds: 0,
-                splitWay: "",
-                members: [
-                    {
-                        memberId: 1,
-                        expense: 400,
-                        refund: 0
-                    }
-                ]
             }
         ]
     }
