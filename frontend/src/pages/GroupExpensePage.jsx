@@ -242,6 +242,19 @@ const fetchData = async () => {
     ? (group.iconUrl.startsWith("http") ? group.iconUrl : `${BASE_URL}/${group.iconUrl}`)
     : DEFAULT_ICON;
 
+    const filteredGroupMembers = group?.members?.filter(member => {
+      const memberId = member._id?.toString();
+      if (!memberId || memberId === myGroupMemberObjectId) return false;
+    
+      const unfinished = balance.filter(b => !b.isFinished);
+      const incoming = unfinished.filter(b => b.toMemberId?.toString() === memberId);
+      const outgoing = unfinished.filter(b => b.fromMemberId?.toString() === memberId);
+      const totalOwedTo = incoming.reduce((sum, b) => sum + b.balance, 0);
+      const totalOwe = outgoing.reduce((sum, b) => sum + b.balance, 0);
+    
+      return totalOwedTo !== totalOwe;
+    });
+
     return (
       <MobileFrame>
         <div className={styles.container}>
@@ -297,7 +310,7 @@ const fetchData = async () => {
         <div className={styles.scrollArea}>
           {activeTab === "expenses" ? (
             Object.keys(bills).length === 0 ? (
-              <p>No expenses found.</p>
+              <p className={styles.emptyMessage}>No expenses found.</p>
             ) : (
             <>
              {Object.entries(bills).map(([date, billList]) => (
@@ -341,32 +354,32 @@ const fetchData = async () => {
           <div className={styles.memberNameRow}>
             {owedToMe > 0 ? (
               <>
-                <span className={styles.memberNameLeft}>
+                <span className={`${styles.memberNameLeft} ${styles.greenText}`}>
                   You are owed
                 </span>
-                <span className={styles.memberNameRight}>
+                <span className={`${styles.memberNameRight} ${styles.greenText}`}>
                   ${owedToMe.toFixed(2)}
                 </span>
               </>
             ) : iOwe > 0 ? (
               <>
-                <span className={styles.memberNameLeft}>
+                <span className={`${styles.memberNameLeft} ${styles.redText}`}>
                   You owe
                 </span>
-                <span className={styles.memberNameRight}>
+                <span className={`${styles.memberNameRight} ${styles.redText}`}>
                   ${iOwe.toFixed(2)}
                 </span>
               </>
             ) : (
               <>
-                <span>No balances</span>
-                <span>$0.00</span>
+                <span className={styles.memberNameLeft}>No balances</span>
+                <span className={styles.memberNameRight}>$0.00</span>
               </>
             )}
           </div>
              
           {myBalances.length === 0 ? (
-              <p>No balances to show.</p>
+              <p className={styles.emptyMessage}>No balances to show.</p>
             ) : (
               <ul className={styles.memberList}>
                 {myBalances.map((b, index) => {
@@ -434,7 +447,9 @@ const fetchData = async () => {
                             }
                           >
                             <span>{isIncoming ? other?.userName || "Someone" : `You owe ${other?.userName || "Someone"}`}</span>
-                            <span>${b.balance.toFixed(2)}</span>
+                            <span className={isIncoming ? styles.greenText : styles.redText}>
+                              ${b.balance.toFixed(2)}
+                            </span>
                           </div>
                         )}
                     </li>
@@ -444,9 +459,9 @@ const fetchData = async () => {
             )}
 
             <div className={styles.memberSection}>
-              <h3>Group Members Balance</h3>
-              {group?.members?.length > 0 ? (
-                group.members.map(member => {
+              <div className={styles.groupBalanceTitle}>Group Members Balance</div>
+              {filteredGroupMembers.length > 0 ? (
+                filteredGroupMembers.map(member => {
                   const memberId = member._id?.toString();
                   
                   if (!memberId) return null;
@@ -478,7 +493,7 @@ const fetchData = async () => {
                       <span className={styles.memberNameLeft}>
                         {isOwed ? `${member.userName} are owed` : `${member.userName} owes`}
                       </span>
-                      <span className={styles.memberNameRight}>
+                      <span className={isOwed ? styles.greenText : styles.redText}>
                         ${total.toFixed(2)}
                       </span>
                     </div>
@@ -558,7 +573,7 @@ const fetchData = async () => {
                 );
               })
             ) : (
-              <p>No group member balances to show.</p>
+              <p className={styles.emptyMessage}>No group member balances to show.</p>
             )}
             </div>
           </div>
