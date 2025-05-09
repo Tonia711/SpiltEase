@@ -324,7 +324,7 @@ const fetchData = async () => {
                   </h4>
                   <div className={styles.billListContainer}>
                     <ul>
-                      {billList.map((bill) => (
+                      {billList.map((bill) => ( 
                         <li
                           key={bill._id}
                           className={styles.billItem}

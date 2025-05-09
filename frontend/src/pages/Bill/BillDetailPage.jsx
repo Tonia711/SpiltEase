@@ -137,7 +137,7 @@ export default function BillDetailPage() {
             )}
           </div>
         </form>
-      </MobileFrame>
+      </MobileFrame> 
     );
   }
   
