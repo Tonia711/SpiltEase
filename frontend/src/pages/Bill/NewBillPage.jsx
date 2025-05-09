@@ -37,7 +37,7 @@ export default function NewBillPage() {
   const [memberExpenses, setMemberExpenses] = useState([]);  //每个人实际的expense array
   const [memberRefunds, setMemberRefunds] = useState([]); //每个人的refund array
   const [error, setError] = useState("");
-
+  const [warning, setWarning] = useState(""); // New state for warning messages
 
   // get all labels 获取所有labels，labcel下拉列表
   useEffect(() => {
@@ -149,6 +149,16 @@ export default function NewBillPage() {
     setShowCamera(false);
     setIsProcessing(true);
     setError(""); // Clear any previous errors
+    setWarning(""); // Clear any previous warnings
+    
+    // Reset all form fields and calculations when starting a new capture
+    setNote("");
+    setExpenses(0);
+    setOcrResult(null);
+    setPaidDate(new Date().toISOString().slice(0, 10)); // Reset date to current date
+    setMemberTotalExpenses([]); // Reset the total split calculations
+    setMemberExpenses([]); // Reset member expenses
+    setMemberRefunds([]); // Reset member refunds
 
     try {
       // Create form data for image upload
@@ -164,19 +174,68 @@ export default function NewBillPage() {
 
       console.log("OCR API Response:", response.data); // Debug response
 
-      // Update the expenses field with the recognized amount
-      if (response.data && response.data.success && response.data.amount) {
+      // For robust handling, check if the response has the expected structure
+      if (!response.data || response.data.success === false) {
+        // Nothing useful was extracted
+        setError("Could not extract any information from receipt. Please enter details manually.");
+        return;
+      }
+
+      // Track what was extracted and what was missing
+      const hasAmount = response.data.amountExtracted === true && response.data.amount;
+      const hasMerchantName = response.data.merchantNameExtracted === true && response.data.merchantName;
+      const hasDate = response.data.transactionDate !== undefined;
+      
+      // Apply values that were successfully extracted
+      if (hasAmount) {
+        console.log("Setting amount:", response.data.amount);
+        setExpenses(response.data.amount);
         setOcrResult({
           amount: response.data.amount,
           timestamp: new Date().toISOString(),
         });
-        setExpenses(response.data.amount);
-      } else {
-        setError("Could not recognize amount from receipt. Please enter manually.");
       }
+      
+      if (hasMerchantName) {
+        console.log("Setting merchant name:", response.data.merchantName);
+        setNote(response.data.merchantName);
+      }
+      
+      if (hasDate) {
+        console.log("Setting transaction date:", response.data.transactionDate);
+        setPaidDate(response.data.transactionDate);
+      }
+      
+      // Generate appropriate error message based on what's missing
+      const missingFields = [];
+      if (!hasAmount) missingFields.push("total amount");
+      if (!hasMerchantName) missingFields.push("expense note");
+      
+      if (missingFields.length > 0) {
+        // Use warning state for partial extractions
+        let message;
+        if (missingFields.length === 1) {
+          message = `${missingFields[0]} not extracted. Please enter manually.`;
+        } else {
+          const lastField = missingFields.pop();
+          message = `${missingFields.join(', ')} and ${lastField} not extracted. Please enter manually.`;
+        }
+        
+        setWarning(message);
+      }
+      
     } catch (err) {
       console.error('Error processing receipt:', err);
-      setError('Failed to process receipt. Please enter the amount manually.');
+      setError('Failed to process receipt. Please enter details manually.');
+      
+      // Reset fields on error
+      setNote("");
+      setExpenses(0);
+      setOcrResult(null);
+      setPaidDate(new Date().toISOString().slice(0, 10)); // Reset date to current date
+      setMemberTotalExpenses([]); 
+      setMemberExpenses([]);
+      setMemberRefunds([]);
     } finally {
       setIsProcessing(false);
     }
@@ -186,8 +245,9 @@ export default function NewBillPage() {
   // submit bill
   const handleAddBill = async (e) => {
     e.preventDefault();
-    setError("");  // 清空之前的错误
-
+    setError("");  // Clear any previous errors
+    setWarning(""); // Clear any previous warnings
+  
     if (!selectedLabelId || !note || !expenses || !paidBy || !paidDate || memberTotalExpenses.length === 0) {
       setError("Please fill in all required fields.");
       return;
@@ -428,7 +488,8 @@ export default function NewBillPage() {
             </div>
           </div>
 
-          {error && <div className={styles.error}>{error}</div>}
+        {warning && <div className={styles.warning}>{warning}</div>}
+        {error && <div className={styles.error}>{error}</div>}
 
           <button type="submit" className={styles.addButton}>
             Add

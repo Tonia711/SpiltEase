@@ -1,89 +1,87 @@
 import { beforeEach, beforeAll, afterAll, it, expect, describe } from "vitest";
-import routes from "../../api/bills/index.js";
 import { User, Avatar, Label, Group, Icon, Bill, Balance, BalancesCalculate } from "../../../db/schema.js";
 import mongoose from "mongoose";
-import express from "express";
 import request from "supertest";
 import app from "../../../app.js"
-
-
 
 beforeAll(async () => {
     const MONGO_URI = process.env.MONGO_URI;
     await mongoose.connect(MONGO_URI);
+    await User.deleteMany({ email: "101@gmail.com" });
 })
 
 afterAll(async () => {
-    await mongoose.disconnect()
+    await User.deleteMany({ email: "101@gmail.com" });
+    await mongoose.disconnect();
 })
 
-  
 describe("Auth routes", () => {
-    // const testUser = {
-    //   userName: "testing101",
-    //   email: "101@gmail.com",
-    //   password: "secure123",
-    // };
+    const testUser = {
+      userName: "testing101",
+      email: "101@gmail.com",
+      password: "secure123",
+    };
   
-    // test("Register new user successfully", async () => {
-    //   const res = await request(app)
-    //     .post("/api/register")
-    //     .send(testUser)
-    //     .expect(201);
+    it("Register new user successfully", async () => {
+      const res = await request(app)
+        .post("/api/auth/register")
+        .send(testUser)
+        .expect(201);
   
-    //   expect(res.body).toHaveProperty("token");
-    //   expect(res.body.user).toMatchObject({
-    //     userName: "Alice",
-    //     email: "alice@example.com",
-    //   });
+      expect(res.body).toHaveProperty("token");
+      expect(res.body.user).toMatchObject({
+        userName: "testing101",
+        email: "101@gmail.com"
+      });
+    });
   
-    //   const userInDb = await User.findOne({ email: testUser.email });
-    //   expect(userInDb).not.toBeNull();
-    //   expect(await bcrypt.compare("secure123", userInDb.password)).toBe(true);
-    // });
+    it("Register with existing userName fails", async () => {
+        try {
+            await User.create({ ...testUser, email: "102@gmail.com" });
+            await request(app)
+            .post("/api/auth/register")
+            .send(testUser);
+        } catch (err) {
+            expect(err.message).toMatch(/E11000.*userName/);
+        }
+    });
+    
+    it("Register with existing email fails", async () => {
+        try {
+            await User.create({ ...testUser, userName: "testing102" });
+            await request(app)
+            .post("/api/auth/register")
+            .send(testUser);
+        } catch (err) {
+            expect(err.message).toMatch(/E11000.*email/);
+        }
+    });
+      
+    it("Login with correct credentials succeeds", async () => {  
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({ email: testUser.email, password: testUser.password })
+        .expect(200);
   
-    // test("Register with existing email fails", async () => {
-    //   await User.create({ ...testUser, password: await bcrypt.hash("secure123", 10) });
+      expect(res.body).toHaveProperty("token");
+      expect(res.body.user.email).toBe(testUser.email);
+    });
   
-    //   const res = await request(app)
-    //     .post("/api/register")
-    //     .send(testUser)
-    //     .expect(409);
+    it("Login with wrong password fails", async () => {
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({ email: testUser.email, password: "wrongpass" })
+        .expect(401);
   
-    //   expect(res.body.error).toBe("Email already exists");
-    // });
+      expect(res.body.error).toBe("Invalid credentials");
+    });
   
-    // test("Login with correct credentials succeeds", async () => {
-    //   const hashedPassword = await bcrypt.hash("secure123", 10);
-    //   await User.create({ ...testUser, password: hashedPassword });
+    it("Login with wrong user email fails", async () => {
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({ email: "test1@gmail.com", password: "any" })
+        .expect(401);
   
-    //   const res = await request(app)
-    //     .post("/api/login")
-    //     .send({ email: testUser.email, password: "secure123" })
-    //     .expect(200);
-  
-    //   expect(res.body).toHaveProperty("token");
-    //   expect(res.body.user.email).toBe(testUser.email);
-    // });
-  
-    // test("Login with wrong password fails", async () => {
-    //   const hashedPassword = await bcrypt.hash("secure123", 10);
-    //   await User.create({ ...testUser, password: hashedPassword });
-  
-    //   const res = await request(app)
-    //     .post("/api/login")
-    //     .send({ email: testUser.email, password: "wrongpass" })
-    //     .expect(401);
-  
-    //   expect(res.body.error).toBe("Invalid credentials");
-    // });
-  
-    // test("Login with non-existent user fails", async () => {
-    //   const res = await request(app)
-    //     .post("/api/login")
-    //     .send({ email: "nouser@example.com", password: "any" })
-    //     .expect(401);
-  
-    //   expect(res.body.error).toBe("Invalid credentials");
-    // });
+      expect(res.body.error).toBe("Invalid credentials");
+    });
   });

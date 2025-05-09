@@ -191,10 +191,9 @@ export default function GroupJoinPage() {
                 maxLength={6}
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
-                className={`${styles.inputField} ${
-                  showInputError ? `${styles.inputError} ${styles.shake}` : ""
-                }`}
-                placeholder="6‑character code"
+                className={`${styles.inputField} ${showInputError ? `${styles.inputError} ${styles.shake}` : ""
+                  }`}
+                placeholder="6-character code"
                 readOnly={showRejoinOption}
               />
             </div>
@@ -263,8 +262,8 @@ export default function GroupJoinPage() {
                           isRealMember
                             ? styles.memberItemReal
                             : isSelectedVirtual
-                            ? styles.memberItemSelected
-                            : styles.memberItem
+                              ? styles.memberItemSelected
+                              : styles.memberItem
                         }
                         onClick={
                           isRealMember ? undefined : () => handleSelectMember(m)
@@ -283,11 +282,10 @@ export default function GroupJoinPage() {
               <h3 className={styles.sectionTitle}>Can't find your name? </h3>
               <button
                 onClick={handleJoinAsNewUser}
-                className={`${styles.joinAsNewButton} ${
-                  selectedMember && selectedMember.isNew
+                className={`${styles.joinAsNewButton} ${selectedMember && selectedMember.isNew
                     ? styles.memberItemSelected
                     : ""
-                }`}
+                  }`}
                 disabled={!user || !user.userName}
               >
                 Join as "{user?.userName || "..."}"
