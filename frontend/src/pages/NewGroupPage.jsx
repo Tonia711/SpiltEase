@@ -72,13 +72,13 @@ export default function NewGroupPage() {
     <MobileFrame>
       <div className={styles.container}>
         <div className={styles.header}>
-          <button
+          <span
             type="button"
             className={styles.backButton}
             onClick={() => navigate("/groups")}
           >
             {"<"}
-          </button>
+          </span>
           <h1 className={styles.title}>New Group</h1>
         </div>
 

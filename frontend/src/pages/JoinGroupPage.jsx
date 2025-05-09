@@ -169,12 +169,12 @@ export default function GroupJoinPage() {
         {!hasValidCode && (
           <>
             <div className={styles.titleRow}>
-              <button
+              <span
                 className={styles.backButton}
                 onClick={() => navigate("/")}
               >
                 {"<"}
-              </button>
+              </span>
               <h2 className={styles.title}>Join Group</h2>
             </div>
 
