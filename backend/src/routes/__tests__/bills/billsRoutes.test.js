@@ -25,7 +25,7 @@ describe('Bill API Routes', () => {
             expenses: 121,
             groupId: group._id,
             labelId: "000000000000000000000001",
-            note: "taxi", 
+            note: "taxiTestingBill", 
             paidBy: user1._id, 
             refunds: 5,
             splitWay: "Equally",
@@ -45,7 +45,9 @@ describe('Bill API Routes', () => {
 
         expect(res.status).toBe(201);
         const newGroupBill = await res.body.groupBills.at(-1);
-        expect(newGroupBill.note).toBe("taxi");
+        expect(newGroupBill.note).toBe("taxiTestingBill");
+
+        await request(app).delete(`/api/bills/${group._id}/bill/${newGroupBill._id}`);
     })
 
     it('should get all labels except transfer', async () => {

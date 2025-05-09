@@ -7,10 +7,12 @@ import app from "../../../app.js"
 beforeAll(async () => {
     const MONGO_URI = process.env.MONGO_URI;
     await mongoose.connect(MONGO_URI);
+    await User.deleteMany({ email: "101@gmail.com" });
 })
 
 afterAll(async () => {
-    await mongoose.disconnect()
+    await User.deleteMany({ email: "101@gmail.com" });
+    await mongoose.disconnect();
 })
 
 describe("Auth routes", () => {
