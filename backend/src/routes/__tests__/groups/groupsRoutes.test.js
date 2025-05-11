@@ -39,7 +39,7 @@ afterEach(async () => {
 });
 
 describe("Group Routes", () => {
-  // --- 1. createGroup 创建群组 ---
+  // --- 1. createGroup ---
   it("should create a group", async () => {
     const res = await request(app)
       .post("/api/groups/create")
@@ -55,7 +55,7 @@ describe("Group Routes", () => {
 
   });
 
-  // --- 2. getUserGroups 获取用户所有群组 ---
+  // --- 2. getUserGroups ---
   it("should fetch current user's groups", async () => {
     const res = await request(app)
       .get("/api/groups")
@@ -65,7 +65,7 @@ describe("Group Routes", () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  // --- 3. getGroupById 获取群组详情 ---
+  // --- 3. getGroupById ---
   it("should get group by ID", async () => {
     const group = await Group.create({
       groupName: "Test Group",
@@ -81,7 +81,7 @@ describe("Group Routes", () => {
 
   });
 
-  // --- 4. validateJoinCode 测试各种情况 ---
+  // --- 4. validateJoinCode ---
   it("should return 'already a member'", async () => {
     const joinCode = "VAL123";
     const group = await Group.create({
