@@ -4,9 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
 import RegisterPage from "../../pages/RegisterPage";
 import { AuthContext } from "../../contexts/AuthContext";
-import api from "../../utils/api";
 
-// Mock API checkAvailability
 vi.mock("../../utils/api", () => ({
   default: {
     get: vi.fn(),

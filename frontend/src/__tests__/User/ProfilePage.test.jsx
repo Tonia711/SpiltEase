@@ -1,17 +1,16 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
-import ProfilePage from "../pages/ProfilePage";
-import { AuthContext } from "../contexts/AuthContext";
-import api from "../utils/api";
+import ProfilePage from "../../pages/ProfilePage";
+import { AuthContext } from "../../contexts/AuthContext";
+import api from "../../utils/api";
 
-// mock api
-vi.mock("../utils/api", () => ({
+vi.mock("../../utils/api", () => ({
   default: {
-    get: vi.fn(),
-    put: vi.fn(),
-    post: vi.fn(),
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
   },
 }));
 
@@ -56,15 +55,23 @@ describe("ProfilePage", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/login");
   });
 
-  it("renders user info", () => {
-    setup();
+  it("renders user info", async () => {
+    await act(async () => {
+      setup();
+    });
     expect(screen.getByText("JohnDoe")).toBeInTheDocument();
     expect(screen.getByText("john@example.com")).toBeInTheDocument();
   });
 
   it("switches to editing mode when Edit is clicked", async () => {
-    setup();
-    fireEvent.click(screen.getByText("Edit"));
+    await act(async () => {
+      setup();
+    });
+    
+    await act(async () => {
+      fireEvent.click(screen.getByText("Edit"));
+    });
+    
     expect(screen.getByDisplayValue("JohnDoe")).toBeInTheDocument();
   });
 
@@ -72,15 +79,24 @@ describe("ProfilePage", () => {
     api.put.mockResolvedValueOnce({
       data: { ...mockUser, userName: "UpdatedName" },
     });
-    setup();
+    
+    await act(async () => {
+      setup();
+    });
 
-    fireEvent.click(screen.getByText("Edit"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Edit"));
+    });
 
     const input = screen.getByDisplayValue("JohnDoe");
-    await userEvent.clear(input);
-    await userEvent.type(input, "UpdatedName");
+    await act(async () => {
+      await userEvent.clear(input);
+      await userEvent.type(input, "UpdatedName");
+    });
 
-    fireEvent.click(screen.getByText("Save"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Save"));
+    });
 
     await waitFor(() => {
       expect(api.put).toHaveBeenCalledWith("/users/me", {
@@ -93,21 +109,36 @@ describe("ProfilePage", () => {
   });
 
   it("opens avatar modal", async () => {
-    api.get.mockResolvedValueOnce({ data: [] });
-    setup();
+    await act(async () => {
+      setup();
+    });
 
-    fireEvent.click(screen.getByText("Edit"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Edit"));
+    });
+
     const cameraButton = screen.getByRole("button", { name: "" }); // the camera icon
-    fireEvent.click(cameraButton);
+    
+    await act(async () => {
+      fireEvent.click(cameraButton);
+    });
 
     await waitFor(() => {
-      expect(screen.getByText("📷")).toBeInTheDocument(); // modal center icon
+      // Find the camera icon in the modal specifically
+      const modalCameraIcon = screen.getAllByText("📷")[1]; // Get the second camera icon (in the modal)
+      expect(modalCameraIcon).toBeInTheDocument();
     });
   });
 
-  it("logs out when Logout is clicked", () => {
-    setup();
-    fireEvent.click(screen.getByText("Logout"));
+  it("logs out when Logout is clicked", async () => {
+    await act(async () => {
+      setup();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Logout"));
+    });
+
     expect(mockLogout).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith("/login");
   });

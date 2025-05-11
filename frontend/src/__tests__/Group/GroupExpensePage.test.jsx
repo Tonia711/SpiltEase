@@ -81,19 +81,15 @@ describe("GroupExpensePage", () => {
   it("switches to Balance tab and displays balance", async () => {
     renderWithContext();
 
-    // Wait for loading to complete
     await waitFor(() => {
       expect(screen.queryByText("Loading expenses...")).not.toBeInTheDocument();
     });
 
-    // Click the Balance tab
     const balanceTab = screen.getByRole("button", { name: /balance/i });
     fireEvent.click(balanceTab);
 
-    // Wait for and verify balance content
     await waitFor(() => {
       expect(screen.getByText("You owe")).toBeInTheDocument();
-      // Look for the amount in the memberNameRight span with red text
       expect(screen.getByText("$25.00", { selector: "span._memberNameRight_c244b1" })).toBeInTheDocument();
     });
   });
@@ -101,12 +97,10 @@ describe("GroupExpensePage", () => {
   it("shows bill amount and date", async () => {
     renderWithContext();
 
-    // Wait for loading to complete
     await waitFor(() => {
       expect(screen.queryByText("Loading expenses...")).not.toBeInTheDocument();
     });
 
-    // Use more specific selectors
     expect(await screen.findByTestId("bill-amount")).toHaveTextContent("$100.00");
     expect(screen.getByText("May 1, 2025")).toBeInTheDocument();
   });
@@ -115,26 +109,21 @@ describe("GroupExpensePage", () => {
     renderWithContext();
     const fab = await screen.findByRole("button", { name: "+" });
     fireEvent.click(fab);
-    // Ideally assert navigate mock or useMemoryRouter's location
   });
 
   it("expands balance detail when clicked", async () => {
     renderWithContext();
     
-    // Wait for loading to complete
     await waitFor(() => {
       expect(screen.queryByText("Loading expenses...")).not.toBeInTheDocument();
     });
 
-    // First switch to the Balance tab
     const balanceTab = screen.getByRole("button", { name: /balance/i });
     fireEvent.click(balanceTab);
 
-    // Wait for and click the balance item with "You owe Bob" text
     const balanceItem = await screen.findByText("You owe Bob");
     fireEvent.click(balanceItem);
 
-    // Verify the mark as paid button appears in the expanded detail box
     await waitFor(() => {
       const detailBox = screen.getByText("TestUser (me) owes Bob").closest("div._balanceDetailBox_c244b1");
       expect(detailBox).toBeInTheDocument();

@@ -1,13 +1,13 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import NewGroupPage from "../pages/NewGroupPage";
-import { AuthContext } from "../contexts/AuthContext";
-import api from "../utils/api";
+import NewGroupPage from "../../pages/NewGroupPage";
+import { AuthContext } from "../../contexts/AuthContext";
+import api from "../../utils/api";
 
 // Mock api
-vi.mock("../utils/api", () => ({
+vi.mock("../../utils/api", () => ({
   default: {
     post: vi.fn(),
   },
@@ -37,6 +37,10 @@ describe("NewGroupPage", () => {
         </MemoryRouter>
       </AuthContext.Provider>
     );
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it("renders with current user as default member", () => {
     setup();
@@ -87,18 +91,32 @@ describe("NewGroupPage", () => {
   it("submits the form and redirects on success", async () => {
     api.post.mockResolvedValueOnce({ data: { groupId: "abc" } });
 
-    setup();
-    fireEvent.change(screen.getByPlaceholderText("Enter group name"), {
-      target: { value: "My Group" },
+    await act(async () => {
+      setup();
     });
 
-    fireEvent.click(screen.getByText("Create"));
+    const form = screen.getByTestId("createForm");
+    const groupNameInput = screen.getByPlaceholderText("Enter group name");
+    const startDateInput = screen.getByLabelText("Start Date");
+
+    await act(async () => {
+      await userEvent.type(groupNameInput, "My Group");
+      await userEvent.type(startDateInput, "2025-05-11");
+    });
+
+    await act(async () => {
+      fireEvent.submit(form);
+    });
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalled();
-      expect(mockedNavigate).toHaveBeenCalledWith("/");
+      expect(api.post).toHaveBeenCalledWith("/groups/create", expect.any(Object));
     });
 
     expect(screen.getByText("Group created successfully!")).toBeInTheDocument();
+
+    // Wait for the navigation timeout
+    await waitFor(() => {
+      expect(mockedNavigate).toHaveBeenCalledWith("/");
+    }, { timeout: 2000 });
   });
 });
