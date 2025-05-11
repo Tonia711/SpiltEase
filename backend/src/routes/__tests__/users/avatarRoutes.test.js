@@ -1,5 +1,5 @@
-import { beforeEach, beforeAll, afterAll, it, expect, describe } from "vitest";
-import { User, Avatar, Label, Group, Icon, Bill, Balance, BalancesCalculate } from "../../../db/schema.js";
+import {  beforeAll, afterAll, it, expect, describe } from "vitest";
+import { User } from "../../../db/schema.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import app from "../../../app.js";
