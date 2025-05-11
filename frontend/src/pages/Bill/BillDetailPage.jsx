@@ -8,13 +8,13 @@ export default function BillDetailPage() {
     const { groupId, billId } = useParams(); 
     const navigate = useNavigate();
     const [bill, setBill] = useState(null);
-    const [labels, setLabels] = useState([]);  // labels
-    const [showConfirm, setShowConfirm] = useState(false); // 新增：控制确认弹窗
+    const [labels, setLabels] = useState([]);  
+    const [showConfirm, setShowConfirm] = useState(false); 
 
     const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
 
 
-    // get all labels 获取所有labels，labcel下拉列表
+    // get all labels 
     useEffect(() => {
       api.get("/bills/allLabels").then(({ data }) => {
         setLabels(data);
@@ -38,7 +38,7 @@ export default function BillDetailPage() {
 
     const handleClickDelete = (e) => {
       e.preventDefault();
-      setShowConfirm(true); // 显示确认弹窗
+      setShowConfirm(true); 
     };
   
     const handleConfirmDelete = async () => {
@@ -59,11 +59,9 @@ export default function BillDetailPage() {
     };
   
     const handleCancelDelete = () => {
-      setShowConfirm(false); // 取消删除
+      setShowConfirm(false); 
     };
    
-    // console.log("BillinDetail", bill);
-    
     return (
       <MobileFrame>
         <form className={styles.form} >
@@ -73,7 +71,7 @@ export default function BillDetailPage() {
           </span>
           <div className={styles.titleup}>
             <img 
-              src={`${IMG_URL}/${labels.find(label => label._id === bill.labelId).iconUrl}`}
+              src={`${IMG_URL}/${labels.find(label => label._id === bill.labelId)?.iconUrl} || null`}
               className={styles.billIcon}
             ></img>
             <p>{bill.note || "Untitled Bill"}</p>

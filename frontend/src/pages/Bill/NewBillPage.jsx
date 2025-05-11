@@ -5,12 +5,12 @@ import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
 import CameraCapture from "../../components/CameraCapture";
 import { useContext } from "react";
-import { AuthContext } from "../../contexts/AuthContext"; // 根据你的项目路径调整 
+import { AuthContext } from "../../contexts/AuthContext"; 
 
 
 
 export default function NewBillPage() {
-  const { groupId } = useParams(); // 获取 groupId
+  const { groupId } = useParams(); // groupId
   const navigate = useNavigate();
 
   // Camera and OCR states
@@ -18,43 +18,41 @@ export default function NewBillPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [ocrResult, setOcrResult] = useState(null);
 
-  // 界面展示的数据
+  // data
   const [labels, setLabels] = useState([]);  // labels
-  // const [group, setGroup] = useState(null); //group 数据
-  const [members, setMembers] = useState(""); //通过获取group的数据来获取成员
-  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："equally" 或 "As Amounts"
+  const [members, setMembers] = useState(""); // members
+  const [splitMethod, setSplitMethod] = useState("Equally"); //"equally" or "As Amounts"
 
 
-  // 表单数据
-  const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
+  // form data
+  const [selectedLabelId, setSelectedLabelId] = useState();   // selected label
   const [note, setNote] = useState("");
   const [expenses, setExpenses] = useState(0);   //paid
   const [refunds, setRefunds] = useState(0);   //refunds
-  const [paidBy, setPaidBy] = useState(""); // paidBy 下拉列表，成员列表
+  const [paidBy, setPaidBy] = useState(""); // paidBy 
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
-  const [selectedMemberIds, setSelectedMemberIds] = useState([]); //选中的人
-  const [memberExpenses, setMemberExpenses] = useState([]);  //每个人实际的expense array
-  const [memberRefunds, setMemberRefunds] = useState([]); //每个人的refund array
+  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //should pay array
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]); 
+  const [memberExpenses, setMemberExpenses] = useState([]);  //expense array
+  const [memberRefunds, setMemberRefunds] = useState([]); //refund array
   const [error, setError] = useState("");
   const [warning, setWarning] = useState(""); // New state for warning messages
 
-  // get all labels 获取所有labels，labcel下拉列表
+  // get all labels 
   useEffect(() => {
     api.get("/bills/allLabels").then(({ data }) => {
       setLabels(data);
-      setSelectedLabelId(data[0]?._id || ""); // 设置默认的 selectedLabelId
+      setSelectedLabelId(data[0]?._id || ""); 
     }).catch(err => {
       console.error("Failed to fetch labels:", err);
     });
   }, []);
 
 
-  // get group members 通过获取group的数据来获取成员
-  // paidBy 下拉列表，成员列表
+  // get group members 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
-  const user = useContext(AuthContext); // 当前登录用户
+  const user = useContext(AuthContext); 
 
   useEffect(() => {
     api
@@ -63,7 +61,7 @@ export default function NewBillPage() {
         const visibleMembers = data.members.filter((m) => m.isHidden === false);
         setMembers(visibleMembers);
 
-        // paidBy默认当前用户
+        // paidBy 
         const defaultPaidBy = visibleMembers.find(m => m.userId === user.user._id)?._id;
         setPaidBy(defaultPaidBy || visibleMembers[0]?._id || "");
       })
@@ -73,7 +71,6 @@ export default function NewBillPage() {
   }, [groupId, BASE_URL, user]);
 
 
-
   useEffect(() => {
     if (members && members.length > 0) {
       setSelectedMemberIds(members.map(m => m._id));
@@ -81,8 +78,7 @@ export default function NewBillPage() {
   }, [members]);
 
 
-
-  //通过输入的expense, refunds来计算每个人分的钱
+  //calculate member expenses
   useEffect(() => {
     if (!members || members.length === 0 || !expenses || isNaN(parseFloat(expenses))) return;
 
@@ -98,8 +94,7 @@ export default function NewBillPage() {
       return;
     }
 
-
-    //大冤种
+    //randomly distribute the leftover 
     const rawExpense = parseFloat((total / count).toFixed(2));
     const avgRefund = parseFloat((refundTotal / count).toFixed(2));
 
@@ -155,10 +150,10 @@ export default function NewBillPage() {
     setNote("");
     setExpenses(0);
     setOcrResult(null);
-    setPaidDate(new Date().toISOString().slice(0, 10)); // Reset date to current date
-    setMemberTotalExpenses([]); // Reset the total split calculations
-    setMemberExpenses([]); // Reset member expenses
-    setMemberRefunds([]); // Reset member refunds
+    setPaidDate(new Date().toISOString().slice(0, 10)); 
+    setMemberTotalExpenses([]); 
+    setMemberExpenses([]); 
+    setMemberRefunds([]); 
 
     try {
       // Create form data for image upload
@@ -285,8 +280,6 @@ export default function NewBillPage() {
   };
 
 
-
-
   return (
     <MobileFrame>
       <div className={styles.container}>
@@ -329,8 +322,6 @@ export default function NewBillPage() {
           </div>
 
           <div className={styles.row1}>
-
-
             <select
               value={selectedLabelId}
               onChange={(e) => setSelectedLabelId(e.target.value)}
