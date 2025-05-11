@@ -89,7 +89,6 @@ describe("NewBillPage", () => {
       await waitFor(() => {
         expect(api.post).toHaveBeenCalledTimes(2);
         
-        // First call - create bill
         expect(api.post).toHaveBeenNthCalledWith(
           1,
           '/bills',
@@ -115,7 +114,6 @@ describe("NewBillPage", () => {
           })
         );
 
-        // Second call - recalculate balances
         expect(api.post).toHaveBeenNthCalledWith(
           2,
           '/balances/group/testGroup123/recalculate'

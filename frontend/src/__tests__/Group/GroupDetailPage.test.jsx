@@ -5,7 +5,7 @@ import GroupDetailPage from "../../pages/GroupDetailPage.jsx";
 import { AuthContext } from "../../contexts/AuthContext";
 import api from "../../utils/api";
 
-// Mock API with proper methods
+// Mock API 
 vi.mock("../../utils/api", () => ({
   default: {
     get: vi.fn(),
@@ -82,17 +82,13 @@ describe("GroupDetailPage", () => {
 
     renderComponent();
 
-    // Wait for the invite code to be displayed
     await waitFor(() => screen.getByText("ABC123"));
     
-    // Find and click the copy icon
     const copyIcon = screen.getByTestId("copy-icon");
     fireEvent.click(copyIcon);
 
-    // Verify clipboard was called
     expect(clipboardMock).toHaveBeenCalledWith("ABC123");
 
-    // Wait for and verify toast message
     await waitFor(() => {
       expect(screen.getByText("Copied to clipboard!")).toBeInTheDocument();
     });

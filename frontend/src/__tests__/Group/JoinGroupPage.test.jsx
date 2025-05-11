@@ -1,4 +1,3 @@
-// GroupJoinPage.test.jsx
 import { describe, it, vi, beforeEach, expect } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import JoinGroupPage from "../../pages/JoinGroupPage";
@@ -108,11 +107,9 @@ describe("GroupJoinPage", () => {
     expect(await screen.findByText("Test Group")).toBeInTheDocument();
     expect(screen.getByText("VirtualUser")).toBeInTheDocument();
 
-    // Select virtual member
     fireEvent.click(screen.getByText("VirtualUser"));
     expect(screen.getByText("Join")).not.toBeDisabled();
 
-    // Click "Join as Lucah"
     fireEvent.click(screen.getByText(/Join as "Lucah"/i));
     expect(screen.getByText("Join")).not.toBeDisabled();
   });
@@ -129,7 +126,7 @@ describe("GroupJoinPage", () => {
           },
         },
       })
-      .mockResolvedValueOnce({}); // join group call
+      .mockResolvedValueOnce({}); 
 
     renderWithContext(user);
     fireEvent.change(screen.getByPlaceholderText(/6-character/i), {
