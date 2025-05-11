@@ -38,9 +38,9 @@ export default function NewBillPage() {
   const [error, setError] = useState("");
   const [warning, setWarning] = useState(""); // New state for warning messages
 
-  // get all labels 
+  // get labels except transfer
   useEffect(() => {
-    api.get("/bills/allLabels").then(({ data }) => {
+    api.get("/bills/labelsExcTrans").then(({ data }) => {
       setLabels(data);
       setSelectedLabelId(data[0]?._id || ""); 
     }).catch(err => {

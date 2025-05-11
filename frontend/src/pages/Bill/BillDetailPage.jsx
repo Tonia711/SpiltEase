@@ -71,7 +71,7 @@ export default function BillDetailPage() {
           </span>
           <div className={styles.titleup}>
             <img 
-              src={`${IMG_URL}/${labels.find(label => label._id === bill.labelId)?.iconUrl} || null`}
+              src={`${IMG_URL}/${labels.find(label => label._id === bill.labelId).iconUrl}`}
               className={styles.billIcon}
             ></img>
             <p>{bill.note || "Untitled Bill"}</p>
@@ -120,9 +120,14 @@ export default function BillDetailPage() {
               <div className={styles.actions}>
                 <button className={styles.deleteButton} onClick={handleClickDelete}>Delete</button>
                 <span></span>
-                <button className={styles.editButton} onClick={() => navigate(`/groups/${groupId}/editBill/${billId}`)}>
-                  Edit
-                </button>
+                {labels.find(label => label._id === bill.labelId)?.type !== 'transfer' && (
+                  <button
+                    className={styles.editButton}
+                    onClick={() => navigate(`/groups/${groupId}/editBill/${billId}`)}
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
             ) : (
               <div className={styles.confirmBox}>
