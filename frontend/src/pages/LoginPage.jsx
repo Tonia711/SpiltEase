@@ -34,7 +34,7 @@ export default function LoginPage() {
     <MobileFrame>
       <div className={styles.pageWrapper}>
         <div className={styles.container}>
-          <form className={styles.form} onSubmit={handleLogin}>
+          <form className={styles.form} onSubmit={handleLogin} data-testid="login-form">
             <div className={styles.logoWrapper}>
               <img
                 src="/images/logo-splitmate.png"
@@ -47,7 +47,9 @@ export default function LoginPage() {
               <div className={styles.labelRow}>
                 <label className={styles.label}>Email address</label>
                 {errors.email && (
-                  <span className={styles.errorInline}>{errors.email}</span>
+                  <span className={styles.errorInline} data-testid="email-error">
+                    {errors.email}
+                  </span>
                 )}
               </div>
               <input
@@ -66,7 +68,9 @@ export default function LoginPage() {
               <div className={styles.labelRow}>
                 <label className={styles.label}>Password</label>
                 {errors.password && (
-                  <span className={styles.errorInline}>{errors.password}</span>
+                  <span className={styles.errorInline} data-testid="password-error">
+                    {errors.password}
+                  </span>
                 )}
               </div>
               <input
@@ -91,7 +95,9 @@ export default function LoginPage() {
             </button>
 
             {errors.general && (
-              <div className={styles.error}>{errors.general}</div>
+              <div className={styles.error} data-testid="general-error">
+                {errors.general}
+              </div>
             )}
           </form>
         </div>

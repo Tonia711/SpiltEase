@@ -40,7 +40,7 @@ export default function GroupExpensePage() {
 
   const myUserId = currentUser?._id?.toString() || "";
 
-  // 点击“Okay”按钮后
+  // 点击"Okay"按钮后
   const handleConfirmMarkAsPaid = async (balanceItem) => {
     try {
       const { fromMemberId, toMemberId, balance: amount } = balanceItem;
@@ -302,7 +302,7 @@ const fetchData = async () => {
             </div>
             <div className={styles.expensesAmountRow}>
               <span>${myExpenses.toFixed(2)}</span>
-              <span>${totalExpenses.toFixed(2)}</span>
+              <span data-testid="total-balance-amount">${totalExpenses.toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -338,7 +338,7 @@ const fetchData = async () => {
                           <div className={styles.billContent}>
                             <div className={styles.billTextRow}>
                               <span className={styles.billNote}>{bill.note}</span>
-                              <span className={styles.billAmount}>${(bill.expenses - bill.refunds).toFixed(2)}</span>
+                              <span className={styles.billAmount} data-testid="bill-amount">${(bill.expenses - bill.refunds).toFixed(2)}</span>
                             </div>
                           </div>
                         </li>
@@ -441,6 +441,7 @@ const fetchData = async () => {
                           // 默认显示项
                           <div
                             className={styles.memberItem}
+                            data-testid="balance-item"
                             onClick={() =>
                               setExpandedBalanceId(b._id === expandedBalanceId ? null : b._id)
                             }
@@ -554,6 +555,7 @@ const fetchData = async () => {
                             ) : (
                               <div
                                 className={styles.memberItem}
+                                data-testid="balance-item"
                                 onClick={() =>
                                   setExpandedBalanceId(
                                     expandedBalanceId === b._id ? null : b._id
