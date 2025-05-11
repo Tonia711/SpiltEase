@@ -49,7 +49,7 @@ describe("EditBillPage", () => {
     api.get.mockImplementation((url) => {
       if (url.includes("/groups/")) return Promise.resolve({ data: mockGroupData });
       if (url.includes("/bills/group123/bill/bill123")) return Promise.resolve({ data: mockBillData });
-      if (url === "/bills/allLabels") return Promise.resolve({ data: mockLabels });
+      if (url === "/bills/labelsExcTrans") return Promise.resolve({ data: mockLabels });
       return Promise.reject("Unknown API GET");
     });
 

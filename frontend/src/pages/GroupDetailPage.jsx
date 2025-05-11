@@ -314,7 +314,7 @@ export default function GroupDetailPage() {
         <div className={styles.inviteCode}>
           Invite Code
           <span className={styles.codeValue}>{group.joinCode}</span>
-          <Copy className={styles.copyIcon} onClick={handleCopy} />
+          <Copy className={styles.copyIcon} onClick={handleCopy} data-testid="copy-icon" />
         </div>
 
 
