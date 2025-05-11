@@ -32,11 +32,11 @@ export default function EditBillPage() {
   const [isEditing, setIsEditing] = useState(false);
 
 
-  // get all labels 
+  // get labels except transfer
   useEffect(() => {
-    api.get("/bills/allLabels").then(({ data }) => {
+    api.get("/bills/labelsExcTrans").then(({ data }) => {
       setLabels(data);
-      setSelectedLabelId(data[0]?._id || ""); // default selectedLabelId
+      setSelectedLabelId(data[0]?._id || ""); 
     }).catch(err => {
       console.error("Failed to fetch labels:", err);
     });

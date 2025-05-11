@@ -3,10 +3,10 @@ import { Bill } from "../db/schema.js";
 import  { Group } from "../db/schema.js";
 import mongoose from "mongoose";
 
-//获取所有标签
+// get all labels
 export const getAllLabels = async (req, res) => {
   try {
-    const labels = await Label.find({ type: { $ne: "transfer" } }); // 排除 transfer 标签
+    const labels = await Label.find();
     res.json(labels);
   } catch (err) {
     console.error("Failed to fetch labels:", err);
@@ -14,16 +14,26 @@ export const getAllLabels = async (req, res) => {
   }
 };
 
-// ✅ 根据 groupId 获取账单列表
+// get all labels except transfer
+export const getLabelsExceptTransfer = async (req, res) => {
+  try {
+    const labels = await Label.find({ type: { $ne: "transfer" } }); 
+    res.json(labels);
+  } catch (err) {
+    console.error("Failed to fetch labels:", err);
+    res.status(500).json({ error: "Failed to get labels" });
+  }
+};
+
+
+// get all bills by groupId
 export const getBillsByGroupId = async (req, res) => {
   try {
     const { groupId } = req.params;
 
-    console.log("🔍 Matching groupId:", groupId, "→", new mongoose.Types.ObjectId(groupId));
-
     const bills = await Bill.aggregate([
         { $match: { groupId: new mongoose.Types.ObjectId(groupId) } },
-        { $unwind: "$groupBills" },  // 拆开 groupBills
+        { $unwind: "$groupBills" }, 
         {
           $lookup: {
             from: "labels",
@@ -35,7 +45,7 @@ export const getBillsByGroupId = async (req, res) => {
         { $unwind: { path: "$label", preserveNullAndEmptyArrays: true } },
         {
             $project: {
-              _id: "$groupBills._id", // 可以换成 "$_id" 保留原 Bill 文档的 id
+              _id: "$groupBills._id",
               label: "$label",
               date: "$groupBills.date",
               note: "$groupBills.note",
@@ -56,7 +66,7 @@ export const getBillsByGroupId = async (req, res) => {
 };
 
 
-// 根据 groupId 和 billId 获取单个bill
+// get a specific bill by groupId and billId
 export const getBillByGroupIdBillId = async (req, res) => {
   const { groupId, billId } = req.params;
   console.log("groupId", groupId);
@@ -108,7 +118,7 @@ export const getBillByGroupIdBillId = async (req, res) => {
 
 
 
-// 创建新bill
+// create a new bill
 export const createBill = async (req, res) => {
   try {
     const {
@@ -123,7 +133,6 @@ export const createBill = async (req, res) => {
       members
     } = req.body;
 
-    // 获取当前 group 下已有的账单数量用于 id 自增
     const existing = await Bill.findOne({ groupId });
     let currentId = 0;
     if (existing?.groupBills?.length > 0) {
@@ -134,7 +143,7 @@ export const createBill = async (req, res) => {
     }
 
     const newGroupBill = {
-      id: currentId + 1, // 自增 id
+      id: currentId + 1, 
       labelId,
       date: new Date(date),
       note,
@@ -159,13 +168,13 @@ export const createBill = async (req, res) => {
 
     res.status(201).json(billDoc);
   } catch (err) {
-    console.error("❌ Failed to create bill:", err);
+    console.error("Failed to create bill:", err);
     res.status(500).json({ error: "Failed to create bill" });
   }
 };
 
 
-// 根据 groupId 和 billId 删除单个bill
+// delete a specific bill by groupId and billId
 export const deleteBillByGroupIdBillId = async (req, res) => {
   const { groupId, billId } = req.params;
 
@@ -178,14 +187,12 @@ export const deleteBillByGroupIdBillId = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    // 找要删除的那一条 bill
     const targetIndex = billDoc.groupBills.findIndex(b => b._id.toString() === billId);
 
     if (targetIndex === -1) {
       return res.status(404).json({ message: "Bill not found in group" });
     }
 
-    // 删除指定的 bill
     billDoc.groupBills.splice(targetIndex, 1);
     await billDoc.save();
     return res.status(200).json({ message: "Bill deleted successfully" });
@@ -197,7 +204,7 @@ export const deleteBillByGroupIdBillId = async (req, res) => {
 };
 
 
-// 根据 groupId 和 billId 修改单个bill
+// update a specific bill by groupId and billId
 export const updateBillByGroupIdBillId = async (req, res) => {
   const { groupId, billId } = req.params;
   const {
@@ -224,10 +231,9 @@ export const updateBillByGroupIdBillId = async (req, res) => {
       return res.status(404).json({ message: "Bill not found in group" });
     }
 
-    // 更新字段
     targetBill.labelId = labelId || targetBill.labelId;
     targetBill.date = date ? new Date(date) : targetBill.date;
-    targetBill.note = note ?? targetBill.note; // 注意允许空字符串
+    targetBill.note = note ?? targetBill.note; 
     targetBill.paidBy = paidBy || targetBill.paidBy;
     targetBill.expenses = expenses ?? targetBill.expenses;
     targetBill.refunds = refunds ?? targetBill.refunds;

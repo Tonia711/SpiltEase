@@ -1,26 +1,29 @@
 import express from "express";
 import { getAllLabels, createBill } from "../../../controllers/billController.js";
 import { getBillsByGroupId } from "../../../controllers/billController.js"; 
-import {getBillByGroupIdBillId, deleteBillByGroupIdBillId, updateBillByGroupIdBillId} from "../../../controllers/billController.js";
+import {getBillByGroupIdBillId, deleteBillByGroupIdBillId, updateBillByGroupIdBillId, getLabelsExceptTransfer} from "../../../controllers/billController.js";
 
 const router = express.Router();
 
 // Create bill
 router.post("/", createBill);
 
-// Get all labels 这个在新建账单的时候用
+// Get all labels 
 router.get("/allLabels", getAllLabels);
 
-// 根据 groupId 获取账单
+// get all labels except transfer
+router.get("/labelsExcTrans", getLabelsExceptTransfer);
+
+// get all bills by groupId
 router.get("/group/:groupId", getBillsByGroupId);
 
-// 根据 groupId和billId 获取某一条账单
+// get a specific bill by groupId and billId
 router.get("/:groupId/bill/:billId", getBillByGroupIdBillId);
 
-//根据 groupId和billId 删除某一条账单
+// delete a specific bill by groupId and billId
 router.delete("/:groupId/bill/:billId", deleteBillByGroupIdBillId);
 
-//根据 groupId和billId 修改某一条账单
+// update a specific bill by groupId and billId
 router.put("/:groupId/bill/:billId", updateBillByGroupIdBillId);
 
 export default router;
