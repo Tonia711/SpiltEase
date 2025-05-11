@@ -6,51 +6,46 @@ import MobileFrame from "../../components/MobileFrame";
 
 
 export default function EditBillPage() {
-  const { groupId, billId } = useParams();  // 获取 groupId
+  const { groupId, billId } = useParams();  // groupId
   const navigate = useNavigate();
 
 
-  // 界面展示的数据
+  // data on the page
   const [bill, setBill] = useState();
   const [labels, setLabels] = useState([]);  // labels
-  // const [group, setGroup] = useState(null); //group 数据
-  const [members, setMembers] = useState(""); //下拉列表，成员列表
-  const [splitMethod, setSplitMethod] = useState("Equally"); // 如何分钱的下拉列表："Equally" 或 "As Amounts"
+  const [members, setMembers] = useState(""); //members list
+  const [splitMethod, setSplitMethod] = useState("Equally"); // "Equally" or "As Amounts"
 
 
-  // 表单数据
-  const [selectedLabelId, setSelectedLabelId] = useState();   // 选择的label
+  // form data
+  const [selectedLabelId, setSelectedLabelId] = useState();   // selected label
   const [note, setNote] = useState("");     //note
-  const [expenses, setExpenses] = useState(0);   //paid 总钱数
+  const [expenses, setExpenses] = useState(0);   //paid amount
   const [refunds, setRefunds] = useState(0);   //refunds
   const [paidBy, setPaidBy] = useState(""); // paidBy  member_id
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //每个人最终应付的钱 array
-  const [selectedMemberIds, setSelectedMemberIds] = useState([]); //选中要分钱的人
-  const [memberExpenses, setMemberExpenses] = useState([]);  //每个人实际的expense array
-  const [memberRefunds, setMemberRefunds] = useState([]); //每个人的refund array
+  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //should pay = expense-refund, array
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]); //selected members
+  const [memberExpenses, setMemberExpenses] = useState([]);  //expense array
+  const [memberRefunds, setMemberRefunds] = useState([]); //refund array
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
 
-
-
-  // get all labels 获取所有labels，labcel下拉列表
+  // get all labels 
   useEffect(() => {
     api.get("/bills/allLabels").then(({ data }) => {
       setLabels(data);
-      setSelectedLabelId(data[0]?._id || ""); // 设置默认的 selectedLabelId
+      setSelectedLabelId(data[0]?._id || ""); // default selectedLabelId
     }).catch(err => {
       console.error("Failed to fetch labels:", err);
     });
   }, []);
 
 
-  // get group members 通过获取group的数据来获取成员
-  // paidBy 下拉列表，成员列表
+  // get group members 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
-
 
   useEffect(() => {
     api
@@ -72,8 +67,7 @@ export default function EditBillPage() {
   }, [members]);
 
 
-
-  // 通过获取bill的数据来获取界面显示的数据
+  // bill
   useEffect(() => {
     api
       .get(`/bills/${groupId}/bill/${billId}`)
@@ -106,7 +100,7 @@ export default function EditBillPage() {
   }, [groupId, BASE_URL]);
 
 
-  //确保 paidBy（付款人）在成员列表中可选，哪怕他不在当前 group.members 里
+  //paidBy members
   useEffect(() => {
     if (members && members.length > 0 && bill) {
       setPaidBy(bill.paidBy);
@@ -119,8 +113,7 @@ export default function EditBillPage() {
   }, [members, bill]);
 
 
-
-  //通过输入的expense, refunds来计算每个人分的钱
+  //calculate member expenses
   useEffect(() => {
     if (!isEditing) return;
 
@@ -141,7 +134,7 @@ export default function EditBillPage() {
       return;
     }
 
-    //大冤种
+    //randomly distribute the leftover
     const rawExpense = parseFloat((total / count).toFixed(2));
     const avgRefund = parseFloat((refundTotal / count).toFixed(2));
 
@@ -178,8 +171,6 @@ export default function EditBillPage() {
       setMemberTotalExpenses(totalArray);
     }
   }, [isEditing, expenses, refunds, splitMethod, members, selectedMemberIds]);
-
-
 
 
   // submit bill
@@ -224,7 +215,7 @@ export default function EditBillPage() {
   };
 
 
-  //修改分钱的人
+  // handle checkbox change
   function handleChangeCheckBox(e, m) {
     const checked = e.target.checked;
     let newSelected;
@@ -267,14 +258,14 @@ export default function EditBillPage() {
       }
     } else {
       if (!checked) {
-        // As Amounts 模式下，去掉取消的人
+        // As Amounts 
         setMemberTotalExpenses(prev => prev.filter(me => me.memberId !== m._id));
       }
     }
   }
 
 
-  //As Amounts修改金额
+  //As Amounts change amount
   function handleChangeAmount(e, m) {
     const newAmount = parseFloat(e.target.value) || 0;
     setMemberTotalExpenses(prev => {
@@ -294,20 +285,7 @@ export default function EditBillPage() {
       }
     });
     setMemberRefunds([]);
-
-    // // 同时更新 refund
-    // const newSelected = [...selectedMemberIds];
-    // const refundTotal = parseFloat(refunds) || 0;
-    // const count = newSelected.length;
-    // const avgRefund = count > 0 ? parseFloat((refundTotal / count).toFixed(2)) : 0;
-    // setMemberRefunds(newSelected.map(id => ({
-    //   memberId: id,
-    //   refund: avgRefund
-    // })));
   }
-
-
-
 
   return (
     <MobileFrame>
