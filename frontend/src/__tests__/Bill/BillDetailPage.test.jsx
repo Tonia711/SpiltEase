@@ -14,9 +14,7 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-const mockLabels = [
-  { _id: "label1", type: "Food", iconUrl: "food.png" },
-];
+const mockLabels = [{ _id: "label1", type: "Food", iconUrl: "food.png" }];
 
 const mockBill = {
   _id: "b1",
@@ -35,8 +33,10 @@ const mockBill = {
 describe("BillDetailPage", () => {
   beforeEach(() => {
     api.get.mockImplementation((url) => {
-      if (url === "/bills/allLabels") return Promise.resolve({ data: mockLabels });
-      if (url === "/bills/g1/bill/b1") return Promise.resolve({ data: mockBill });
+      if (url === "/bills/allLabels")
+        return Promise.resolve({ data: mockLabels });
+      if (url === "/bills/g1/bill/b1")
+        return Promise.resolve({ data: mockBill });
       return Promise.reject("Unknown GET");
     });
   });
@@ -65,6 +65,8 @@ describe("BillDetailPage", () => {
     const deleteButton = await screen.findByText("Delete");
     fireEvent.click(deleteButton);
 
-    expect(screen.getByText("Are you sure you want to delete this expense?")).toBeInTheDocument();
+    expect(
+      screen.getByText("Are you sure you want to delete this expense?")
+    ).toBeInTheDocument();
   });
 });

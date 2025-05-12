@@ -68,7 +68,7 @@ export default function GroupDetailPage() {
         : DEFAULT_ICON;
       setGroupIconUrl(fullIconUrl);
       setLoading(false);
-      return data; // Return updated group data
+      return data;
     } catch (err) {
       console.error("Failed to fetch group data:", err);
       showErrorToast("Failed to load group details.");
@@ -314,7 +314,7 @@ export default function GroupDetailPage() {
         <div className={styles.inviteCode}>
           Invite Code
           <span className={styles.codeValue}>{group.joinCode}</span>
-          <Copy className={styles.copyIcon} onClick={handleCopy} />
+          <Copy className={styles.copyIcon} onClick={handleCopy} data-testid="copy-icon" />
         </div>
 
 

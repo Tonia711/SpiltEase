@@ -3,39 +3,42 @@
   --bg-dark: #1f1c2c;
   --text-white: #ffffff;
   --input-bg: #5b566a;
+  --content-width: 325px;
 }
 
 .container {
   background-color: var(--bg-dark);
   min-height: 100vh;
   max-width: 375px;
-  margin: 0 auto;
-  padding: 2rem 1rem 5rem;
+  padding: 0;
   color: var(--text-white);
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .header {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--content-width);
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  max-width: 326px;
-  margin-top: 80px;
-  margin-bottom: 2rem;
-  position: relative;
-  z-index: 2;
+  z-index: 1000;
 }
 
 .backButton {
+  position: absolute;
+  left: 0;
   background: none;
   border: none;
   font-size: 1.5rem;
   color: #fff;
   cursor: pointer;
-  padding: 0 ;
 }
 
 .avatarWrapper,
@@ -44,7 +47,7 @@
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  margin: 0 auto 1rem;
+  margin: 0;
 }
 
 .avatar {
@@ -52,6 +55,7 @@
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+  margin: 0 auto;
 }
 
 .centerOverlayIcon {
@@ -100,13 +104,22 @@
   text-align: center;
 }
 
-.infoBlock {
+.infoBlock,
+.buttonGroup,
+.notice,
+.logoutWrapper {
   width: 100%;
-  max-width: 325px;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.infoBlock {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 2rem;
+  margin-top: 170px;
 }
 .formGroup {
   display: flex;
@@ -126,6 +139,7 @@ label {
   font-weight: bold;
   border-radius: 6px;
   padding: 0.75rem;
+  max-width: var(--content-width);
 }
 
 .inputField {
@@ -136,6 +150,7 @@ label {
   padding: 0.75rem;
   font-size: 14px;
   outline: none;
+  max-width: var(--content-width);
 }
 
 .editButton,
@@ -252,6 +267,8 @@ label {
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
+  width: 100%;
+  max-width: 150px;
 }
 
 .cancelBtn {

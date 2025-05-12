@@ -83,8 +83,9 @@ export default function NewGroupPage() {
         </div>
 
         <form
-          id="createForm"
           className={styles.form}
+          id="createForm"
+          data-testid="createForm"
           onSubmit={handleCreateGroup}
         >
           <div className={styles.inputGroup}>
@@ -99,8 +100,9 @@ export default function NewGroupPage() {
           </div>
 
           <div className={styles.inputGroup}>
-            <label>Start Date</label>
+            <label htmlFor="startDate">Start Date</label>
             <input
+              id="startDate"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}

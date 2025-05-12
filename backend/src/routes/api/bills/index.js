@@ -1,14 +1,22 @@
 import express from "express";
-import { getAllLabels, createBill } from "../../../controllers/billController.js";
-import { getBillsByGroupId } from "../../../controllers/billController.js"; 
-import {getBillByGroupIdBillId, deleteBillByGroupIdBillId, updateBillByGroupIdBillId, getLabelsExceptTransfer} from "../../../controllers/billController.js";
+import {
+  getAllLabels,
+  createBill,
+} from "../../../controllers/billController.js";
+import { getBillsByGroupId } from "../../../controllers/billController.js";
+import {
+  getBillByGroupIdBillId,
+  deleteBillByGroupIdBillId,
+  updateBillByGroupIdBillId,
+  getLabelsExceptTransfer,
+} from "../../../controllers/billController.js";
 
 const router = express.Router();
 
 // Create bill
 router.post("/", createBill);
 
-// Get all labels 
+// Get all labels
 router.get("/allLabels", getAllLabels);
 
 // get all labels except transfer

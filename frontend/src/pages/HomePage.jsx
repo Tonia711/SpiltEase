@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/HomePage.module.css";
 import { AuthContext } from "../contexts/AuthContext";
@@ -12,7 +12,6 @@ export default function HomePage() {
 
   const avatarUrl = user?.avatarUrl || "/avatars/avatar1.png";
   const username = user?.userName || "User";
-  const groups = user?.groupId || [];
 
   const handleProfileClick = () => {
     navigate("/profile");
@@ -32,25 +31,17 @@ export default function HomePage() {
         </div>
 
         <div className={styles.groupListContainer}>
-          {/* {groups.length === 0 ? (
-            <div className={styles.welcome}>
-              <h2 className={styles.welcomeTitle}>Welcome aboard, mate!</h2>
-              <p className={styles.welcomeText}>
-                Create or join a group to get started.
-              </p>
-            </div>
-          ) : (
-            <GroupList />
-          )} */}
           <GroupList />
         </div>
 
-        <button
-          className={styles.fab}
-          onClick={() => setShowOptions(!showOptions)}
-        >
-          +
-        </button>
+        <div className={styles.fabContainer}>
+          <button
+            className={styles.fab}
+            onClick={() => setShowOptions(!showOptions)}
+          >
+            +
+          </button>
+        </div>
 
         {showOptions && (
           <div className={styles.options}>

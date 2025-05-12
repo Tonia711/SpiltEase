@@ -1,11 +1,8 @@
-/* File: src/styles/MobileFrame.module.css */
-
 .frame {
-  width: 100vw;
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #1F1C2C;
+  background-color: #1f1c2c;
   display: flex;
   flex-direction: column;
 }

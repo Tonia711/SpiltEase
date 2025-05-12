@@ -6,27 +6,32 @@
 
 .container {
   background-color: var(--bg-dark);
-  min-height: 100vh;
-  padding: 2rem 1rem 5rem;
+  padding: 0 auto;
   color: white;
   position: relative;
-  max-width: 375px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.profile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin: 0 auto;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.profile {
+  margin-top: 60px;
+  position: sticky;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
 }
 
 .avatar {
   width: 90px;
   height: 90px;
-  margin-top: 80px;
   border-radius: 50%;
 }
 
@@ -37,39 +42,32 @@
 }
 
 .groupListContainer {
-  width: 326px;
+  width: 325px;
   transition: background-color 0.2s ease;
 }
 
-.groupCard:hover {
-  background-color: var(--bg-dark);
-}
-
-.groupIcon {
-  font-size: 1.5rem;
-}
-
-.groupName {
-  font-size: 12px;
-  font-weight: 400;
-  color: #fff;
-}
-
 .fab {
-  position: fixed;
+  position: absolute;
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--yellow);
-  color: black;
-  font-size: 2rem;
+  background-color: #ffca28;
+  color: #000;
+  font-size: 64px;
   border: none;
   border-radius: 50%;
   width: 90px;
   height: 90px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 100;
+}
+
+.fabContainer {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
 }
 
 .options {

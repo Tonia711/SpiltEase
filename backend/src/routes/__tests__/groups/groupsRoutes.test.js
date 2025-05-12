@@ -27,15 +27,21 @@ beforeEach(async () => {
   });
 
   userId = user._id;
-  token = jwt.sign({ id: user._id, email: user.email, userName: user.userName }, JWT_SECRET, {
-    expiresIn: "1h",
-  });
+  token = jwt.sign(
+    { id: user._id, email: user.email, userName: user.userName },
+    JWT_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
 });
 
 afterEach(async () => {
-    await User.deleteMany({ userName: "GroupTester" });
-    await Group.deleteMany({ groupName: /Test Group|Validate Group|Test Group Join|Group Update|Summary Test Group|Updated Group Name|Group To Delete|Icon Update Group|Summary Test Group/ });
-    
+  await User.deleteMany({ userName: "GroupTester" });
+  await Group.deleteMany({
+    groupName:
+      /Test Group|Validate Group|Test Group Join|Group Update|Summary Test Group|Updated Group Name|Group To Delete|Icon Update Group|Summary Test Group/,
+  });
 });
 
 describe("Group Routes", () => {
@@ -52,7 +58,6 @@ describe("Group Routes", () => {
 
     expect(res.body.message).toBe("Group created successfully");
     expect(res.body.group).toHaveProperty("_id");
-
   });
 
   // --- 2. getUserGroups ---
@@ -78,7 +83,6 @@ describe("Group Routes", () => {
       .expect(200);
 
     expect(res.body.groupName).toBe("Test Group");
-
   });
 
   // --- 4. validateJoinCode ---
@@ -116,7 +120,9 @@ describe("Group Routes", () => {
       .send({ joinCode })
       .expect(200);
 
-    expect(res.body.message).toBe("You have been in this group, would you like to rejoin?");
+    expect(res.body.message).toBe(
+      "You have been in this group, would you like to rejoin?"
+    );
     expect(res.body.canRejoin).toBe(true);
   });
 
@@ -156,9 +162,7 @@ describe("Group Routes", () => {
       .expect(400);
 
     expect(res.body.message).toBe("Valid join code is required");
-
   });
-
 
   // --- 5. joinGroupByCode ---
   it("should join a group by joinCode", async () => {
@@ -175,7 +179,6 @@ describe("Group Routes", () => {
       .expect(201);
 
     expect(res.body.groupName).toBe("Test Group Join");
-
   });
 
   // --- 6. updateGroupInfo ---
@@ -192,56 +195,53 @@ describe("Group Routes", () => {
       .send({
         groupName: "Updated Group Name",
         startDate: "2025-01-01",
-        members: [{ _id: group.members[0]._id, userId, userName: "GroupTester" }],
+        members: [
+          { _id: group.members[0]._id, userId, userName: "GroupTester" },
+        ],
       })
       .expect(200);
 
     expect(res.body.groupName).toBe("Updated Group Name");
-
   });
 
-   // --- 7. getGroupSummary ---
+  // --- 7. getGroupSummary ---
   it("should get group summary", async () => {
     const group = await Group.create({
       groupName: "Summary Test Group",
       members: [{ userName: "GroupTester", userId }],
     });
-  
+
     const res = await request(app)
       .get(`/api/groups/${group._id}/summary`)
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
-  
+
     expect(res.body).toHaveProperty("groupSummary");
-
   });
-  
 
-   // --- 8. updateGroupIcon ---
+  // --- 8. updateGroupIcon ---
   it("should update iconId", async () => {
     const group = await Group.create({
       groupName: "Icon Update Group",
       members: [{ userName: "GroupTester", userId }],
     });
-  
+
     const iconPath = path.resolve("public/uploads/testing.png");
     expect(fs.existsSync(iconPath)).toBe(true);
-  
+
     const res = await request(app)
       .post("/api/groups/icon")
       .field("groupId", group._id.toString())
       .attach("icon", iconPath)
       .expect(201);
-  
+
     expect(res.body).toHaveProperty("message", "Icon uploaded");
     expect(res.body).toHaveProperty("iconId");
     expect(res.body).toHaveProperty("iconUrl");
-  
+
     const updatedGroup = await Group.findById(group._id).lean();
     expect(updatedGroup.iconId.toString()).toBe(res.body.iconId);
-  
   });
-
 
   // --- 9. deleteGroup ---
   it("should delete a group", async () => {
@@ -260,8 +260,5 @@ describe("Group Routes", () => {
       .expect(200);
 
     expect(res.body.message).toBe("Group removed from user successfully");
-
   });
-
-
 });

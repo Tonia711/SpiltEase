@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
@@ -31,7 +31,6 @@ export default function RegisterPage() {
       return rest;
     });
 
-    // === 邮箱格式 + 查重（延迟）===
     if (name === "email") {
       if (emailDebounceTimer) clearTimeout(emailDebounceTimer);
 
@@ -48,7 +47,6 @@ export default function RegisterPage() {
       setEmailDebounceTimer(timer);
     }
 
-    // === 用户名查重 ===
     if (name === "userName") {
       if (usernameDebounceTimer) clearTimeout(usernameDebounceTimer);
 
@@ -58,7 +56,6 @@ export default function RegisterPage() {
       setUsernameDebounceTimer(timer);
     }
 
-    // === 密码强度即时校验 ===
     if (name === "password") {
       if (value.length < 6) {
         setErrors((prev) => ({
@@ -72,7 +69,6 @@ export default function RegisterPage() {
         });
       }
 
-      // 同步检查确认密码是否匹配
       if (formData.confirmPassword && value !== formData.confirmPassword) {
         setErrors((prev) => ({
           ...prev,
@@ -86,7 +82,6 @@ export default function RegisterPage() {
       }
     }
 
-    // === 确认密码即时匹配校验 ===
     if (name === "confirmPassword") {
       if (value !== formData.password) {
         setErrors((prev) => ({

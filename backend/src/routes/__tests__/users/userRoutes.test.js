@@ -24,13 +24,17 @@ beforeEach(async () => {
   const user = await User.create({
     userName: "MeTestUser",
     email: "me@test.com",
-    password: "password123"
+    password: "password123",
   });
 
   userId = user._id;
-  token = jwt.sign({ id: user._id, email: user.email, userName: user.userName }, JWT_SECRET, {
-    expiresIn: "1h"
-  });
+  token = jwt.sign(
+    { id: user._id, email: user.email, userName: user.userName },
+    JWT_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
 });
 
 describe("User Routes", () => {

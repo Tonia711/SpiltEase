@@ -29,7 +29,6 @@ const balanceSchema = new mongoose.Schema({
 const Balance =
   mongoose.models.Balance || mongoose.model("Balance", balanceSchema);
 
-// 结算记录
 const balancesCalculateSchema = new mongoose.Schema({
   groupId: { type: Number, required: true },
   calculatedAt: { type: Date, default: Date.now },
@@ -45,6 +44,4 @@ const BalancesCalculate =
   mongoose.models.BalancesCalculate ||
   mongoose.model("BalancesCalculate", balancesCalculateSchema);
 
-// —— 最后统一导出 ——
-// User 和 Avatar 直接复用各自的 model
 export { User, Avatar, Label, Group, Icon, Bill, Balance, BalancesCalculate };

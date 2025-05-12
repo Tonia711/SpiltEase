@@ -110,6 +110,7 @@ export const getGroupById = async (req, res) => {
   }
 };
 
+// Validate join code
 export const validateJoinCode = async (req, res) => {
   const { joinCode } = req.body;
   const currentUserId = req.user.id;
@@ -175,6 +176,7 @@ function getUniqueName(baseName, existingMembers) {
   return name;
 }
 
+// join a group by code
 export const joinGroupByCode = async (req, res) => {
   const { joinCode, selectedMemberId } = req.body;
   const currentUserId = req.user.id;
@@ -298,6 +300,7 @@ export const joinGroupByCode = async (req, res) => {
   }
 };
 
+// update group Icon
 export const updateGroupIcon = async (req, res) => {
   try {
     const { groupId } = req.body;
@@ -322,6 +325,7 @@ export const updateGroupIcon = async (req, res) => {
   }
 };
 
+// checke if the member deletable
 export const checkMemberdeletable = async (req, res) => {
   const groupId = req.params.id;
   const memberObjectIdStr = req.params.memberId;
@@ -372,6 +376,7 @@ export const checkMemberdeletable = async (req, res) => {
   }
 };
 
+// update group info
 export const updateGroupInfo = async (req, res) => {
   const currentGroupId = req.params.id;
   const { groupName, startDate, members: incomingMembers } = req.body;
@@ -399,8 +404,8 @@ export const updateGroupInfo = async (req, res) => {
       _id: m._id,
       userId: m.userId,
       userName: m.userName,
-      isHidden: m.isHidden || false, 
-    }));    
+      isHidden: m.isHidden || false,
+    }));
     const incomingMembersWithoutId = incomingMembers.filter((m) => !m._id); // These are the new members from frontend preview
 
     const incomingMemberIds = new Set(
@@ -408,7 +413,7 @@ export const updateGroupInfo = async (req, res) => {
     );
 
     // Identify members marked for deletion (exist in current but not in incoming with ID)
-    const membersToDelete = incomingMembersWithId.filter(m => m.isHidden);  
+    const membersToDelete = incomingMembersWithId.filter(m => m.isHidden);
 
     for (const memberToDelete of membersToDelete) {
       const unsettledBalances = await Balance.find({
@@ -468,7 +473,7 @@ export const updateGroupInfo = async (req, res) => {
     // Update the group's members array with the new list
     group.members = newMembersArray;
 
-    // 6. Save the updated group document
+    // Save the updated group document
     await group.save();
 
     res.status(200).json(group);
@@ -481,7 +486,6 @@ export const updateGroupInfo = async (req, res) => {
   }
 };
 
-// Helper：生成随机 joinCode
 function generateJoinCode(length = 6) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
@@ -502,7 +506,6 @@ export const createGroup = async (req, res) => {
   }
 
   try {
-    // 生成唯一 joinCode，避免重复
     let joinCode;
     let codeExists = true;
     while (codeExists) {
@@ -511,13 +514,12 @@ export const createGroup = async (req, res) => {
       codeExists = !!existingGroup;
     }
 
-    // 组装新 group
     const newGroup = new Group({
       groupName,
       startDate: startDate ? new Date(startDate) : null,
       joinCode,
       members: members.map((m, idx) => ({
-        memberId: idx + 1, // 自动编号，从1开始
+        memberId: idx + 1, 
         userName: m.userName,
         userId: m.userId || null,
         isVirtual: m.userId ? false : true,
@@ -529,7 +531,6 @@ export const createGroup = async (req, res) => {
 
     const savedGroup = await newGroup.save();
 
-    // 把 groupId 加到用户自己的 groupId 列表里
     await User.findByIdAndUpdate(currentUserId, {
       $addToSet: { groupId: savedGroup._id },
     });
