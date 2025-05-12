@@ -258,17 +258,19 @@ export default function GroupExpensePage() {
   return (
     <MobileFrame>
       <div className={styles.container}>
-        <div className={styles.header}>
-          <span className={styles.backButton} onClick={() => navigate("/")}>
-            {"<"}
-          </span>
-          <div>
-            <img
-              src={groupIconUrl}
-              alt="Group Icon"
-              className={styles.groupIcon}
-              onClick={handleGroupClick}
-            />
+        <div className={styles.header}> 
+          <div className={styles.groupIconWrapper}>
+            <span className={styles.backButton} onClick={() => navigate("/")}>
+              {"<"}
+            </span>
+            <div className={styles.groupIconContainer}>
+              <img
+                src={groupIconUrl}
+                alt="Group Icon"
+                className={styles.groupIcon}
+                onClick={handleGroupClick}
+              />
+            </div>
             <div className={styles.groupName}>{group?.groupName}</div>
           </div>
         </div>
