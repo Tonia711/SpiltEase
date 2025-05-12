@@ -176,7 +176,7 @@ async function importData() {
       console.log("✅ Users updated with groupIds");
     }
 
-    // 将labelId转为object
+    // labelId to object
     const labelsDocs = labels.map((a, index) => {
       const doc = {
         type: a.type,
@@ -188,7 +188,7 @@ async function importData() {
       return doc;
     });
 
-    // 插入 Labels 并构建 labelMap
+    // insert Labels, labelMap
     const insertedLabels = await Label.insertMany(labelsDocs);
     console.log("✅ Labels inserted");
     const labelMap = {};
@@ -199,21 +199,21 @@ async function importData() {
       }
     });
 
-    // 获取所有 Group 文档，并构建 groupId -> memberId 对应 member._id 的映射
+    // groupId -> memberId
     const allGroups = await Group.find();
-    const groupMemberIdToObjectIdMap = {}; // 结构：{ groupId: { memberId: member._id } }
+    const groupMemberIdToObjectIdMap = {}; 
 
     allGroups.forEach((group) => {
       const memberMap = {};
       group.members.forEach((member) => {
-        memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
+        memberMap[member.memberId] = member._id; // member._id, not userId
       });
       groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
     });
 
-    // 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
+    // fixedBills, memberId
     const fixedBills = bills.map((b) => {
-      const realGroupId = groupMap[b.groupId]; // 从 groupMap 中拿真实 group ObjectId
+      const realGroupId = groupMap[b.groupId]; 
       const memberIdMap =
         groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
 
@@ -221,10 +221,10 @@ async function importData() {
         groupId: realGroupId,
         groupBills: (b.groupBills || []).map((gb) => ({
           ...gb,
-          labelId: labelMap[gb.labelId], // 替换为 labels _id
+          labelId: labelMap[gb.labelId], 
           paidBy: memberIdMap[gb.paidBy],
           members: gb.members.map((m) => ({
-            memberId: memberIdMap[m.memberId], // 替换为 groups members _id
+            memberId: memberIdMap[m.memberId], 
             expense: m.expense,
             refund: m.refund,
           })),
