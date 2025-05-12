@@ -1,82 +1,82 @@
 const users = [
     {
         id: 1,
-        userName: "testUser1",
+        userName: "Mike",
         password: "password1",
         avatarId: 1,
-        email: "test1@gmail.com",
+        email: "mike@gmail.com",
         groupId: [1,2]
     },
     {
         id: 2,
-        userName: "testUser2",
+        userName: "Jake",
         password: "password2",
         avatarId: 2,
-        email: "test2@gmail.com",
+        email: "jake@gmail.com",
         groupId: [1,2]
     },
     {
         id: 3,
-        userName: "testUser3",
+        userName: "Sam",
         password: "password3",
         avatarId: 3,
-        email: "test3@gmail.com",
+        email: "sam@gmail.com",
         groupId: [1,2]
     },
     {
         id: 4,
-        userName: "testUser4",
+        userName: "Ryan",
         password: "password4",
         avatarId: 4,
-        email: "test4@gmail.com",
+        email: "ryan@gmail.com",
         groupId: [2]
     },
     {
         id: 5,
-        userName: "testUser5",
+        userName: "Tyler",
         password: "password5",
         avatarId: 5,
-        email: "test5@gmail.com",
+        email: "tyler@gmail.com",
         groupId: [2,3]
     },
     {
         id: 6,
-        userName: "testUser6",
+        userName: "Nick",
         password: "password6",
         avatarId: 6,
-        email: "test6@gmail.com",
+        email: "nick@gmail.com",
         groupId: [2,3]
     },
     {
         id: 7,
-        userName: "testUser7",
+        userName: "Josh",
         password: "password7",
         avatarId: 7,
-        email: "test7@gmail.com",
+        email: "josh@gmail.com",
         groupId: [2,3]
     },
     {
         id: 8,
-        userName: "testUser8",
+        userName: "Chris",
         password: "password8",
         avatarId: 8,
-        email: "test8@gmail.com",
+        email: "chris@gmail.com",
         groupId: [2]
     },
     {
         id: 9,
-        userName: "testUser9",
+        userName: "Matt",
         password: "password9",
         avatarId: 9,
-        email: "test9@gmail.com",
+        email: "matt@gmail.com",
         groupId: []
     },
     {
         id: 10,
-        userName: "testUser10",
+        userName: "Danny",
         password: "password10",
         avatarId: 10,
-        email: "test10@gmail.com",
+        email: "danny@gmail.com",
         groupId: []
     }
 ];

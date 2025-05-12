@@ -1,7 +1,7 @@
 const groups = [
   {
     id: 1,
-    groupName: "testGroup1",
+    groupName: "NZ south island trip",
     note: "This is group 1",
     iconId: 1,
     budget: 0,
@@ -45,7 +45,7 @@ const groups = [
   },
   {
     id: 2,
-    groupName: "testGroup2",
+    groupName: "NZ north island trip",
     note: "This is group 2",
     iconId: 2,
     budget: 0,
@@ -114,7 +114,7 @@ const groups = [
   },
   {
     id: 3,
-    groupName: "testGroup3",
+    groupName: "Australia trip",
     note: "This is group 3",
     iconId: 3,
     budget: 0,
