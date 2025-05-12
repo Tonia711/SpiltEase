@@ -14,7 +14,7 @@ export default function GroupExpensePage() {
   const navigate = useNavigate();
   const { user: currentUser } = useContext(AuthContext);
   const [group, setGroup] = useState(null);
-  const [groupBills, setGroupBills] = useState([]); 
+  const [groupBills, setGroupBills] = useState([]);
   const [bills, setBills] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,13 +44,13 @@ export default function GroupExpensePage() {
   const handleConfirmMarkAsPaid = async (balanceItem) => {
     try {
       const { fromMemberId, toMemberId, balance: amount } = balanceItem;
-      
+
       const fromUser = group.members.find(m => m._id?.toString() === fromMemberId)?.userName || "Someone";
       const toUser = group.members.find(m => m._id?.toString() === toMemberId)?.userName || "Someone";
 
       const fromDisplay = fromMemberId === myGroupMemberObjectId ? "You" : fromUser;
       const toDisplay = toMemberId === myGroupMemberObjectId ? "You" : toUser;
-  
+
       // 构造一个转账账单
       const newBill = {
         groupId,
@@ -69,16 +69,16 @@ export default function GroupExpensePage() {
           },
         ],
       };
-  
+
       await api.post("/bills", newBill);
-      
+
       // TODO: 更新对应 balance 的 isFinished 为 true（你需要提供一个接口）
       await api.put(`/balances/group/${groupId}/markPaid`, {
         fromMemberId,
         toMemberId,
       });
       await fetchData();
-  
+
       // 刷新 balance
       const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
       setBalance(balanceData.groupBalances ?? []);
@@ -90,7 +90,7 @@ export default function GroupExpensePage() {
       alert("Failed to mark as paid. Please try again.");
     }
   };
-  
+
 
   // 找到自己在 group.members 里的 _id
   const myGroupMemberObjectId = useMemo(() => {
@@ -102,9 +102,9 @@ export default function GroupExpensePage() {
 
   const { owedToMe, iOwe, myBalances, myExpenses, totalExpenses } = useMemo(() => {
     let myExpenses = 0;
-    let totalExpenses = 0;    
+    let totalExpenses = 0;
     let owedToMe = 0;
-    let iOwe = 0; 
+    let iOwe = 0;
     let myBalances = [];
     const memberBalanceMap = {};
 
@@ -113,16 +113,16 @@ export default function GroupExpensePage() {
         if (bill.label?._id?.toString() === "000000000000000000000007") return;
 
         totalExpenses += (bill.expenses || 0) - (bill.refunds || 0);
-    
+
         if (bill.members && bill.members.length > 0) {
-          bill.members.forEach(member => {            
+          bill.members.forEach(member => {
             if (member.memberId?.toString() === myGroupMemberObjectId) {
               myExpenses += (member.expense || 0) - (member.refund || 0);
-            }    
+            }
           });
         }
       });
-    }  
+    }
 
     if (myGroupMemberObjectId && balance.length > 0) {
       const unfinished = balance.filter(b => !b.isFinished);
@@ -130,7 +130,7 @@ export default function GroupExpensePage() {
       unfinished.forEach(b => {
         const fromId = b.fromMemberId?.toString();
         const toId = b.toMemberId?.toString();
-    
+
         if (toId === myGroupMemberObjectId) {
           owedToMe += b.balance;
           myBalances.push({ ...b, direction: "incoming" });
@@ -138,13 +138,13 @@ export default function GroupExpensePage() {
           iOwe += b.balance;
           myBalances.push({ ...b, direction: "outgoing" });
         }
-    
+
         if (fromId && !memberBalanceMap[fromId]) {
           memberBalanceMap[fromId] = -b.balance;
         } else if (fromId) {
           memberBalanceMap[fromId] -= b.balance;
         }
-    
+
         if (toId && !memberBalanceMap[toId]) {
           memberBalanceMap[toId] = b.balance;
         } else if (toId) {
@@ -153,57 +153,57 @@ export default function GroupExpensePage() {
       });
     }
     return { owedToMe, iOwe, myBalances, myExpenses, totalExpenses };
-}, [balance, myUserId, groupBills, myGroupMemberObjectId]);
+  }, [balance, myUserId, groupBills, myGroupMemberObjectId]);
 
-const refreshBalance = async () => {
-  try {
-    const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
-    setBalance(balanceData.groupBalances ?? []);
-  } catch (err) {
-    console.error("Failed to refresh balance:", err);
-    setBalance([]);
+  const refreshBalance = async () => {
+    try {
+      const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
+      setBalance(balanceData.groupBalances ?? []);
+    } catch (err) {
+      console.error("Failed to refresh balance:", err);
+      setBalance([]);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const [{ data: groupData }, { data: billsData }] = await Promise.all([
+        api.get(`/groups/${groupId}`),
+        api.get(`/bills/group/${groupId}`),
+      ]);
+
+      setGroup(groupData);
+      setGroupBills(billsData);
+
+      await refreshBalance();
+
+      billsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // 按日期分类账单
+      const grouped = {};
+      billsData
+        .forEach((bill) => {
+          const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
+          if (!grouped[dateKey]) grouped[dateKey] = [];
+          grouped[dateKey].push(bill);
+        });
+
+      const sortedGrouped = Object.keys(grouped)
+        .sort((a, b) => new Date(b) - new Date(a)) // 日期 key 也按降序排
+        .reduce((obj, key) => {
+          obj[key] = grouped[key];
+          return obj;
+        }, {});
+
+      setBills(sortedGrouped);
+
+    } catch (err) {
+      console.error("Failed to fetch group or bills:", err);
+      setError("Failed to load expenses.");
+    } finally {
+      setLoading(false);
+    }
   }
-};
-
-const fetchData = async () => {
-  try {
-    const [{ data: groupData }, { data: billsData }] = await Promise.all([
-      api.get(`/groups/${groupId}`),
-      api.get(`/bills/group/${groupId}`),
-    ]);
-
-    setGroup(groupData);
-    setGroupBills(billsData);
-
-    await refreshBalance();
-
-    billsData.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // 按日期分类账单
-    const grouped = {};
-    billsData
-      .forEach((bill) => {
-        const dateKey = dayjs(bill.date).format("YYYY-MM-DD");
-        if (!grouped[dateKey]) grouped[dateKey] = [];
-        grouped[dateKey].push(bill);
-      });
-
-    const sortedGrouped = Object.keys(grouped)
-      .sort((a, b) => new Date(b) - new Date(a)) // 日期 key 也按降序排
-      .reduce((obj, key) => {
-        obj[key] = grouped[key];
-        return obj;
-      }, {});
-
-    setBills(sortedGrouped);
-
-  } catch (err) {
-    console.error("Failed to fetch group or bills:", err);
-    setError("Failed to load expenses.");
-  } finally {
-    setLoading(false);
-  }
-}
 
   useEffect(() => {
     fetchData();
@@ -224,7 +224,7 @@ const fetchData = async () => {
     if (activeTab === "balance") {
       fetchBalance();
     }
-  }, [activeTab, groupId]); 
+  }, [activeTab, groupId]);
 
 
   if (loading) return <p>Loading expenses...</p>;
@@ -242,57 +242,57 @@ const fetchData = async () => {
     ? (group.iconUrl.startsWith("http") ? group.iconUrl : `${BASE_URL}/${group.iconUrl}`)
     : DEFAULT_ICON;
 
-    const filteredGroupMembers = group?.members?.filter(member => {
-      const memberId = member._id?.toString();
-      if (!memberId || memberId === myGroupMemberObjectId) return false;
-    
-      const unfinished = balance.filter(b => !b.isFinished);
-      const incoming = unfinished.filter(b => b.toMemberId?.toString() === memberId);
-      const outgoing = unfinished.filter(b => b.fromMemberId?.toString() === memberId);
-      const totalOwedTo = incoming.reduce((sum, b) => sum + b.balance, 0);
-      const totalOwe = outgoing.reduce((sum, b) => sum + b.balance, 0);
-    
-      return totalOwedTo !== totalOwe;
-    });
+  const filteredGroupMembers = group?.members?.filter(member => {
+    const memberId = member._id?.toString();
+    if (!memberId || memberId === myGroupMemberObjectId) return false;
 
-    return (
-      <MobileFrame>
-        <div className={styles.container}>
-          <div className={styles.header}>
-            <span className={styles.backButton} onClick={() => navigate("/")}>
-              {"<"}
-            </span>
-            <div>
-              <img
-                src={groupIconUrl}
-                alt="Group Icon"
-                className={styles.groupIcon}
-                onClick={handleGroupClick}
-              />
-              <div className={styles.groupName}>{group?.groupName}</div>
-            </div>
-          </div>
+    const unfinished = balance.filter(b => !b.isFinished);
+    const incoming = unfinished.filter(b => b.toMemberId?.toString() === memberId);
+    const outgoing = unfinished.filter(b => b.fromMemberId?.toString() === memberId);
+    const totalOwedTo = incoming.reduce((sum, b) => sum + b.balance, 0);
+    const totalOwe = outgoing.reduce((sum, b) => sum + b.balance, 0);
 
-          <div className={styles.tabContainer}>
-            <button
-              className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
-              onClick={() => setActiveTab("expenses")}
-            >
-              Expense
-            </button>
-            <button
-              className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
-              onClick={() => setActiveTab("balance")}
-            >
-              Balance
-            </button>
-            <button
-              className={`${styles.tabButton} ${activeTab === "summary" ? styles.activeTab : ""}`}
-              onClick={() => setActiveTab("summary")}
-            >
-              Summary
-            </button>
+    return totalOwedTo !== totalOwe;
+  });
+
+  return (
+    <MobileFrame>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <span className={styles.backButton} onClick={() => navigate("/")}>
+            {"<"}
+          </span>
+          <div>
+            <img
+              src={groupIconUrl}
+              alt="Group Icon"
+              className={styles.groupIcon}
+              onClick={handleGroupClick}
+            />
+            <div className={styles.groupName}>{group?.groupName}</div>
           </div>
+        </div>
+
+        <div className={styles.tabContainer}>
+          <button
+            className={`${styles.tabButton} ${activeTab === "expenses" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("expenses")}
+          >
+            Expense
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === "balance" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("balance")}
+          >
+            Balance
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === "summary" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("summary")}
+          >
+            Summary
+          </button>
+        </div>
 
         {activeTab === "expenses" && (
           <div className={styles.expensesHeader}>
@@ -312,83 +312,83 @@ const fetchData = async () => {
             Object.keys(bills).length === 0 ? (
               <p className={styles.emptyMessage}>No expenses found.</p>
             ) : (
-            <>
-             {Object.entries(bills).map(([date, billList]) => (
-                <div key={date} className={styles.billGroup}>
-                  <h4 className={styles.billDateTitle}>
-                    {dayjs(date).format("MMM D, YYYY")}
-                  </h4>
-                  <div className={styles.billListContainer}>
-                    <ul>
-                      {billList.map((bill) => ( 
-                        <li
-                          key={bill._id}
-                          className={styles.billItem}
-                          onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
-                        >
+              <>
+                {Object.entries(bills).map(([date, billList]) => (
+                  <div key={date} className={styles.billGroup}>
+                    <h4 className={styles.billDateTitle}>
+                      {dayjs(date).format("MMM D, YYYY")}
+                    </h4>
+                    <div className={styles.billListContainer}>
+                      <ul>
+                        {billList.map((bill) => (
+                          <li
+                            key={bill._id}
+                            className={styles.billItem}
+                            onClick={() => navigate(`/groups/${groupId}/expenses/${bill._id}`)}
+                          >
 
-                          {bill.label?.iconUrl && (
-                            <img
-                              src={`${BASE_URL}/${bill.label.iconUrl}`}
-                              alt={bill.label.type}
-                              className={styles.billIcon}
-                            />
-                          )}
+                            {bill.label?.iconUrl && (
+                              <img
+                                src={`${BASE_URL}/${bill.label.iconUrl}`}
+                                alt={bill.label.type}
+                                className={styles.billIcon}
+                              />
+                            )}
 
-                          <div className={styles.billContent}>
-                            <div className={styles.billTextRow}>
-                              <span className={styles.billNote}>{bill.note}</span>
-                              <span className={styles.billAmount} data-testid="bill-amount">${(bill.expenses - bill.refunds).toFixed(2)}</span>
+                            <div className={styles.billContent}>
+                              <div className={styles.billTextRow}>
+                                <span className={styles.billNote}>{bill.note}</span>
+                                <span className={styles.billAmount} data-testid="bill-amount">${(bill.expenses - bill.refunds).toFixed(2)}</span>
+                              </div>
                             </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div> 
-                </div>
-              ))}
-            </>
-          )
-      ) : activeTab === "balance" ? (
-        <div>
-          <div className={styles.memberNameRow}>
-            {owedToMe > 0 ? (
-              <>
-                <span className={`${styles.memberNameLeft} ${styles.greenText}`}>
-                  You are owed
-                </span>
-                <span className={`${styles.memberNameRight} ${styles.greenText}`}>
-                  ${owedToMe.toFixed(2)}
-                </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
               </>
-            ) : iOwe > 0 ? (
-              <>
-                <span className={`${styles.memberNameLeft} ${styles.redText}`}>
-                  You owe
-                </span>
-                <span className={`${styles.memberNameRight} ${styles.redText}`}>
-                  ${iOwe.toFixed(2)}
-                </span>
-              </>
-            ) : (
-              <div className={styles.rowLayout}>
-                <span className={styles.memberNameLeft}>No balances</span>
-                <span className={styles.memberNameRight}>$0.00</span>
+            )
+          ) : activeTab === "balance" ? (
+            <div>
+              <div className={styles.memberNameRow}>
+                {owedToMe > 0 ? (
+                  <>
+                    <span className={`${styles.memberNameLeft} ${styles.greenText}`}>
+                      You are owed
+                    </span>
+                    <span className={`${styles.memberNameRight} ${styles.greenText}`}>
+                      ${owedToMe.toFixed(2)}
+                    </span>
+                  </>
+                ) : iOwe > 0 ? (
+                  <>
+                    <span className={`${styles.memberNameLeft} ${styles.redText}`}>
+                      You owe
+                    </span>
+                    <span className={`${styles.memberNameRight} ${styles.redText}`}>
+                      ${iOwe.toFixed(2)}
+                    </span>
+                  </>
+                ) : (
+                  <div className={styles.rowLayout}>
+                    <span className={styles.memberNameLeft}>No balances</span>
+                    <span className={styles.memberNameRight}>$0.00</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-             
-          {myBalances.length === 0 ? (
-              <p className={styles.emptyMessage}>No balances to show.</p>
-            ) : (
-              <ul className={styles.memberList}>
-                {myBalances.map((b, index) => {
-                  const isIncoming = b.direction === "incoming";
-                  const otherId = isIncoming ? b.fromMemberId : b.toMemberId;
-                  const other = group?.members?.find(m => m._id?.toString() === otherId?.toString());
-                  
-                  return (
-                    <li key={index}>
+
+              {myBalances.length === 0 ? (
+                <p className={styles.emptyMessage}>No balances to show.</p>
+              ) : (
+                <ul className={styles.memberList}>
+                  {myBalances.map((b, index) => {
+                    const isIncoming = b.direction === "incoming";
+                    const otherId = isIncoming ? b.fromMemberId : b.toMemberId;
+                    const other = group?.members?.find(m => m._id?.toString() === otherId?.toString());
+
+                    return (
+                      <li key={index}>
                         {/* 展开详情卡片 */}
                         {expandedBalanceId === b._id ? (
                           <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
@@ -398,8 +398,8 @@ const fetchData = async () => {
                                   ? `${other?.userName || "Someone"} owes ${currentUser.userName} (me)`
                                   : `${currentUser.userName} (me) owes ${other?.userName || "Someone"}`}
                               </span>
-                              <button 
-                                className={styles.balanceCloseBtn} 
+                              <button
+                                className={styles.balanceCloseBtn}
                                 onClick={() => setExpandedBalanceId(null)}
                               >
                                 x
@@ -409,20 +409,20 @@ const fetchData = async () => {
                             <div className={styles.balanceLineBottom}>
                               <p className={styles.balanceAmount}>${b.balance.toFixed(2)}</p>
                               <button
-                                className={styles.markPaidText} 
+                                className={styles.markPaidText}
                                 onClick={() => setConfirmMarkPaidId(b._id)}
                               >
                                 Mark as paid
-                              </button> 
+                              </button>
                             </div>
-                          
+
                             {/* ✅ 如果点击了 Mark as paid，就显示 Okay 和 Cancel */}
                             {confirmMarkPaidId === b._id && (
                               <div className={styles.confirmRow}>
                                 <span className={styles.confirmText}>
                                   A transfer will be added to group expense.
                                 </span>
-                                <button 
+                                <button
                                   className={styles.okButton}
                                   onClick={() => handleConfirmMarkAsPaid(b)}
                                 >
@@ -434,7 +434,7 @@ const fetchData = async () => {
                                 >
                                   Cancel
                                 </button>
-                              </div>  
+                              </div>
                             )}
                           </div>
                         ) : (
@@ -452,148 +452,148 @@ const fetchData = async () => {
                             </span>
                           </div>
                         )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
 
-            <div className={styles.memberSection}>
-              <div className={styles.groupBalanceTitle}>Group Members Balance</div>
-              {filteredGroupMembers.length > 0 ? (
-                filteredGroupMembers.map(member => {
-                  const memberId = member._id?.toString();
-                  
-                  if (!memberId) return null;
+              <div className={styles.memberSection}>
+                <div className={styles.groupBalanceTitle}>Group Members Balance</div>
+                {filteredGroupMembers.length > 0 ? (
+                  filteredGroupMembers.map(member => {
+                    const memberId = member._id?.toString();
 
-                  if (memberId === myGroupMemberObjectId) return null;
+                    if (!memberId) return null;
 
-                  const unfinished = balance.filter(b => !b.isFinished);
+                    if (memberId === myGroupMemberObjectId) return null;
 
-                  const incoming = unfinished.filter(b => b.toMemberId?.toString() === memberId);
-                  const outgoing = unfinished.filter(b => b.fromMemberId?.toString() === memberId);
+                    const unfinished = balance.filter(b => !b.isFinished);
 
-                  const totalOwedTo = incoming.reduce((sum, b) => sum + b.balance, 0);
-                  const totalOwe = outgoing.reduce((sum, b) => sum + b.balance, 0);
+                    const incoming = unfinished.filter(b => b.toMemberId?.toString() === memberId);
+                    const outgoing = unfinished.filter(b => b.fromMemberId?.toString() === memberId);
 
-                  const isOwed = totalOwedTo > totalOwe;
-                  const total = isOwed ? totalOwedTo - totalOwe : totalOwe - totalOwedTo;
+                    const totalOwedTo = incoming.reduce((sum, b) => sum + b.balance, 0);
+                    const totalOwe = outgoing.reduce((sum, b) => sum + b.balance, 0);
 
-                  if (total === 0) return null;
+                    const isOwed = totalOwedTo > totalOwe;
+                    const total = isOwed ? totalOwedTo - totalOwe : totalOwe - totalOwedTo;
 
-                  const relatedBalances = unfinished.filter(b => 
-                    !b.isFinished &&
-                    ((isOwed && b.toMemberId?.toString() === memberId) ||
-                    (!isOwed && b.fromMemberId?.toString() === memberId))
-              );
+                    if (total === 0) return null;
 
-                return (
-                  <div key={member._id} className={styles.memberBlock}>
-                    <div className={styles.memberNameRow}>
-                      <span className={styles.memberNameLeft}>
-                        {isOwed ? `${member.userName} are owed` : `${member.userName} owes`}
-                      </span>
-                      <span className={isOwed ? styles.greenText : styles.redText}>
-                        ${total.toFixed(2)}
-                      </span>
-                    </div>
-                    <ul className={styles.memberList}>
-                      {relatedBalances.map((b, index) => {
-                        const otherId = isOwed ? b.fromMemberId : b.toMemberId;
-                        const otherUser = group.members.find(m => m._id?.toString() === otherId?.toString());
-                        if (!otherUser) return null;
+                    const relatedBalances = unfinished.filter(b =>
+                      !b.isFinished &&
+                      ((isOwed && b.toMemberId?.toString() === memberId) ||
+                        (!isOwed && b.fromMemberId?.toString() === memberId))
+                    );
 
-                        return (
-                          <li key={index}>
-                            {expandedBalanceId === b._id ? (
-                              <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
-                                <div className={styles.balanceLineTop}>
-                                  <span>
-                                    {isOwed
-                                      ? `${otherUser.userName} owes ${member.userName}`
-                                      : `${member.userName} owes ${otherUser.userName}`}
-                                  </span>
-                                  <button
-                                    className={styles.balanceCloseBtn}
-                                    onClick={() => setExpandedBalanceId(null)}
+                    return (
+                      <div key={member._id} className={styles.memberBlock}>
+                        <div className={styles.memberNameRow}>
+                          <span className={styles.memberNameLeft}>
+                            {isOwed ? `${member.userName} are owed` : `${member.userName} owes`}
+                          </span>
+                          <span className={isOwed ? styles.greenText : styles.redText}>
+                            ${total.toFixed(2)}
+                          </span>
+                        </div>
+                        <ul className={styles.memberList}>
+                          {relatedBalances.map((b, index) => {
+                            const otherId = isOwed ? b.fromMemberId : b.toMemberId;
+                            const otherUser = group.members.find(m => m._id?.toString() === otherId?.toString());
+                            if (!otherUser) return null;
+
+                            return (
+                              <li key={index}>
+                                {expandedBalanceId === b._id ? (
+                                  <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
+                                    <div className={styles.balanceLineTop}>
+                                      <span>
+                                        {isOwed
+                                          ? `${otherUser.userName} owes ${member.userName}`
+                                          : `${member.userName} owes ${otherUser.userName}`}
+                                      </span>
+                                      <button
+                                        className={styles.balanceCloseBtn}
+                                        onClick={() => setExpandedBalanceId(null)}
+                                      >
+                                        x
+                                      </button>
+                                    </div>
+
+                                    <div className={styles.balanceLineBottom}>
+                                      <p className={styles.balanceAmount}>${b.balance.toFixed(2)}</p>
+                                      <button
+                                        className={styles.markPaidText}
+                                        onClick={() => setConfirmMarkPaidId(b._id)}
+                                      >
+                                        Mark as paid
+                                      </button>
+                                    </div>
+
+                                    {/* 新增确认逻辑 */}
+                                    {confirmMarkPaidId === b._id && (
+                                      <div className={styles.confirmRow}>
+                                        <span className={styles.confirmText}>
+                                          A transfer will be added to group expense.
+                                        </span>
+                                        <button
+                                          className={styles.okButton}
+                                          onClick={() => handleConfirmMarkAsPaid(b)}
+                                        >
+                                          Okay
+                                        </button>
+                                        <button
+                                          className={styles.cancelButton}
+                                          onClick={() => setConfirmMarkPaidId(null)}
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={styles.memberItem}
+                                    data-testid="balance-item"
+                                    onClick={() =>
+                                      setExpandedBalanceId(
+                                        expandedBalanceId === b._id ? null : b._id
+                                      )
+                                    }
                                   >
-                                    x
-                                  </button>
-                                </div>
-
-                                <div className={styles.balanceLineBottom}>
-                                  <p className={styles.balanceAmount}>${b.balance.toFixed(2)}</p>
-                                  <button
-                                    className={styles.markPaidText}
-                                    onClick={() => setConfirmMarkPaidId(b._id)}
-                                  >
-                                    Mark as paid
-                                  </button>
-                                </div>
-
-                                {/* 新增确认逻辑 */}
-                                {confirmMarkPaidId === b._id && (
-                                  <div className={styles.confirmRow}>
-                                    <span className={styles.confirmText}>
-                                      A transfer will be added to group expense.
-                                    </span>
-                                    <button 
-                                      className={styles.okButton}
-                                      onClick={() => handleConfirmMarkAsPaid(b)}
-                                    >
-                                      Okay
-                                    </button>
-                                    <button
-                                      className={styles.cancelButton}
-                                      onClick={() => setConfirmMarkPaidId(null)}
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>      
+                                    <span>{otherUser.userName}</span>
+                                    <span>${b.balance.toFixed(2)}</span>
+                                  </div>
                                 )}
-                              </div>
-                            ) : (
-                              <div
-                                className={styles.memberItem}
-                                data-testid="balance-item"
-                                onClick={() =>
-                                  setExpandedBalanceId(
-                                    expandedBalanceId === b._id ? null : b._id
-                                  )
-                                }
-                              >
-                                <span>{otherUser.userName}</span>
-                                <span>${b.balance.toFixed(2)}</span>
-                              </div>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                );
-              })
-            ) : (
-              <p className={styles.emptyMessage}>No group member balances to show.</p>
-            )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className={styles.emptyMessage}>No group member balances to show.</p>
+                )}
+              </div>
             </div>
-          </div>
-        ) : ( 
-          // Summary tab content
-          <GroupSummary
-            groupId={groupId}
-            group={group}
-            groupIconUrl={groupIconUrl}
-          />                 
-        )}
-      </div>
-
-          <div className={styles.fabContainer}>
-            <button className={styles.fab} onClick={handleAddExpenseClick}>
-              +
-            </button>
-          </div>
+          ) : (
+            // Summary tab content
+            <GroupSummary
+              groupId={groupId}
+              group={group}
+              groupIconUrl={groupIconUrl}
+            />
+          )}
         </div>
-      </MobileFrame>
-    );
-  }
+
+        <div className={styles.fabContainer}>
+          <button className={styles.fab} onClick={handleAddExpenseClick}>
+            +
+          </button>
+        </div>
+      </div>
+    </MobileFrame>
+  );
+}
