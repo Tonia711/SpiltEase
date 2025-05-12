@@ -3,7 +3,9 @@
   background-color: #1f1c2c;
   color: white;
   min-height: 100vh;
-  /* overflow-y: auto; */
+  width: 325px;
+  margin: 0 auto;
+  position: relative;
 }
 
 .inputHalf {
@@ -22,7 +24,6 @@
   font-family:"DM Sans", system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-
 .header {
   display: flex;
   justify-content: space-between; 
@@ -33,12 +34,14 @@
   text-align: center;
   margin-bottom: 0;
 }
+
 .headerTitle {
   display: flex;
   justify-self: center;
   align-items: center;
   gap: 6px;
 }
+
 .backButton {
   background: none;
   border: none;
@@ -46,12 +49,12 @@
   color: #fff;
   cursor: pointer;
   padding: 0 ;
+  font-weight: normal;
 }
 
 .backButton:hover {
   color: #f2c94c;
 }
-
 
 .labelIcon {
   width: 25px;
@@ -62,6 +65,7 @@
   width: 25px;
   height: 25px;
   vertical-align: middle;
+
 }
 .row1 {
   display: flex;
@@ -93,7 +97,6 @@
   height: 40px;
 }
 
-
 .select,
 .dateInput {
   padding: 12px;
@@ -115,7 +118,7 @@
   background-color: #2d2a3e;
   padding: 12px;
   border-radius: 6px;
-  height: 250px;
+  height: 200px;
   overflow-y: auto;
 }
 
@@ -141,14 +144,11 @@
 
 .memberItem {
   display: flex;
-  /* align-items: center; */
   justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid #444;
   font-size: 15px;
 }
-
-
 
 .memberIcon {
   width: 15px;
@@ -178,9 +178,9 @@
   margin-top: 10px;
 }
 
-
 .addButton {
-  width: calc(100% - 50px); 
+  position: absolute;
+  width: 325px;
   background-color: #fbc02d;
   color: black;
   padding: 14px;
@@ -188,8 +188,7 @@
   font-weight: bold;
   border: none;
   border-radius: 6px;
-  position: fixed;
-  bottom: 50px;
+  bottom: 100px;
 }
 
 .addButton:hover {
@@ -201,8 +200,8 @@
   font-size: 14px;
   text-align: center;
   position: fixed;
-  bottom: 100px;
-  width: calc(100% - 50px); 
+  bottom: 120px;
+  width: 325px; 
 }
 
 .warning {
@@ -210,6 +209,7 @@
     font-size: 14px;
     margin-bottom: 10px;
     text-align: center;
+    width: 325px; 
   }
 
 .processingOverlay {

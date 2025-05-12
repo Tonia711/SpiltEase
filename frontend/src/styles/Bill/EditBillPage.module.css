@@ -1,8 +1,10 @@
 .form {
     padding: 25px;
-    background-color: #1f1c2c;
+    background-color: #1f1c2c; 
     color: white;
     min-height: 100vh;
+    width: 325px;
+    margin: 0 auto;
 }
 
 .header {
@@ -15,6 +17,7 @@
     text-align: center;
     margin-bottom: 0;
 }
+
 .headerTitle {
     display: flex;
     justify-self: center;
@@ -28,6 +31,7 @@
     color: #fff;
     cursor: pointer;
     padding: 0 ;
+    font-weight: normal;
 }
 
 .backButton:hover {
@@ -124,7 +128,7 @@
     background-color: #2a273a;
     padding: 12px;
     border-radius: 6px;
-    height: 250px;
+    height: 200px;
     overflow-y: auto;
 }
 
@@ -141,7 +145,6 @@
 
 .memberItem {
     display: flex;
-    /* align-items: center; */
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid #444;
@@ -176,9 +179,8 @@
     margin-top: 10px;
 }
 
-
 .addButton {
-    width: calc(100% - 50px); 
+    width: 325px;
     background-color: #fbc02d;
     color: black;
     padding: 14px;
@@ -186,10 +188,9 @@
     font-weight: bold;
     border: none;
     border-radius: 6px;
-    position: fixed;
+    position: absolute;
     bottom: 50px;
 }
-
 
 .error {
     color: #ef5780;
