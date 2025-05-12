@@ -1,4 +1,3 @@
-// File: src/contexts/AuthContext.jsx
 import React, { createContext, useState, useEffect } from "react";
 import api from "../utils/api";
 
@@ -10,11 +9,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Try to fetch user info on initial load if token exists
     const initAuth = async () => {
       if (token) {
         api.defaults.headers.common.Authorization = `Bearer ${token}`;
         try {
           const { data } = await api.get("/users/me");
+          // Prepend base URL if avatar path is relative
           const AVATAR_BASE = import.meta.env.VITE_API_BASE_URL
             ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
             : "";
@@ -33,6 +34,7 @@ export function AuthProvider({ children }) {
     initAuth();
   }, [token]);
 
+  // User login and error handling
   const login = async (email, password) => {
     try {
       const { data } = await api.post("/auth/login", { email, password });
@@ -45,6 +47,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("Login error", err);
 
+      // Distinguish between "email not found" and "wrong password"
       if (err.response?.status === 401) {
         try {
           const check = await api.get(
@@ -69,6 +72,7 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // User registration and auto-login
   const register = async ({ userName, email, password }) => {
     try {
       const { data } = await api.post("/auth/register", {
@@ -88,10 +92,12 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Update local user info
   const updateUser = (me) => {
     setUser(me);
   };
 
+  // Clear auth state and localStorage
   const logout = () => {
     delete api.defaults.headers.common.Authorization;
     localStorage.removeItem("token");

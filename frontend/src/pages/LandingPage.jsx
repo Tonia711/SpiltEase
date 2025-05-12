@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/LandingPage.module.css";
-import MobileFrame from "../components/MobileFrame"; // ✅ 引入 MobileFrame 组件
+import MobileFrame from "../components/MobileFrame";
 
 export default function LandingPage() {
   const navigate = useNavigate();
