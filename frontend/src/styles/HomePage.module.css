@@ -6,14 +6,12 @@
 
 .container {
   background-color: var(--bg-dark);
-  min-height: 100vh;
   padding: 160px 1rem 5rem;
   color: white;
   position: relative;
-  max-width: 375px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .profile {
@@ -42,6 +40,8 @@
 
 .groupListContainer {
   width: 326px;
+  padding-top: 20px;
+  
   transition: background-color 0.2s ease;
 }
 
