@@ -34,12 +34,14 @@ export default function HomePage() {
           <GroupList />
         </div>
 
-        <button
-          className={styles.fab}
-          onClick={() => setShowOptions(!showOptions)}
-        >
-          +
-        </button>
+        <div className={styles.fabContainer}>
+          <button
+            className={styles.fab}
+            onClick={() => setShowOptions(!showOptions)}
+          >
+            +
+          </button>
+        </div>
 
         {showOptions && (
           <div className={styles.options}>
