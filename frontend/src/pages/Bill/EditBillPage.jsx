@@ -369,6 +369,7 @@ export default function EditBillPage() {
       if (hasAmount) {
         console.log("Setting amount:", response.data.amount);
         setExpenses(response.data.amount);
+        setIsEditing(true);
         setOcrResult({
           amount: response.data.amount,
           timestamp: new Date().toISOString(),
