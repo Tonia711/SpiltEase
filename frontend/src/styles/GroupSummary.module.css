@@ -177,58 +177,6 @@
   font-size: 12px;
 }
 
-.balancesSection, .settleUpSection {
-  margin-bottom: 32px;
-  animation: slideUp 0.5s ease-out;
-}
-
-.balancesSection h3, .settleUpSection h3 {
-  font-size: 16px;
-  margin-bottom: 12px;
-  text-align: center;
-  color: #ffca28;
-}
-
-.balancesList, .suggestionsList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.balanceItem, .suggestionItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background-color: #3e3455;
-  border-radius: 10px;
-}
-
-.memberName {
-  font-weight: 500;
-}
-
-.balanceAmount {
-  font-weight: bold;
-}
-
-.positive {
-  color: #4CAF50;
-}
-
-.negative {
-  color: #F44336;
-}
-
-.fromMember, .toMember {
-  font-weight: bold;
-}
-
-.paymentAmount {
-  color: #4CAF50;
-  font-weight: bold;
-}
-
 .loadingContainer, .errorContainer {
   display: flex;
   flex-direction: column;
@@ -249,8 +197,18 @@
 }
 
 .noDataMessage {
-  color: #888;
-  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.noDataMessage p {
+  font-size: 1.1rem;
+  color: #a0a0a0;
+  margin: 0;
+  line-height: 1.5;
 }
 
 @keyframes fadeIn {

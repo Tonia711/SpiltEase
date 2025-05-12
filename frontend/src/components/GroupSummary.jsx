@@ -26,20 +26,24 @@ const DEFAULT_SUMMARY_DATA = {
   totalExpenses: 0,
   billCount: 0,
   memberCount: 0,
-  groupSummary: [
-    { labelName: "No Data", totalExpense: 0 }
-  ],
-  userSummary: [
-    { labelName: "No Data", userExpense: 0 }
-  ],
-  categoryBreakdown: {
-    "No Data": 0
-  },
-  memberContributions: {
-    "No Members": 0
-  },
-  balances: {},
-  settleUpSuggestions: []
+  groupSummary: [],
+  userSummary: [],
+  categoryBreakdown: {},
+  memberContributions: {}
+};
+
+// Component to display when there's no data
+const NoDataMessage = ({ type }) => {
+  const messages = {
+    group: "No expenses yet! Time to start splitting some bills! 🎉",
+    user: "You haven't added any expenses yet. Ready to join the fun? 💰"
+  };
+
+  return (
+    <div className={styles.noDataMessage}>
+      <p>{messages[type]}</p>
+    </div>
+  );
 };
 
 export default function GroupSummary({ groupId, group, groupIconUrl }) {
@@ -228,6 +232,16 @@ export default function GroupSummary({ groupId, group, groupIconUrl }) {
   const displayGroupTotal = groupTotal || calculatedGroupTotal;
   const displayUserTotal = userTotal || calculatedUserTotal;
 
+  // Helper function to check if we have valid data for charts
+  const hasValidChartData = (data) => {
+    if (!data) return false;
+    if (data.labels?.length > 0 && data.datasets?.[0]?.data?.some(val => val > 0)) return true;
+    return false;
+  };
+
+  const hasGroupData = hasValidChartData(categoryChartData);
+  const hasUserData = hasValidChartData(memberChartData);
+
   return (
     <div className={styles.summaryContainer}>
       {summaryLoading ? (
@@ -238,152 +252,83 @@ export default function GroupSummary({ groupId, group, groupIconUrl }) {
         <>
           <div className={styles.chartSection}>
             <h3>Group Summary</h3>
-            <div className={styles.summaryHeader}>
-              <span className={styles.summaryTitle}>Total</span>
-              <span className={styles.summaryAmount}>
-                ${displayGroupTotal.toFixed(2)}
-              </span>
-            </div>
-            <div className={styles.chartContainer}>
-              <Pie data={categoryChartData} options={chartOptions} />
-            </div>
-
-            {summaryData?.groupSummary && summaryData.groupSummary.length > 0 && (
-              <ul className={styles.labelList}>
-                {summaryData.groupSummary.map((item, index) => (
-                  <li key={index} className={styles.labelItem}>
-                    <div className={styles.labelName}>
-                      <div
-                        className={styles.labelColor}
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                      ></div>
-                      {item.labelName}
-                    </div>
-                    <div className={styles.labelAmount}>
-                      ${item.totalExpense.toFixed(2)}
-                      <span className={styles.labelPercentage}>
-                        {displayGroupTotal > 0 ? `(${Math.round((item.totalExpense / displayGroupTotal) * 100)}%)` : '(0%)'}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {summaryData?.categoryBreakdown && Object.keys(summaryData.categoryBreakdown).length > 0 && !summaryData.groupSummary && (
-              <ul className={styles.labelList}>
-                {Object.entries(summaryData.categoryBreakdown).map(([category, amount], index) => (
-                  <li key={index} className={styles.labelItem}>
-                    <div className={styles.labelName}>
-                      <div
-                        className={styles.labelColor}
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                      ></div>
-                      {category}
-                    </div>
-                    <div className={styles.labelAmount}>
-                      ${amount.toFixed(2)}
-                      <span className={styles.labelPercentage}>
-                        {displayGroupTotal > 0 ? `(${Math.round((amount / displayGroupTotal) * 100)}%)` : '(0%)'}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            {hasGroupData ? (
+              <>
+                <div className={styles.summaryHeader}>
+                  <span className={styles.summaryTitle}>Total</span>
+                  <span className={styles.summaryAmount}>
+                    ${displayGroupTotal.toFixed(2)}
+                  </span>
+                </div>
+                <div className={styles.chartContainer}>
+                  <Pie data={categoryChartData} options={chartOptions} />
+                </div>
+                {summaryData?.groupSummary && summaryData.groupSummary.length > 0 && (
+                  <ul className={styles.labelList}>
+                    {summaryData.groupSummary.map((item, index) => (
+                      <li key={index} className={styles.labelItem}>
+                        <div className={styles.labelName}>
+                          <div
+                            className={styles.labelColor}
+                            style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                          ></div>
+                          {item.labelName}
+                        </div>
+                        <div className={styles.labelAmount}>
+                          ${item.totalExpense.toFixed(2)}
+                          <span className={styles.labelPercentage}>
+                            {displayGroupTotal > 0 ? `(${Math.round((item.totalExpense / displayGroupTotal) * 100)}%)` : '(0%)'}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            ) : (
+              <NoDataMessage type="group" />
             )}
           </div>
 
           <div className={styles.chartSection}>
             <h3>My Summary</h3>
-            <div className={styles.summaryHeader}>
-              <span className={styles.summaryTitle}>Total</span>
-              <span className={styles.summaryAmount}>
-                ${displayUserTotal.toFixed(2)}
-              </span>
-            </div>
-            <div className={styles.chartContainer}>
-              <Pie data={memberChartData} options={chartOptions} />
-            </div>
-
-            {summaryData?.userSummary && summaryData.userSummary.length > 0 && (
-              <ul className={styles.labelList}>
-                {summaryData.userSummary.map((item, index) => (
-                  <li key={index} className={styles.labelItem}>
-                    <div className={styles.labelName}>
-                      <div
-                        className={styles.labelColor}
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                      ></div>
-                      {item.labelName}
-                    </div>
-                    <div className={styles.labelAmount}>
-                      ${item.userExpense.toFixed(2)}
-                      <span className={styles.labelPercentage}>
-                        {displayUserTotal > 0 ? `(${Math.round((item.userExpense / displayUserTotal) * 100)}%)` : '(0%)'}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {summaryData?.memberContributions && Object.keys(summaryData.memberContributions).length > 0 && !summaryData.userSummary && (
-              <ul className={styles.labelList}>
-                {Object.entries(summaryData.memberContributions).map(([member, amount], index) => (
-                  <li key={index} className={styles.labelItem}>
-                    <div className={styles.labelName}>
-                      <div
-                        className={styles.labelColor}
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                      ></div>
-                      {member}
-                    </div>
-                    <div className={styles.labelAmount}>
-                      ${amount.toFixed(2)}
-                      <span className={styles.labelPercentage}>
-                        {displayUserTotal > 0 ? `(${Math.round((amount / displayUserTotal) * 100)}%)` : '(0%)'}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            {hasUserData ? (
+              <>
+                <div className={styles.summaryHeader}>
+                  <span className={styles.summaryTitle}>Total</span>
+                  <span className={styles.summaryAmount}>
+                    ${displayUserTotal.toFixed(2)}
+                  </span>
+                </div>
+                <div className={styles.chartContainer}>
+                  <Pie data={memberChartData} options={chartOptions} />
+                </div>
+                {summaryData?.userSummary && summaryData.userSummary.length > 0 && (
+                  <ul className={styles.labelList}>
+                    {summaryData.userSummary.map((item, index) => (
+                      <li key={index} className={styles.labelItem}>
+                        <div className={styles.labelName}>
+                          <div
+                            className={styles.labelColor}
+                            style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                          ></div>
+                          {item.labelName}
+                        </div>
+                        <div className={styles.labelAmount}>
+                          ${item.userExpense.toFixed(2)}
+                          <span className={styles.labelPercentage}>
+                            {displayUserTotal > 0 ? `(${Math.round((item.userExpense / displayUserTotal) * 100)}%)` : '(0%)'}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            ) : (
+              <NoDataMessage type="user" />
             )}
           </div>
-
-          {summaryData?.balances && Object.keys(summaryData.balances).length > 0 && (
-            <div className={styles.balancesSection}>
-              <h3>Current Balances</h3>
-              <div className={styles.balancesList}>
-                {Object.entries(summaryData.balances).map(([member, balance], index) => (
-                  <div key={index} className={styles.balanceItem}>
-                    <span className={styles.memberName}>{member}</span>
-                    <span className={`${styles.balanceAmount} ${balance >= 0 ? styles.positive : styles.negative}`}>
-                      {balance >= 0 ? `+$${balance.toFixed(2)}` : `-$${Math.abs(balance).toFixed(2)}`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {summaryData?.settleUpSuggestions && summaryData.settleUpSuggestions.length > 0 && (
-            <div className={styles.settleUpSection}>
-              <h3>Settle Up Suggestions</h3>
-              <div className={styles.suggestionsList}>
-                {summaryData.settleUpSuggestions.map((suggestion, index) => (
-                  <div key={index} className={styles.suggestionItem}>
-                    <p>
-                      <span className={styles.fromMember}>{suggestion.from}</span> should pay{" "}
-                      <span className={styles.toMember}>{suggestion.to}</span>{" "}
-                      <span className={styles.paymentAmount}>
-                        ${(suggestion.amount || 0).toFixed(2)}
-                      </span>
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>
