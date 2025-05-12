@@ -99,8 +99,6 @@ export default function BillDetailPage() {
             <span>{bill.date ? bill.date.slice(0, 10) : ''}</span>
           </div>
 
-
-
           <div className={styles.rowName}>
               <p>Split by</p>
               <p>Amounts</p>

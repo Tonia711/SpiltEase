@@ -182,7 +182,6 @@ export default function EditBillPage() {
       setError("Please fill in all required fields.");
       return;
     }
-    console.log(memberRefunds);
 
     const updatedBill = {
       labelId: selectedLabelId,
@@ -302,8 +301,7 @@ export default function EditBillPage() {
             />
             <p >Edit Expense</p>
           </div>
-
-          {/* <span>📷</span> */}
+          
           <img src="/images/camera.png" alt="camera icon" className={styles.cameraIcon} />
         </h2>
 

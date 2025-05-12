@@ -8,7 +8,6 @@ import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext"; 
 
 
-
 export default function NewBillPage() {
   const { groupId } = useParams(); // groupId
   const navigate = useNavigate();
@@ -167,8 +166,6 @@ export default function NewBillPage() {
         },
       });
 
-      // console.log("OCR API Response:", response.data); // Debug response
-
       // For robust handling, check if the response has the expected structure
       if (!response.data || response.data.success === false) {
         // Nothing useful was extracted
@@ -183,7 +180,6 @@ export default function NewBillPage() {
       
       // Apply values that were successfully extracted
       if (hasAmount) {
-        // console.log("Setting amount:", response.data.amount);
         setExpenses(response.data.amount);
         setOcrResult({
           amount: response.data.amount,
@@ -192,12 +188,10 @@ export default function NewBillPage() {
       }
       
       if (hasMerchantName) {
-        // console.log("Setting merchant name:", response.data.merchantName);
         setNote(response.data.merchantName);
       }
       
       if (hasDate) {
-        // console.log("Setting transaction date:", response.data.transactionDate);
         setPaidDate(response.data.transactionDate);
       }
       
@@ -263,8 +257,6 @@ export default function NewBillPage() {
         refund: memberRefunds == 0 ? 0 : memberRefunds.find(r => r.memberId === m.memberId)?.refund
       }))
     };
-
-    // console.log(newBill);
 
     try {
       await api.post(`/bills`, newBill);
