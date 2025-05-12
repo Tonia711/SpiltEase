@@ -33,7 +33,9 @@ describe("LoginPage", () => {
 
   it("renders email and password inputs", () => {
     renderLoginPage();
-    expect(screen.getByPlaceholderText(/enter email address/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/enter email address/i)
+    ).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
   });
 

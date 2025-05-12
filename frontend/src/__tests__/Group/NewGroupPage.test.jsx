@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -109,14 +115,20 @@ describe("NewGroupPage", () => {
     });
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith("/groups/create", expect.any(Object));
+      expect(api.post).toHaveBeenCalledWith(
+        "/groups/create",
+        expect.any(Object)
+      );
     });
 
     expect(screen.getByText("Group created successfully!")).toBeInTheDocument();
 
     // Wait for the navigation timeout
-    await waitFor(() => {
-      expect(mockedNavigate).toHaveBeenCalledWith("/");
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(mockedNavigate).toHaveBeenCalledWith("/");
+      },
+      { timeout: 2000 }
+    );
   });
 });

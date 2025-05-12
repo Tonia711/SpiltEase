@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
@@ -67,11 +73,11 @@ describe("ProfilePage", () => {
     await act(async () => {
       setup();
     });
-    
+
     await act(async () => {
       fireEvent.click(screen.getByText("Edit"));
     });
-    
+
     expect(screen.getByDisplayValue("JohnDoe")).toBeInTheDocument();
   });
 
@@ -79,7 +85,7 @@ describe("ProfilePage", () => {
     api.put.mockResolvedValueOnce({
       data: { ...mockUser, userName: "UpdatedName" },
     });
-    
+
     await act(async () => {
       setup();
     });
@@ -117,14 +123,14 @@ describe("ProfilePage", () => {
       fireEvent.click(screen.getByText("Edit"));
     });
 
-    const cameraButton = screen.getByRole("button", { name: "" }); 
-    
+    const cameraButton = screen.getByRole("button", { name: "" });
+
     await act(async () => {
       fireEvent.click(cameraButton);
     });
 
     await waitFor(() => {
-      const modalCameraIcon = screen.getAllByText("📷")[1]; 
+      const modalCameraIcon = screen.getAllByText("📷")[1];
       expect(modalCameraIcon).toBeInTheDocument();
     });
   });

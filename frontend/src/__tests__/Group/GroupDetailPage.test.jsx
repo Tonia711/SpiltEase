@@ -5,14 +5,14 @@ import GroupDetailPage from "../../pages/GroupDetailPage.jsx";
 import { AuthContext } from "../../contexts/AuthContext";
 import api from "../../utils/api";
 
-// Mock API 
+// Mock API
 vi.mock("../../utils/api", () => ({
   default: {
     get: vi.fn(),
     put: vi.fn(),
     post: vi.fn(),
-    delete: vi.fn()
-  }
+    delete: vi.fn(),
+  },
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -76,14 +76,14 @@ describe("GroupDetailPage", () => {
     const clipboardMock = vi.fn();
     Object.assign(navigator, {
       clipboard: {
-        writeText: clipboardMock
-      }
+        writeText: clipboardMock,
+      },
     });
 
     renderComponent();
 
     await waitFor(() => screen.getByText("ABC123"));
-    
+
     const copyIcon = screen.getByTestId("copy-icon");
     fireEvent.click(copyIcon);
 
@@ -100,13 +100,17 @@ describe("GroupDetailPage", () => {
     await waitFor(() => screen.getByText("Edit"));
 
     fireEvent.click(screen.getByText("Edit"));
-    expect(screen.getByDisplayValue("Test Group")).not.toHaveAttribute("readOnly");
+    expect(screen.getByDisplayValue("Test Group")).not.toHaveAttribute(
+      "readOnly"
+    );
 
     fireEvent.change(screen.getByDisplayValue("Test Group"), {
       target: { value: "New Group Name" },
     });
 
-    api.put.mockResolvedValueOnce({ data: { ...mockGroupData, groupName: "New Group Name" } });
+    api.put.mockResolvedValueOnce({
+      data: { ...mockGroupData, groupName: "New Group Name" },
+    });
 
     fireEvent.click(screen.getByText("Save"));
 
