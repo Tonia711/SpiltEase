@@ -1,4 +1,4 @@
-//账本的icons，固定的10个，用户加的放后面
+// icons for groups
 const icons = [
     {
         id: 1,

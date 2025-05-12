@@ -1,4 +1,4 @@
-// 默认10个系统头像，用户上传的将添加在数据库中（不写在这里）
+// default avatars data
 
 const avatars = [
   {

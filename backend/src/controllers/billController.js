@@ -69,8 +69,6 @@ export const getBillsByGroupId = async (req, res) => {
 // get a specific bill by groupId and billId
 export const getBillByGroupIdBillId = async (req, res) => {
   const { groupId, billId } = req.params;
-  console.log("groupId", groupId);
-  console.log("billId", billId);
 
   try {
     const bills = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
@@ -180,8 +178,6 @@ export const deleteBillByGroupIdBillId = async (req, res) => {
 
   try {
     const billDoc = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
-
-    console.log("1");
 
     if (!billDoc) {
       return res.status(404).json({ message: "Group not found" });

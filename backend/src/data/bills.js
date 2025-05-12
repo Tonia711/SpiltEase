@@ -1,5 +1,5 @@
-//账单
-//bills的人取groups里的memberId
+// bills
+// memberId, not userId
 const bills = [
     {
         groupId: 1,
