@@ -3,7 +3,7 @@ const groups = [
     id: 1,
     groupName: "NZ south island trip",
     note: "",
-    iconId: 1,
+    iconId: 2,
     budget: 0,
     totalExpenses: 3055,
     totalRefunds: 50,
@@ -55,11 +55,6 @@ const groups = [
     endDate: new Date("2025-04-22"),
     joinCode: "code02",
     members: [
-      {
-        memberId: 1,
-        userId: 1,
-        userName: "Mike",
-      },
       {
         memberId: 2,
         userId: 2,
