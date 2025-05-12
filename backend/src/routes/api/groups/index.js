@@ -1,5 +1,3 @@
-//groups/index.js
-
 import express from "express";
 import multer from "multer";
 import path from "path";
@@ -13,8 +11,6 @@ import {
   updateGroupInfo,
   joinGroupByCode,
   updateGroupIcon,
-  // addNewVirtualMember,
-  // deleteGroupMember,
   checkMemberdeletable,
 } from "../../../controllers/groupController.js";
 import { getGroupSummary } from "../../../controllers/summaryController.js";
@@ -40,13 +36,11 @@ router.post("/join", protect, joinGroupByCode);
 
 router.post("/create", protect, createGroup);
 router.post("/icon", upload.single("icon"), updateGroupIcon);
-// router.post("/:id/members/new", protect, addNewVirtualMember);
 router.get(
   "/:id/check-member-deletable/:memberId",
   protect,
   checkMemberdeletable
 );
-// router.delete("/:id/members/:memberId", protect, deleteGroupMember);
 router.put("/:id/update", protect, updateGroupInfo);
 
 export default router;

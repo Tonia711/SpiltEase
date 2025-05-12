@@ -24,7 +24,6 @@ function App() {
 
   return (
     <Routes>
-      {/* 公共页面 */}
       <Route path="/" element={isLoggedIn ? <HomePage /> : <LandingPage />} />
       <Route
         path="/login"
@@ -35,7 +34,6 @@ function App() {
         element={isLoggedIn ? <Navigate to="/" replace /> : <RegisterPage />}
       />
 
-      {/* 下面的路由都用 ProtectedRoute 包裹 */}
       <Route
         path="/create-group"
         element={
@@ -60,7 +58,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      {/* 新建bill */}
       <Route
         path="/groups/:groupId/creatBill"
         element={
@@ -69,7 +66,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      {/* bill列表 */}
       <Route
         path="/groups/:groupId/expenses"
         element={
@@ -86,7 +82,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      {/* 查看单个bill内容 */}
       <Route
         path="/groups/:groupId/expenses/:billId"
         element={
@@ -95,7 +90,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      {/* 修改单个bill */}
       <Route
         path="/groups/:groupId/editBill/:billId"
         element={
@@ -114,9 +108,6 @@ function App() {
         }
       />
 
-
-
-      {/* 其他未匹配时跳回首页或 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
