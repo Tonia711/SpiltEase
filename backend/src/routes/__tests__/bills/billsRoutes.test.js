@@ -14,9 +14,9 @@ beforeAll(async () => {
   const MONGO_URI = process.env.MONGO_URI;
   await mongoose.connect(MONGO_URI);
 
-  testGroup = await Group.findOne({ groupName: "testGroup1" });
-  testUser1 = testGroup.members.find((m) => m.userName === "testUser1");
-  testUser2 = testGroup.members.find((m) => m.userName === "testUser2");
+  testGroup = await Group.findOne({ groupName: "NZ south island trip" });
+  testUser1 = testGroup.members.find((m) => m.userName === "Mike");
+  testUser2 = testGroup.members.find((m) => m.userName === "Jake");
 
   // Create two test bills
   const bill1 = await request(app)
