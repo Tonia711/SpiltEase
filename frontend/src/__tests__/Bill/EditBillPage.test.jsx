@@ -38,7 +38,10 @@ function renderWithRoutes() {
   return render(
     <MemoryRouter initialEntries={["/groups/group123/edit/bill123"]}>
       <Routes>
-        <Route path="/groups/:groupId/edit/:billId" element={<EditBillPage />} />
+        <Route
+          path="/groups/:groupId/edit/:billId"
+          element={<EditBillPage />}
+        />
       </Routes>
     </MemoryRouter>
   );
@@ -47,9 +50,12 @@ function renderWithRoutes() {
 describe("EditBillPage", () => {
   beforeEach(() => {
     api.get.mockImplementation((url) => {
-      if (url.includes("/groups/")) return Promise.resolve({ data: mockGroupData });
-      if (url.includes("/bills/group123/bill/bill123")) return Promise.resolve({ data: mockBillData });
-      if (url === "/bills/labelsExcTrans") return Promise.resolve({ data: mockLabels });
+      if (url.includes("/groups/"))
+        return Promise.resolve({ data: mockGroupData });
+      if (url.includes("/bills/group123/bill/bill123"))
+        return Promise.resolve({ data: mockBillData });
+      if (url === "/bills/labelsExcTrans")
+        return Promise.resolve({ data: mockLabels });
       return Promise.reject("Unknown API GET");
     });
 
@@ -67,23 +73,27 @@ describe("EditBillPage", () => {
   it("shows validation error on incomplete submit", async () => {
     renderWithRoutes();
     await screen.findByDisplayValue("Mock Note");
-  
+
     const inputs = screen.getAllByPlaceholderText("$ 0.00");
     fireEvent.change(inputs[0], { target: { value: "" } }); // 清空 Paid Amount
-  
+
     fireEvent.click(screen.getByText("Save"));
-  
-    expect(await screen.findByText("Please fill in all required fields.")).toBeInTheDocument();
+
+    expect(
+      await screen.findByText("Please fill in all required fields.")
+    ).toBeInTheDocument();
   });
-  
 
   it("submits updated bill successfully", async () => {
     renderWithRoutes();
     await screen.findByDisplayValue("Mock Note");
 
-    fireEvent.change(screen.getByPlaceholderText("e.g. Shared taxi to airport"), {
-      target: { value: "Updated Note" },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText("e.g. Shared taxi to airport"),
+      {
+        target: { value: "Updated Note" },
+      }
+    );
 
     fireEvent.click(screen.getByText("Save"));
 

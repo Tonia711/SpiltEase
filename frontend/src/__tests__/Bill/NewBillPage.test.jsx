@@ -56,8 +56,10 @@ describe("NewBillPage", () => {
     vi.resetAllMocks();
 
     api.get.mockImplementation((url) => {
-      if (url.startsWith("/groups/")) return Promise.resolve({ data: mockGroup });
-      if (url.includes("labelsExcTrans")) return Promise.resolve({ data: mockLabels });
+      if (url.startsWith("/groups/"))
+        return Promise.resolve({ data: mockGroup });
+      if (url.includes("labelsExcTrans"))
+        return Promise.resolve({ data: mockLabels });
       return Promise.reject("Unknown endpoint");
     });
 
@@ -68,7 +70,9 @@ describe("NewBillPage", () => {
     it("renders title and note input", async () => {
       setup();
       expect(await screen.findByText("Add Expense")).toBeInTheDocument();
-      expect(screen.getByPlaceholderText("e.g. Shared taxi to airport")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("e.g. Shared taxi to airport")
+      ).toBeInTheDocument();
     });
   });
 
@@ -76,9 +80,12 @@ describe("NewBillPage", () => {
     it("submits with minimal valid data", async () => {
       setup();
 
-      fireEvent.change(await screen.findByPlaceholderText("e.g. Shared taxi to airport"), {
-        target: { value: "Test Note" },
-      });
+      fireEvent.change(
+        await screen.findByPlaceholderText("e.g. Shared taxi to airport"),
+        {
+          target: { value: "Test Note" },
+        }
+      );
 
       fireEvent.change(screen.getAllByPlaceholderText("$ 0.00")[0], {
         target: { value: "100" },
@@ -88,35 +95,35 @@ describe("NewBillPage", () => {
 
       await waitFor(() => {
         expect(api.post).toHaveBeenCalledTimes(2);
-        
+
         expect(api.post).toHaveBeenNthCalledWith(
           1,
-          '/bills',
+          "/bills",
           expect.objectContaining({
-            groupId: 'testGroup123',
-            note: 'Test Note',
-            splitWay: 'Equally',
+            groupId: "testGroup123",
+            note: "Test Note",
+            splitWay: "Equally",
             expenses: 100,
-            labelId: 'l1',
-            paidBy: 'm1',
+            labelId: "l1",
+            paidBy: "m1",
             members: expect.arrayContaining([
               expect.objectContaining({
-                memberId: 'm1',
+                memberId: "m1",
                 expense: 50,
-                refund: 0
+                refund: 0,
               }),
               expect.objectContaining({
-                memberId: 'm2',
+                memberId: "m2",
                 expense: 50,
-                refund: 0
-              })
-            ])
+                refund: 0,
+              }),
+            ]),
           })
         );
 
         expect(api.post).toHaveBeenNthCalledWith(
           2,
-          '/balances/group/testGroup123/recalculate'
+          "/balances/group/testGroup123/recalculate"
         );
       });
     });
@@ -124,7 +131,9 @@ describe("NewBillPage", () => {
     it("shows validation error if required fields are missing", async () => {
       setup();
       fireEvent.click(await screen.findByText("Add"));
-      expect(await screen.findByText("Please fill in all required fields.")).toBeInTheDocument();
+      expect(
+        await screen.findByText("Please fill in all required fields.")
+      ).toBeInTheDocument();
       expect(api.post).not.toHaveBeenCalled();
     });
   });

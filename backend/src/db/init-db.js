@@ -66,7 +66,7 @@ async function importData() {
       if (a.isSystem && a.id && a.id <= 10) {
         const hexId = a.id.toString(16).padStart(24, "0");
         doc._id = new mongoose.Types.ObjectId(hexId);
-        a._id = doc._id; 
+        a._id = doc._id;
       }
 
       return doc;
@@ -93,7 +93,7 @@ async function importData() {
         const hexId = u.id.toString(16).padStart(24, "0");
         userObjectId = new Types.ObjectId(hexId);
       } else {
-        userObjectId = new Types.ObjectId(); 
+        userObjectId = new Types.ObjectId();
       }
 
       userDocs.push({
@@ -104,7 +104,7 @@ async function importData() {
         avatarId: avatarMap[u.avatarId],
       });
 
-      userIdMap[u.id] = userObjectId; 
+      userIdMap[u.id] = userObjectId;
     }
 
     await User.insertMany(userDocs);
@@ -151,7 +151,7 @@ async function importData() {
       .map((u) => {
         const groupObjectIds = (u.groupId || [])
           .map((groupId) => groupMap[groupId])
-          .filter((id) => id); 
+          .filter((id) => id);
         return {
           updateOne: {
             filter: { _id: userIdMap[u.id] },
@@ -188,7 +188,7 @@ async function importData() {
     });
 
     const allGroups = await Group.find();
-    const groupMemberIdToObjectIdMap = {}; 
+    const groupMemberIdToObjectIdMap = {};
 
     allGroups.forEach((group) => {
       const memberMap = {};
@@ -200,7 +200,7 @@ async function importData() {
 
     // 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
     const fixedBills = bills.map((b) => {
-      const realGroupId = groupMap[b.groupId]; 
+      const realGroupId = groupMap[b.groupId];
       const memberIdMap =
         groupMemberIdToObjectIdMap[realGroupId.toString()] || {};
 
@@ -211,7 +211,7 @@ async function importData() {
           labelId: labelMap[gb.labelId],
           paidBy: memberIdMap[gb.paidBy],
           members: gb.members.map((m) => ({
-            memberId: memberIdMap[m.memberId], 
+            memberId: memberIdMap[m.memberId],
             expense: m.expense,
             refund: m.refund,
           })),

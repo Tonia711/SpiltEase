@@ -9,7 +9,7 @@ vi.mock("../../utils/api");
 
 const mockUser = {
   _id: "user123",
-  userName: "TestUser"
+  userName: "TestUser",
 };
 
 const mockGroup = {
@@ -18,8 +18,8 @@ const mockGroup = {
   iconUrl: "groups/defaultIcon.jpg",
   members: [
     { _id: "m1", userId: "user123", userName: "TestUser" },
-    { _id: "m2", userId: "user456", userName: "Bob" }
-  ]
+    { _id: "m2", userId: "user456", userName: "Bob" },
+  ],
 };
 
 const mockBills = [
@@ -30,8 +30,11 @@ const mockBills = [
     expenses: 100,
     refunds: 0,
     date: "2025-05-01T00:00:00.000Z",
-    members: [{ memberId: "m1", expense: 50, refund: 0 }, { memberId: "m2", expense: 50, refund: 0 }]
-  }
+    members: [
+      { memberId: "m1", expense: 50, refund: 0 },
+      { memberId: "m2", expense: 50, refund: 0 },
+    ],
+  },
 ];
 
 const mockBalance = {
@@ -41,9 +44,9 @@ const mockBalance = {
       fromMemberId: "m1",
       toMemberId: "m2",
       balance: 25,
-      isFinished: false
-    }
-  ]
+      isFinished: false,
+    },
+  ],
 };
 
 function renderWithContext() {
@@ -51,7 +54,10 @@ function renderWithContext() {
     <AuthContext.Provider value={{ user: mockUser }}>
       <MemoryRouter initialEntries={["/groups/g1/expenses"]}>
         <Routes>
-          <Route path="/groups/:groupId/expenses" element={<GroupExpensePage />} />
+          <Route
+            path="/groups/:groupId/expenses"
+            element={<GroupExpensePage />}
+          />
         </Routes>
       </MemoryRouter>
     </AuthContext.Provider>
@@ -63,8 +69,10 @@ describe("GroupExpensePage", () => {
     vi.resetAllMocks();
     api.get.mockImplementation((url) => {
       if (url === "/groups/g1") return Promise.resolve({ data: mockGroup });
-      if (url === "/bills/group/g1") return Promise.resolve({ data: mockBills });
-      if (url === "/balances/group/g1") return Promise.resolve({ data: mockBalance });
+      if (url === "/bills/group/g1")
+        return Promise.resolve({ data: mockBills });
+      if (url === "/balances/group/g1")
+        return Promise.resolve({ data: mockBalance });
       return Promise.reject("Unknown GET");
     });
 
@@ -90,7 +98,9 @@ describe("GroupExpensePage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("You owe")).toBeInTheDocument();
-      expect(screen.getByText("$25.00", { selector: "span._memberNameRight_c244b1" })).toBeInTheDocument();
+      expect(
+        screen.getByText("$25.00", { selector: "span._memberNameRight_c244b1" })
+      ).toBeInTheDocument();
     });
   });
 
@@ -101,7 +111,9 @@ describe("GroupExpensePage", () => {
       expect(screen.queryByText("Loading expenses...")).not.toBeInTheDocument();
     });
 
-    expect(await screen.findByTestId("bill-amount")).toHaveTextContent("$100.00");
+    expect(await screen.findByTestId("bill-amount")).toHaveTextContent(
+      "$100.00"
+    );
     expect(screen.getByText("May 1, 2025")).toBeInTheDocument();
   });
 
@@ -113,7 +125,7 @@ describe("GroupExpensePage", () => {
 
   it("expands balance detail when clicked", async () => {
     renderWithContext();
-    
+
     await waitFor(() => {
       expect(screen.queryByText("Loading expenses...")).not.toBeInTheDocument();
     });
@@ -125,9 +137,13 @@ describe("GroupExpensePage", () => {
     fireEvent.click(balanceItem);
 
     await waitFor(() => {
-      const detailBox = screen.getByText("TestUser (me) owes Bob").closest("div._balanceDetailBox_c244b1");
+      const detailBox = screen
+        .getByText("TestUser (me) owes Bob")
+        .closest("div._balanceDetailBox_c244b1");
       expect(detailBox).toBeInTheDocument();
-      expect(detailBox.querySelector("button._markPaidText_c244b1")).toHaveTextContent("Mark as paid");
+      expect(
+        detailBox.querySelector("button._markPaidText_c244b1")
+      ).toHaveTextContent("Mark as paid");
     });
   });
 });

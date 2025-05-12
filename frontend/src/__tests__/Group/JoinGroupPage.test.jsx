@@ -11,8 +11,8 @@ vi.mock("../../utils/api", () => ({
     post: vi.fn(),
     get: vi.fn(),
     put: vi.fn(),
-    delete: vi.fn()
-  }
+    delete: vi.fn(),
+  },
 }));
 
 function renderWithContext(user) {
@@ -35,7 +35,9 @@ describe("GroupJoinPage", () => {
   it("shows error for empty invite code", async () => {
     renderWithContext(user);
     fireEvent.click(screen.getByText("Join"));
-    expect(await screen.findByText("Please enter a 5-digit code.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Please enter a 5-digit code.")
+    ).toBeInTheDocument();
   });
 
   it("shows error for invalid code (404)", async () => {
@@ -80,8 +82,14 @@ describe("GroupJoinPage", () => {
       target: { value: "REJOIN" },
     });
     fireEvent.click(screen.getByText("Join"));
-    expect(await screen.findByText("You've been part of this group before. Would you like to rejoin?")).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /rejoin group/i })).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "You've been part of this group before. Would you like to rejoin?"
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /rejoin group/i })
+    ).toBeInTheDocument();
   });
 
   it("shows member list and allows new join", async () => {
@@ -126,7 +134,7 @@ describe("GroupJoinPage", () => {
           },
         },
       })
-      .mockResolvedValueOnce({}); 
+      .mockResolvedValueOnce({});
 
     renderWithContext(user);
     fireEvent.change(screen.getByPlaceholderText(/6-character/i), {

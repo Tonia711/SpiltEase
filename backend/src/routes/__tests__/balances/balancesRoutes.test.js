@@ -10,8 +10,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 let token, userId, groupId;
 
 beforeAll(async () => {
-    const MONGO_URI = process.env.MONGO_URI;
-    await mongoose.connect(MONGO_URI);
+  const MONGO_URI = process.env.MONGO_URI;
+  await mongoose.connect(MONGO_URI);
 });
 
 afterAll(async () => {
@@ -108,15 +108,17 @@ describe("Balance Routes", () => {
     });
 
     const res = await request(app)
-        .put(`/api/balances/group/${groupId}/markPaid`) 
-        .send({ fromMemberId: fromId, toMemberId: toId }) 
-        .expect(200);
-    
+      .put(`/api/balances/group/${groupId}/markPaid`)
+      .send({ fromMemberId: fromId, toMemberId: toId })
+      .expect(200);
+
     expect(res.body.message).toBe("Marked as paid");
 
     const updated = await Balance.findOne({ groupId });
     const marked = updated.groupBalances.find(
-      b => b.fromMemberId.toString() === fromId.toString() && b.toMemberId.toString() === toId.toString()
+      (b) =>
+        b.fromMemberId.toString() === fromId.toString() &&
+        b.toMemberId.toString() === toId.toString()
     );
     expect(marked.isFinished).toBe(true);
     expect(marked.finishHistory.length).toBeGreaterThan(0);

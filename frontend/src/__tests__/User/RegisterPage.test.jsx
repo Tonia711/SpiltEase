@@ -39,21 +39,34 @@ describe("RegisterPage", () => {
     setup();
     expect(screen.getByPlaceholderText("Enter username")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Enter email")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Minimum 6 characters")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Minimum 6 characters")
+    ).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Confirm password")).toBeInTheDocument();
   });
 
   it("shows error when passwords do not match", async () => {
     setup();
-    await userEvent.type(screen.getByPlaceholderText("Minimum 6 characters"), "abcdef");
-    await userEvent.type(screen.getByPlaceholderText("Confirm password"), "abc123");
+    await userEvent.type(
+      screen.getByPlaceholderText("Minimum 6 characters"),
+      "abcdef"
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("Confirm password"),
+      "abc123"
+    );
 
-    expect(await screen.findByText("Passwords do not match")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Passwords do not match")
+    ).toBeInTheDocument();
   });
 
   it("shows error for invalid email format", async () => {
     setup();
-    await userEvent.type(screen.getByPlaceholderText("Enter email"), "invalid-email");
+    await userEvent.type(
+      screen.getByPlaceholderText("Enter email"),
+      "invalid-email"
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Invalid email format")).toBeInTheDocument();
@@ -64,10 +77,22 @@ describe("RegisterPage", () => {
     mockRegister.mockResolvedValueOnce({ ok: true });
     setup();
 
-    await userEvent.type(screen.getByPlaceholderText("Enter username"), "newuser");
-    await userEvent.type(screen.getByPlaceholderText("Enter email"), "user@example.com");
-    await userEvent.type(screen.getByPlaceholderText("Minimum 6 characters"), "abcdef");
-    await userEvent.type(screen.getByPlaceholderText("Confirm password"), "abcdef");
+    await userEvent.type(
+      screen.getByPlaceholderText("Enter username"),
+      "newuser"
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("Enter email"),
+      "user@example.com"
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("Minimum 6 characters"),
+      "abcdef"
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("Confirm password"),
+      "abcdef"
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 
@@ -91,10 +116,22 @@ describe("RegisterPage", () => {
 
     setup();
 
-    await userEvent.type(screen.getByPlaceholderText("Enter username"), "newuser");
-    await userEvent.type(screen.getByPlaceholderText("Enter email"), "user@example.com");
-    await userEvent.type(screen.getByPlaceholderText("Minimum 6 characters"), "abcdef");
-    await userEvent.type(screen.getByPlaceholderText("Confirm password"), "abcdef");
+    await userEvent.type(
+      screen.getByPlaceholderText("Enter username"),
+      "newuser"
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("Enter email"),
+      "user@example.com"
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("Minimum 6 characters"),
+      "abcdef"
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("Confirm password"),
+      "abcdef"
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 

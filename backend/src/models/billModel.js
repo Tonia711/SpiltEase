@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const billSchema = new mongoose.Schema({
   groupId: {
-    type: mongoose.Schema.Types.ObjectId, 
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Group",
     required: true,
   },
@@ -16,19 +16,22 @@ const billSchema = new mongoose.Schema({
       date: Date,
       note: String,
       paidBy: {
-        type: mongoose.Schema.Types.ObjectId, 
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
       },
       expenses: Number,
       refunds: Number,
       splitWay: String,
-      members: [{ 
-        memberId: {
-          type: mongoose.Schema.Types.ObjectId, 
-          required: true
-        }, 
-        expense: Number, 
-        refund: Number }],
+      members: [
+        {
+          memberId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+          },
+          expense: Number,
+          refund: Number,
+        },
+      ],
     },
   ],
 });

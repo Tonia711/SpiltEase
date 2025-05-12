@@ -1,6 +1,6 @@
 import { Label } from "../db/schema.js";
 import { Bill } from "../db/schema.js";
-import  { Group } from "../db/schema.js";
+import { Group } from "../db/schema.js";
 import mongoose from "mongoose";
 
 // get all labels
@@ -17,7 +17,7 @@ export const getAllLabels = async (req, res) => {
 // get all labels except transfer
 export const getLabelsExceptTransfer = async (req, res) => {
   try {
-    const labels = await Label.find({ type: { $ne: "transfer" } }); 
+    const labels = await Label.find({ type: { $ne: "transfer" } });
     res.json(labels);
   } catch (err) {
     console.error("Failed to fetch labels:", err);
@@ -25,37 +25,36 @@ export const getLabelsExceptTransfer = async (req, res) => {
   }
 };
 
-
 // get all bills by groupId
 export const getBillsByGroupId = async (req, res) => {
   try {
     const { groupId } = req.params;
 
     const bills = await Bill.aggregate([
-        { $match: { groupId: new mongoose.Types.ObjectId(groupId) } },
-        { $unwind: "$groupBills" }, 
-        {
-          $lookup: {
-            from: "labels",
-            localField: "groupBills.labelId",
-            foreignField: "_id",
-            as: "label"
-          }
+      { $match: { groupId: new mongoose.Types.ObjectId(groupId) } },
+      { $unwind: "$groupBills" },
+      {
+        $lookup: {
+          from: "labels",
+          localField: "groupBills.labelId",
+          foreignField: "_id",
+          as: "label",
         },
-        { $unwind: { path: "$label", preserveNullAndEmptyArrays: true } },
-        {
-            $project: {
-              _id: "$groupBills._id",
-              label: "$label",
-              date: "$groupBills.date",
-              note: "$groupBills.note",
-              paidBy: "$groupBills.paidBy",
-              expenses: "$groupBills.expenses",
-              refunds: "$groupBills.refunds",
-              splitWay: "$groupBills.splitWay",
-              members: "$groupBills.members",
-            }
-        }          
+      },
+      { $unwind: { path: "$label", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: "$groupBills._id",
+          label: "$label",
+          date: "$groupBills.date",
+          note: "$groupBills.note",
+          paidBy: "$groupBills.paidBy",
+          expenses: "$groupBills.expenses",
+          refunds: "$groupBills.refunds",
+          splitWay: "$groupBills.splitWay",
+          members: "$groupBills.members",
+        },
+      },
     ]);
 
     res.status(200).json(bills);
@@ -65,34 +64,39 @@ export const getBillsByGroupId = async (req, res) => {
   }
 };
 
-
 // get a specific bill by groupId and billId
 export const getBillByGroupIdBillId = async (req, res) => {
   const { groupId, billId } = req.params;
 
   try {
-    const bills = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
+    const bills = await Bill.findOne({
+      groupId: new mongoose.Types.ObjectId(groupId),
+    });
 
     if (!bills) {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const bill = bills.groupBills.find(b => b._id.toString() === billId);
+    const bill = bills.groupBills.find((b) => b._id.toString() === billId);
 
     if (!bill) {
       return res.status(404).json({ message: "Bill not found in group" });
     }
 
     const group = await Group.findById(groupId).lean();
-    const paidByMember = group?.members.find(m => m._id.toString() === bill.paidBy.toString());
+    const paidByMember = group?.members.find(
+      (m) => m._id.toString() === bill.paidBy.toString()
+    );
 
-    const enrichedMembers = (bill.members || []).map(member => {
-      const found = group?.members.find(m => m._id.toString() === member.memberId.toString());
+    const enrichedMembers = (bill.members || []).map((member) => {
+      const found = group?.members.find(
+        (m) => m._id.toString() === member.memberId.toString()
+      );
       return {
         memberId: member.memberId,
         expense: member.expense,
         refund: member.refund,
-        userName: found?.userName || "Unknown"
+        userName: found?.userName || "Unknown",
       };
     });
 
@@ -105,16 +109,13 @@ export const getBillByGroupIdBillId = async (req, res) => {
       ...bill.toObject(),
       paidBy: paidByMember?._id || "Unknown",
       paidByName: paidByMember?.userName || "Unknown",
-      members: enrichedMembers
+      members: enrichedMembers,
     });
-
   } catch (error) {
     console.error("Error fetching group bill:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 // create a new bill
 export const createBill = async (req, res) => {
@@ -128,7 +129,7 @@ export const createBill = async (req, res) => {
       expenses,
       refunds,
       splitWay,
-      members
+      members,
     } = req.body;
 
     const existing = await Bill.findOne({ groupId });
@@ -141,7 +142,7 @@ export const createBill = async (req, res) => {
     }
 
     const newGroupBill = {
-      id: currentId + 1, 
+      id: currentId + 1,
       labelId,
       date: new Date(date),
       note,
@@ -149,7 +150,7 @@ export const createBill = async (req, res) => {
       expenses,
       refunds,
       splitWay,
-      members
+      members,
     };
 
     let billDoc = await Bill.findOne({ groupId });
@@ -160,7 +161,7 @@ export const createBill = async (req, res) => {
     } else {
       billDoc = await Bill.create({
         groupId,
-        groupBills: [newGroupBill]
+        groupBills: [newGroupBill],
       });
     }
 
@@ -171,19 +172,22 @@ export const createBill = async (req, res) => {
   }
 };
 
-
 // delete a specific bill by groupId and billId
 export const deleteBillByGroupIdBillId = async (req, res) => {
   const { groupId, billId } = req.params;
 
   try {
-    const billDoc = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
+    const billDoc = await Bill.findOne({
+      groupId: new mongoose.Types.ObjectId(groupId),
+    });
 
     if (!billDoc) {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const targetIndex = billDoc.groupBills.findIndex(b => b._id.toString() === billId);
+    const targetIndex = billDoc.groupBills.findIndex(
+      (b) => b._id.toString() === billId
+    );
 
     if (targetIndex === -1) {
       return res.status(404).json({ message: "Bill not found in group" });
@@ -192,36 +196,30 @@ export const deleteBillByGroupIdBillId = async (req, res) => {
     billDoc.groupBills.splice(targetIndex, 1);
     await billDoc.save();
     return res.status(200).json({ message: "Bill deleted successfully" });
-
   } catch (err) {
     console.error("Failed to delete bill:", err);
     res.status(500).json({ message: "Failed to delete bill" });
   }
 };
 
-
 // update a specific bill by groupId and billId
 export const updateBillByGroupIdBillId = async (req, res) => {
   const { groupId, billId } = req.params;
-  const {
-    labelId,
-    date,
-    note,
-    paidBy,
-    expenses,
-    refunds,
-    splitWay,
-    members
-  } = req.body;
+  const { labelId, date, note, paidBy, expenses, refunds, splitWay, members } =
+    req.body;
 
   try {
-    const billDoc = await Bill.findOne({ groupId: new mongoose.Types.ObjectId(groupId) });
+    const billDoc = await Bill.findOne({
+      groupId: new mongoose.Types.ObjectId(groupId),
+    });
 
     if (!billDoc) {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const targetBill = billDoc.groupBills.find(b => b._id.toString() === billId);
+    const targetBill = billDoc.groupBills.find(
+      (b) => b._id.toString() === billId
+    );
 
     if (!targetBill) {
       return res.status(404).json({ message: "Bill not found in group" });
@@ -229,7 +227,7 @@ export const updateBillByGroupIdBillId = async (req, res) => {
 
     targetBill.labelId = labelId || targetBill.labelId;
     targetBill.date = date ? new Date(date) : targetBill.date;
-    targetBill.note = note ?? targetBill.note; 
+    targetBill.note = note ?? targetBill.note;
     targetBill.paidBy = paidBy || targetBill.paidBy;
     targetBill.expenses = expenses ?? targetBill.expenses;
     targetBill.refunds = refunds ?? targetBill.refunds;

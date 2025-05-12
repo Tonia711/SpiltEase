@@ -1,7 +1,7 @@
 import request from "supertest";
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import path from "path";
-import app from "../../../app.js"; 
+import app from "../../../app.js";
 
 vi.mock("@azure/ai-form-recognizer", async () => {
   return {
@@ -19,27 +19,27 @@ vi.mock("@azure/ai-form-recognizer", async () => {
                   Total: { kind: "number", value: 42.5 },
                   MerchantName: { kind: "string", value: "Test Store" },
                   TransactionDate: { kind: "date", value: "2024-05-01" },
-                }
-              }
+                },
+              },
             ],
             pages: [
               {
                 lines: [
                   { content: "Test Store $42.50" },
-                  { content: "Date: 01/05/2024" }
-                ]
-              }
-            ]
-          })
+                  { content: "Date: 01/05/2024" },
+                ],
+              },
+            ],
+          }),
         };
       }
-    }
+    },
   };
 });
 
 describe("POST /api/ocr/receipt", () => {
   it("should extract amount, merchant, and date from uploaded receipt", async () => {
-    const testImagePath = path.resolve("public/uploads/ocr_testing.jpg"); 
+    const testImagePath = path.resolve("public/uploads/ocr_testing.jpg");
 
     const response = await request(app)
       .post("/api/ocr/receipt")

@@ -4,46 +4,46 @@ import styles from "../../styles/Bill/EditBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
 
-
 export default function EditBillPage() {
-  const { groupId, billId } = useParams();  // groupId
+  const { groupId, billId } = useParams(); // groupId
   const navigate = useNavigate();
-
 
   // data on the page
   const [bill, setBill] = useState();
-  const [labels, setLabels] = useState([]);  // labels
+  const [labels, setLabels] = useState([]); // labels
   const [members, setMembers] = useState(""); //members list
   const [splitMethod, setSplitMethod] = useState("Equally"); // "Equally" or "As Amounts"
 
-
   // form data
-  const [selectedLabelId, setSelectedLabelId] = useState();   // selected label
-  const [note, setNote] = useState("");     //note
-  const [expenses, setExpenses] = useState(0);   //paid amount
-  const [refunds, setRefunds] = useState(0);   //refunds
+  const [selectedLabelId, setSelectedLabelId] = useState(); // selected label
+  const [note, setNote] = useState(""); //note
+  const [expenses, setExpenses] = useState(0); //paid amount
+  const [refunds, setRefunds] = useState(0); //refunds
   const [paidBy, setPaidBy] = useState(""); // paidBy  member_id
-  const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
-  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]);  //should pay = expense-refund, array
+  const [paidDate, setPaidDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [memberTotalExpenses, setMemberTotalExpenses] = useState([]); //should pay = expense-refund, array
   const [selectedMemberIds, setSelectedMemberIds] = useState([]); //selected members
-  const [memberExpenses, setMemberExpenses] = useState([]);  //expense array
+  const [memberExpenses, setMemberExpenses] = useState([]); //expense array
   const [memberRefunds, setMemberRefunds] = useState([]); //refund array
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
-
   // get labels except transfer
   useEffect(() => {
-    api.get("/bills/labelsExcTrans").then(({ data }) => {
-      setLabels(data);
-      setSelectedLabelId(data[0]?._id || ""); 
-    }).catch(err => {
-      console.error("Failed to fetch labels:", err);
-    });
+    api
+      .get("/bills/labelsExcTrans")
+      .then(({ data }) => {
+        setLabels(data);
+        setSelectedLabelId(data[0]?._id || "");
+      })
+      .catch((err) => {
+        console.error("Failed to fetch labels:", err);
+      });
   }, []);
 
-
-  // get group members 
+  // get group members
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const IMG_URL = import.meta.env.VITE_AVATAR_BASE_URL;
 
@@ -59,13 +59,11 @@ export default function EditBillPage() {
       });
   }, [groupId, BASE_URL]);
 
-
   useEffect(() => {
     if (members && members.length > 0) {
-      setSelectedMemberIds(members.map(m => m._id));
+      setSelectedMemberIds(members.map((m) => m._id));
     }
   }, [members]);
-
 
   // bill
   useEffect(() => {
@@ -80,38 +78,45 @@ export default function EditBillPage() {
         setPaidDate(data.date.slice(0, 10));
         setSplitMethod(data.splitWay);
         setPaidBy(data.paidBy);
-        setSelectedMemberIds(data.members.map(m => m.memberId));
-        setMemberExpenses(data.members.map(m => ({
-          memberId: m.memberId,
-          amount: m.expense
-        })));
-        setMemberRefunds(data.members.map(m => ({
-          memberId: m.memberId,
-          refund: m.refund
-        })));
-        setMemberTotalExpenses(data.members.map(m => ({
-          memberId: m.memberId,
-          amount: parseFloat((m.expense - m.refund).toFixed(2))
-        })));
+        setSelectedMemberIds(data.members.map((m) => m.memberId));
+        setMemberExpenses(
+          data.members.map((m) => ({
+            memberId: m.memberId,
+            amount: m.expense,
+          }))
+        );
+        setMemberRefunds(
+          data.members.map((m) => ({
+            memberId: m.memberId,
+            refund: m.refund,
+          }))
+        );
+        setMemberTotalExpenses(
+          data.members.map((m) => ({
+            memberId: m.memberId,
+            amount: parseFloat((m.expense - m.refund).toFixed(2)),
+          }))
+        );
       })
       .catch((err) => {
         console.error("Failed to fetch group data:", err);
       });
   }, [groupId, BASE_URL]);
 
-
   //paidBy members
   useEffect(() => {
     if (members && members.length > 0 && bill) {
       setPaidBy(bill.paidBy);
 
-      const exist = members.some(m => m._id === bill.paidBy);
+      const exist = members.some((m) => m._id === bill.paidBy);
       if (!exist) {
-        setMembers(prev => [...prev, { _id: bill.paidBy, userName: "Unknown User" }]);
+        setMembers((prev) => [
+          ...prev,
+          { _id: bill.paidBy, userName: "Unknown User" },
+        ]);
       }
     }
   }, [members, bill]);
-
 
   //calculate member expenses
   useEffect(() => {
@@ -120,12 +125,15 @@ export default function EditBillPage() {
     const total = parseFloat(expenses);
     const refundTotal = parseFloat(refunds || 0);
     if (
-      !members || members.length === 0 ||
-      !selectedMemberIds || selectedMemberIds.length === 0 ||
+      !members ||
+      members.length === 0 ||
+      !selectedMemberIds ||
+      selectedMemberIds.length === 0 ||
       isNaN(total)
-    ) return;
+    )
+      return;
 
-    const filtered = members.filter(m => selectedMemberIds.includes(m._id));
+    const filtered = members.filter((m) => selectedMemberIds.includes(m._id));
     const count = filtered.length;
     if (count === 0) {
       setMemberExpenses([]);
@@ -141,27 +149,34 @@ export default function EditBillPage() {
     const expenseDistributed = parseFloat((rawExpense * count).toFixed(2));
     const refundDistributed = parseFloat((avgRefund * count).toFixed(2));
     const expenseLeftover = parseFloat((total - expenseDistributed).toFixed(2));
-    const refundLeftover = parseFloat((refundTotal - refundDistributed).toFixed(2));
+    const refundLeftover = parseFloat(
+      (refundTotal - refundDistributed).toFixed(2)
+    );
 
-    const expenseRandomIndex = expenseLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
-    const refundRandomIndex = refundLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
+    const expenseRandomIndex =
+      expenseLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
+    const refundRandomIndex =
+      refundLeftover !== 0 ? Math.floor(Math.random() * count) : -1;
 
     const expensesArray = filtered.map((m, i) => ({
       memberId: m._id,
-      amount: i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense
+      amount:
+        i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense,
     }));
 
     const refundsArray = filtered.map((m, i) => ({
       memberId: m._id,
-      refund: i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund
+      refund: i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund,
     }));
 
     const totalArray = filtered.map((m, i) => {
-      const expense = i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense;
-      const refund = i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund;
+      const expense =
+        i === expenseRandomIndex ? rawExpense + expenseLeftover : rawExpense;
+      const refund =
+        i === refundRandomIndex ? avgRefund + refundLeftover : avgRefund;
       return {
         memberId: m._id,
-        amount: parseFloat((expense - refund).toFixed(2))
+        amount: parseFloat((expense - refund).toFixed(2)),
       };
     });
 
@@ -172,13 +187,19 @@ export default function EditBillPage() {
     }
   }, [isEditing, expenses, refunds, splitMethod, members, selectedMemberIds]);
 
-
   // submit bill
   const handleSaveBill = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!selectedLabelId || !note || !expenses || !paidBy || !paidDate || memberTotalExpenses.length === 0) {
+    if (
+      !selectedLabelId ||
+      !note ||
+      !expenses ||
+      !paidBy ||
+      !paidDate ||
+      memberTotalExpenses.length === 0
+    ) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -191,13 +212,16 @@ export default function EditBillPage() {
       expenses: parseFloat(expenses),
       refunds: parseFloat(refunds),
       splitWay: splitMethod,
-      members: memberTotalExpenses.map(m => ({
+      members: memberTotalExpenses.map((m) => ({
         memberId: m.memberId,
-        expense: memberExpenses.find(r => r.memberId === m.memberId)?.amount || 0,
-        refund: memberRefunds == 0 ? 0 : memberRefunds.find(r => r.memberId === m.memberId)?.refund
-      }))
+        expense:
+          memberExpenses.find((r) => r.memberId === m.memberId)?.amount || 0,
+        refund:
+          memberRefunds == 0
+            ? 0
+            : memberRefunds.find((r) => r.memberId === m.memberId)?.refund,
+      })),
     };
-
 
     try {
       setBill(null);
@@ -205,14 +229,13 @@ export default function EditBillPage() {
       await api.post(`/balances/group/${groupId}/recalculate`);
       navigate(`/groups/${groupId}/expenses/${billId}`, {
         replace: true,
-        state: { needRefreshBalance: true }
+        state: { needRefreshBalance: true },
       });
     } catch (err) {
       console.error("Failed to update bill:", err);
       setError("Failed to update bill. Please try again.");
     }
   };
-
 
   // handle checkbox change
   function handleChangeCheckBox(e, m) {
@@ -222,7 +245,7 @@ export default function EditBillPage() {
     if (checked) {
       newSelected = [...selectedMemberIds, m._id];
     } else {
-      newSelected = selectedMemberIds.filter(id => id !== m._id);
+      newSelected = selectedMemberIds.filter((id) => id !== m._id);
     }
     setSelectedMemberIds(newSelected);
 
@@ -236,20 +259,26 @@ export default function EditBillPage() {
         const avgRefund = parseFloat((refundTotal / count).toFixed(2));
         const finalAmount = parseFloat((rawExpense - avgRefund).toFixed(2));
 
-        setMemberExpenses(newSelected.map(id => ({
-          memberId: id,
-          amount: rawExpense
-        })));
+        setMemberExpenses(
+          newSelected.map((id) => ({
+            memberId: id,
+            amount: rawExpense,
+          }))
+        );
 
-        setMemberRefunds(newSelected.map(id => ({
-          memberId: id,
-          refund: avgRefund
-        })));
+        setMemberRefunds(
+          newSelected.map((id) => ({
+            memberId: id,
+            refund: avgRefund,
+          }))
+        );
 
-        setMemberTotalExpenses(newSelected.map(id => ({
-          memberId: id,
-          amount: finalAmount
-        })));
+        setMemberTotalExpenses(
+          newSelected.map((id) => ({
+            memberId: id,
+            amount: finalAmount,
+          }))
+        );
       } else {
         setMemberExpenses([]);
         setMemberRefunds([]);
@@ -257,28 +286,33 @@ export default function EditBillPage() {
       }
     } else {
       if (!checked) {
-        // As Amounts 
-        setMemberTotalExpenses(prev => prev.filter(me => me.memberId !== m._id));
+        // As Amounts
+        setMemberTotalExpenses((prev) =>
+          prev.filter((me) => me.memberId !== m._id)
+        );
       }
     }
   }
 
-
   //As Amounts change amount
   function handleChangeAmount(e, m) {
     const newAmount = parseFloat(e.target.value) || 0;
-    setMemberTotalExpenses(prev => {
-      const exists = prev.find(p => p.memberId === m._id);
+    setMemberTotalExpenses((prev) => {
+      const exists = prev.find((p) => p.memberId === m._id);
       if (exists) {
-        return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+        return prev.map((p) =>
+          p.memberId === m._id ? { ...p, amount: newAmount } : p
+        );
       } else {
         return [...prev, { memberId: m._id, amount: newAmount }];
       }
     });
-    setMemberExpenses(prev => {
-      const exists = prev.find(p => p.memberId === m._id);
+    setMemberExpenses((prev) => {
+      const exists = prev.find((p) => p.memberId === m._id);
       if (exists) {
-        return prev.map(p => p.memberId === m._id ? { ...p, amount: newAmount } : p);
+        return prev.map((p) =>
+          p.memberId === m._id ? { ...p, amount: newAmount } : p
+        );
       } else {
         return [...prev, { memberId: m._id, amount: newAmount }];
       }
@@ -290,19 +324,29 @@ export default function EditBillPage() {
     <MobileFrame>
       <form className={styles.form} onSubmit={handleSaveBill}>
         <h2 className={styles.header}>
-          <span className={styles.backButton} onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)}>
+          <span
+            className={styles.backButton}
+            onClick={() => navigate(`/groups/${groupId}/expenses/${billId}`)}
+          >
             {"<"}
           </span>
           <div className={styles.headerTitle}>
             <img
-              src={`${IMG_URL}/${labels.find(label => label._id === selectedLabelId)?.iconUrl}`}
-              alt={labels.find(label => label._id === selectedLabelId)?.type || "label icon"}
+              src={`${IMG_URL}/${labels.find((label) => label._id === selectedLabelId)?.iconUrl}`}
+              alt={
+                labels.find((label) => label._id === selectedLabelId)?.type ||
+                "label icon"
+              }
               className={styles.labelIcon}
             />
-            <p >Edit Expense</p>
+            <p>Edit Expense</p>
           </div>
-          
-          <img src="/images/camera.png" alt="camera icon" className={styles.cameraIcon} />
+
+          <img
+            src="/images/camera.png"
+            alt="camera icon"
+            className={styles.cameraIcon}
+          />
         </h2>
 
         <div className={styles.rowName}>
@@ -316,7 +360,7 @@ export default function EditBillPage() {
             onChange={(e) => setSelectedLabelId(e.target.value)}
             className={styles.select}
           >
-            {labels.map(label => (
+            {labels.map((label) => (
               <option key={label._id} value={label._id}>
                 {label.type}
               </option>
@@ -331,7 +375,6 @@ export default function EditBillPage() {
             className={styles.inputHalf}
           />
         </div>
-
 
         <div className={styles.rowName}>
           <p>Paid Amount</p>
@@ -387,7 +430,9 @@ export default function EditBillPage() {
         </div>
 
         <div className={styles.row4}>
-          <label className={styles.rowName} htmlFor="splitMethod" >Split Method</label>
+          <label className={styles.rowName} htmlFor="splitMethod">
+            Split Method
+          </label>
           <select
             id="splitMethod"
             value={splitMethod}
@@ -406,14 +451,18 @@ export default function EditBillPage() {
           <ul className={styles.memberList}>
             {(members || []).map((m, i) => {
               const checked = selectedMemberIds.includes(m._id);
-              const current = memberTotalExpenses.find(me => me.memberId === m._id) || { amount: 0 };
+              const current = memberTotalExpenses.find(
+                (me) => me.memberId === m._id
+              ) || { amount: 0 };
 
               return (
                 <li key={m._id} className={styles.memberListItem}>
                   <input
                     type="checkbox"
                     checked={checked}
-                    onChange={(e) => { handleChangeCheckBox(e, m) }}
+                    onChange={(e) => {
+                      handleChangeCheckBox(e, m);
+                    }}
                     className={styles.memberIcon}
                   />
                   <div className={styles.memberItem}>
@@ -424,7 +473,9 @@ export default function EditBillPage() {
                         <input
                           type="number"
                           value={current.amount}
-                          onChange={(e) => { handleChangeAmount(e, m) }}
+                          onChange={(e) => {
+                            handleChangeAmount(e, m);
+                          }}
                           className={styles.inputAmount}
                           disabled={!checked}
                         />
@@ -442,11 +493,17 @@ export default function EditBillPage() {
         <div className={styles.rowSummary}>
           <div>
             <strong>Total split:</strong> $
-            {memberTotalExpenses.reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
+            {memberTotalExpenses
+              .reduce((sum, m) => sum + m.amount, 0)
+              .toFixed(2)}
           </div>
           <div>
             <strong>Difference:</strong> $
-            {(parseFloat(expenses || 0) - memberTotalExpenses.reduce((sum, m) => sum + m.amount, 0) - refunds).toFixed(2)}
+            {(
+              parseFloat(expenses || 0) -
+              memberTotalExpenses.reduce((sum, m) => sum + m.amount, 0) -
+              refunds
+            ).toFixed(2)}
           </div>
         </div>
 

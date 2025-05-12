@@ -24,7 +24,9 @@ describe("LandingPage", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Mates don't let mates do the math")).toBeInTheDocument();
+    expect(
+      screen.getByText("Mates don't let mates do the math")
+    ).toBeInTheDocument();
     expect(screen.getByAltText("SplitMate")).toBeInTheDocument();
   });
 

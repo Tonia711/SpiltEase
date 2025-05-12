@@ -53,14 +53,14 @@ describe("HomePage", () => {
   it("toggles options when FAB is clicked", () => {
     setup();
     const fab = screen.getByRole("button", { name: "+" });
-    
+
     expect(screen.queryByText("Create Group")).not.toBeInTheDocument();
     expect(screen.queryByText("Join Group")).not.toBeInTheDocument();
-    
+
     fireEvent.click(fab);
     expect(screen.getByText("Create Group")).toBeInTheDocument();
     expect(screen.getByText("Join Group")).toBeInTheDocument();
-    
+
     fireEvent.click(fab);
     expect(screen.queryByText("Create Group")).not.toBeInTheDocument();
     expect(screen.queryByText("Join Group")).not.toBeInTheDocument();
@@ -68,12 +68,12 @@ describe("HomePage", () => {
 
   it("navigates to /create-group and /groups/join", () => {
     setup();
-    
+
     fireEvent.click(screen.getByRole("button", { name: "+" }));
-    
+
     fireEvent.click(screen.getByText("Create Group"));
     expect(mockNavigate).toHaveBeenCalledWith("/create-group");
-    
+
     fireEvent.click(screen.getByText("Join Group"));
     expect(mockNavigate).toHaveBeenCalledWith("/groups/join");
   });
