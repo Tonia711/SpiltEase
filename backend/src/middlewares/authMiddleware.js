@@ -1,13 +1,15 @@
 import jwt from "jsonwebtoken";
-// src/middleware/auth.js
+
+// Middleware to protect routes – verifies JWT
 export const protect = (req, res, next) => {
+  // Extract token from Authorization header
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "No token provided" });
 
   try {
+    // Decode and verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("🔓 [protect] jwt.verify 得到 decoded:", decoded);
-    req.user = decoded;
+    req.user = decoded; // attach user info to request
     next();
   } catch (err) {
     res.status(401).json({ error: "Invalid or expired token" });

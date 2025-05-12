@@ -1,8 +1,8 @@
-// File: src/controllers/userController.js
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import Group from "../models/groupModel.js";
 
+// Get current logged-in user info
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
@@ -12,7 +12,7 @@ export const getMe = async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const userObj = user.toObject();
-
+    // Flatten avatarId to avatarUrl + raw ID
     userObj.avatarUrl = userObj.avatarId?.avatarUrl;
     userObj.avatarId = userObj.avatarId?._id;
 
@@ -24,6 +24,7 @@ export const getMe = async (req, res) => {
   }
 };
 
+// Update user profile (username or avatar)
 export const updateMe = async (req, res) => {
   const updates = {};
   if (req.body.userName) updates.userName = req.body.userName;
@@ -39,10 +40,10 @@ export const updateMe = async (req, res) => {
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
+    // Propagate updated userName to all group member lists
     if (updates.userName) {
       const userIdObj = new mongoose.Types.ObjectId(req.user.id);
-
-      const result = await Group.updateMany(
+      await Group.updateMany(
         { "members.userId": userIdObj },
         { $set: { "members.$[elem].userName": updates.userName } },
         {
@@ -63,6 +64,7 @@ export const updateMe = async (req, res) => {
   }
 };
 
+// Delete current user account
 export const deleteMe = async (req, res) => {
   try {
     const user = await User.findOneAndDelete({ _id: req.user.id });
@@ -76,6 +78,7 @@ export const deleteMe = async (req, res) => {
   }
 };
 
+// Search users by username keyword (case-insensitive)
 export const searchUsers = async (req, res) => {
   const { q } = req.query;
 
@@ -95,6 +98,7 @@ export const searchUsers = async (req, res) => {
   }
 };
 
+// Check if email or username already exists
 export const checkFieldExists = async (req, res) => {
   const { field, value } = req.query;
 

@@ -7,7 +7,6 @@ import {
 } from "../../controllers/avatarController.js";
 
 const router = express.Router();
-// 设置上传路径与文件名
 const storage = multer.diskStorage({
   destination: "public/uploads/",
   filename: (req, file, cb) => {

@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
 
+// Schema for user avatar (system or uploaded)
 const avatarSchema = new mongoose.Schema({
   avatarUrl: {
     type: String,
-    required: true,
+    required: true, // URL or relative path to image file
     trim: true,
   },
   isSystem: {
     type: Boolean,
-    default: false, // 用户上传为 false，系统内置为 true
+    default: false, // true = preset avatar, false = user-uploaded
   },
 });
 

@@ -1,7 +1,7 @@
 import Avatar from "../models/avatarModel.js";
 import User from "../models/userModel.js";
 
-// ✅ 只返回系统预设头像
+// Get all system avatars (preset)
 export const getAllAvatars = async (req, res) => {
   try {
     const avatars = await Avatar.find({ isSystem: true });
@@ -11,19 +11,19 @@ export const getAllAvatars = async (req, res) => {
   }
 };
 
-// 上传自定义头像并更新用户 avatarId
+// Handle custom avatar upload
 export const uploadCustomAvatar = async (req, res) => {
   try {
-    const { userId } = req.body; // 或从 req.user 拿
+    const { userId } = req.body;
     const filePath = `uploads/${req.file.filename}`;
 
-    // Step 1: 存入 Avatar 表
+    // Save uploaded avatar as a non-system avatar
     const newAvatar = await Avatar.create({
       avatarUrl: filePath,
       isSystem: false,
     });
 
-    // Step 2: 更新用户 avatarId 为这个头像
+    // Link new avatar to user
     await User.findByIdAndUpdate(userId, {
       avatarId: newAvatar._id,
     });
