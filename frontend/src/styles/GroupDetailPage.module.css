@@ -26,6 +26,10 @@
 }
 
 .backButton {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -144,22 +148,11 @@
 
 .editButton{
   background-color: #ffca28;
-  color: white;
+  color: black;
   position: fixed;
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000; 
-}
-
-.editButton:hover {
-  color: black;
-  font-size: bolder;
-  transition: all 0.3s ease;
-}
-
-.backButton:hover {
-  color: #ffca28;
 }
 
 .groupIconContainer {
