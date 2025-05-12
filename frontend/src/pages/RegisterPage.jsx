@@ -159,12 +159,12 @@ export default function RegisterPage() {
         <div className={styles.container}>
           <form className={styles.form} onSubmit={handleSubmit}>
             <div className={styles.titleRow}>
-              <button
+              <span
                 className={styles.backButton}
                 onClick={() => navigate(-1)}
               >
                 {"<"}
-              </button>
+              </span>
               <h2 className={styles.pageTitle}>Create Account</h2>
             </div>
 

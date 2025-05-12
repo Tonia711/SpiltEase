@@ -45,6 +45,7 @@
 .cameraIcon {
     width: 25px;
     height: 25px;
+    vertical-align: middle;
 }
 
 .row1 {
@@ -189,7 +190,7 @@
     border: none;
     border-radius: 6px;
     position: absolute;
-    bottom: 50px;
+    bottom: 100px;
 }
 
 .error {

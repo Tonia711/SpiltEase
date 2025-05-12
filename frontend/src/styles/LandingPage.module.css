@@ -15,6 +15,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 325px;
+  margin: 0 auto;
 }
 
 .logoImage {
