@@ -10,7 +10,7 @@
   min-height: 100vh;
   max-width: 375px;
   margin: 0 auto;
-  padding: 2rem 1rem 5rem;
+  padding: 0;
   color: var(--text-white);
   display: flex;
   flex-direction: column;
@@ -23,7 +23,7 @@
   justify-content: center;
   width: 100%;
   max-width: 326px;
-  margin-top: 80px;
+  margin-top: 60px;
   margin-bottom: 2rem;
   position: relative;
   z-index: 2;
@@ -35,7 +35,7 @@
   font-size: 1.5rem;
   color: #fff;
   cursor: pointer;
-  padding: 0 ;
+  padding: 0;
 }
 
 .avatarWrapper,
