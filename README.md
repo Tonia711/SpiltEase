@@ -18,6 +18,7 @@ Please use good version control practices, such as feature branching, both to ma
 ![](./PokeMasters.png)
 
 后端 env:
+```
 PORT=3000
 DATABASE = mongodb+srv://pokemasters:<PASSWORD>@cluster0.c5u4t48.mongodb.net/splitmate?retryWrites=true&w=majority&appName=Cluster0
 DATABASE_LOCAL = mongodb://localhost:27017/pokemasters
@@ -28,7 +29,14 @@ MONGO_URI=mongodb+srv://pokemasters:pw123456@cluster0.c5u4t48.mongodb.net/splitm
 JWT_SECRET=yourSecretKey123
 JWT_EXPIRES_IN=7d
 
+# Azure Form Recognizer Credentials
+AZURE_FORM_RECOGNIZER_ENDPOINT=https://pokemasters-receipt-ocr.cognitiveservices.azure.com/
+AZURE_FORM_RECOGNIZER_KEY=w1jrMsm2sLNQaz5zJtxatBG9LYrBGUKnoxNhBUuovJZ7GnMXVNvdJQQJ99BEACL93NaXJ3w3AAALACOGeyu7
+```
+
 前端：
+```
 VITE_API_BASE_URL=http://localhost:3000/api
 
 VITE_AVATAR_BASE_URL=http://localhost:3000
+```

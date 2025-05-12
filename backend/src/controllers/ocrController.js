@@ -228,7 +228,8 @@ export const processReceipt = async (req, res) => {
         imagePath: req.file.path,
         recognizedText,
         amountExtracted: extractedAmount !== null,
-        merchantNameExtracted: extractedMerchantName !== null
+        merchantNameExtracted: extractedMerchantName !== null,
+        category: 'shopping' // Add default category for OCR scanned receipts
       };
       
       // Add amount if extracted

@@ -213,6 +213,14 @@ export default function NewBillPage() {
         setPaidDate(response.data.transactionDate);
       }
 
+      // Set category to shopping for OCR scanned receipts
+      if (response.data.success) {
+        const shoppingLabel = labels.find(label => label.type.toLowerCase() === 'shopping');
+        if (shoppingLabel) {
+          setSelectedLabelId(shoppingLabel._id);
+        }
+      }
+      
       // Generate appropriate error message based on what's missing
       const missingFields = [];
       if (!hasAmount) missingFields.push("total amount");

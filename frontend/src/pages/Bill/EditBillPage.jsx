@@ -3,10 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "../../styles/Bill/EditBillPage.module.css";
 import api from "../../utils/api";
 import MobileFrame from "../../components/MobileFrame";
+import CameraCapture from "../../components/CameraCapture";
 
 export default function EditBillPage() {
   const { groupId, billId } = useParams(); // groupId
   const navigate = useNavigate();
+
+  // Camera and OCR states
+  const [showCamera, setShowCamera] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [ocrResult, setOcrResult] = useState(null);
+  const [warning, setWarning] = useState(""); // For OCR warnings
 
   // data on the page
   const [bill, setBill] = useState();
@@ -320,8 +327,117 @@ export default function EditBillPage() {
     setMemberRefunds([]);
   }
 
+  // Handle camera capture
+  const handleCameraClick = () => {
+    setShowCamera(true);
+  };
+
+  // Process captured image through OCR
+  const handleCaptureComplete = async (imageBlob, imagePreview) => {
+    setShowCamera(false);
+    setIsProcessing(true);
+    setError(""); // Clear any previous errors
+    setWarning(""); // Clear any previous warnings
+    
+    try {
+      // Create form data for image upload
+      const formData = new FormData();
+      formData.append('image', imageBlob, 'receipt.jpg');
+
+      // Send to OCR API
+      const response = await api.post('/ocr/receipt', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log("OCR API Response:", response.data); // Debug response
+
+      // For robust handling, check if the response has the expected structure
+      if (!response.data || response.data.success === false) {
+        // Nothing useful was extracted
+        setError("Could not extract any information from receipt. Please enter details manually.");
+        return;
+      }
+
+      // Track what was extracted and what was missing
+      const hasAmount = response.data.amountExtracted === true && response.data.amount;
+      const hasMerchantName = response.data.merchantNameExtracted === true && response.data.merchantName;
+      const hasDate = response.data.transactionDate !== undefined;
+      
+      // Apply values that were successfully extracted
+      if (hasAmount) {
+        console.log("Setting amount:", response.data.amount);
+        setExpenses(response.data.amount);
+        setIsEditing(true);
+        setOcrResult({
+          amount: response.data.amount,
+          timestamp: new Date().toISOString(),
+        });
+      }
+      
+      if (hasMerchantName) {
+        console.log("Setting merchant name:", response.data.merchantName);
+        setNote(response.data.merchantName);
+      }
+      
+      if (hasDate) {
+        console.log("Setting transaction date:", response.data.transactionDate);
+        setPaidDate(response.data.transactionDate);
+      }
+
+      // Set category to shopping for OCR scanned receipts
+      if (response.data.success) {
+        const shoppingLabel = labels.find(label => label.type.toLowerCase() === 'shopping');
+        if (shoppingLabel) {
+          setSelectedLabelId(shoppingLabel._id);
+        }
+      }
+      
+      // Generate appropriate error message based on what's missing
+      const missingFields = [];
+      if (!hasAmount) missingFields.push("total amount");
+      if (!hasMerchantName) missingFields.push("expense note");
+      
+      if (missingFields.length > 0) {
+        // Use warning state for partial extractions
+        let message;
+        if (missingFields.length === 1) {
+          message = `${missingFields[0]} not extracted. Please enter manually.`;
+        } else {
+          const lastField = missingFields.pop();
+          message = `${missingFields.join(', ')} and ${lastField} not extracted. Please enter manually.`;
+        }
+        
+        setWarning(message);
+      }
+      
+    } catch (err) {
+      console.error('Error processing receipt:', err);
+      setError('Failed to process receipt. Please enter details manually.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   return (
     <MobileFrame>
+      <div className={styles.container}>
+        {showCamera && (
+          <div className={styles.cameraWrapper}>
+            <CameraCapture
+              onCapture={handleCaptureComplete}
+              onClose={() => setShowCamera(false)}
+            />
+          </div>
+        )}
+
+        {isProcessing && (
+          <div className={styles.processingOverlay}>
+            <div className={styles.spinner}></div>
+            <p>Processing receipt...</p>
+          </div>
+        )}
+        
       <form className={styles.form} onSubmit={handleSaveBill}>
         <h2 className={styles.header}>
           <span
@@ -342,12 +458,10 @@ export default function EditBillPage() {
             <p>Edit Expense</p>
           </div>
 
-          <img
-            src="/images/camera.png"
-            alt="camera icon"
-            className={styles.cameraIcon}
-          />
-        </h2>
+            <span onClick={handleCameraClick}>
+              <img src="/images/camera.png" alt="camera icon" className={styles.cameraIcon} />
+            </span>
+          </h2>
 
         <div className={styles.rowName}>
           <p>Category</p>
@@ -488,8 +602,8 @@ export default function EditBillPage() {
               );
             })}
           </ul>
-        </div>
-
+        </div>        
+        
         <div className={styles.rowSummary}>
           <div>
             <strong>Total split:</strong> $
@@ -507,12 +621,14 @@ export default function EditBillPage() {
           </div>
         </div>
 
+        {warning && <div className={styles.warning}>{warning}</div>}
         {error && <div className={styles.error}>{error}</div>}
 
         <button type="submit" className={styles.addButton}>
           Save
         </button>
       </form>
+      </div>
     </MobileFrame>
   );
 }
