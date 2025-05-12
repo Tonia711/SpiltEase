@@ -1,4 +1,4 @@
-//界面显示的balances数据
+//balances data
 const balances = [
     {
         groupId: 1,

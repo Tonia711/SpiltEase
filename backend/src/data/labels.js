@@ -1,5 +1,4 @@
-//固定的数据
-//7是transfer
+// lables for bills
 const labels = [
     {
         id: 1,
