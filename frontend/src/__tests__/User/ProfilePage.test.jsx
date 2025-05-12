@@ -117,15 +117,14 @@ describe("ProfilePage", () => {
       fireEvent.click(screen.getByText("Edit"));
     });
 
-    const cameraButton = screen.getByRole("button", { name: "" }); // the camera icon
+    const cameraButton = screen.getByRole("button", { name: "" }); 
     
     await act(async () => {
       fireEvent.click(cameraButton);
     });
 
     await waitFor(() => {
-      // Find the camera icon in the modal specifically
-      const modalCameraIcon = screen.getAllByText("📷")[1]; // Get the second camera icon (in the modal)
+      const modalCameraIcon = screen.getAllByText("📷")[1]; 
       expect(modalCameraIcon).toBeInTheDocument();
     });
   });
