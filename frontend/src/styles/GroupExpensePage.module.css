@@ -4,9 +4,9 @@
   background-color: #1F1C2C;
   height: 100vh;
   color: white;
-  padding: 20px;
+  padding: 0;
   box-sizing: border-box;
-  padding-top: 62px;
+  align-items: center;
 }
 
 .groupName {
@@ -15,12 +15,26 @@
   font-weight: bold;
 }
 
+.groupIconWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+
+.groupIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .groupIcon {
   width: 90px;
   height: 90px;
   object-fit: cover;
   border-radius: 50%;
-  margin: 1.5rem auto 0.3rem;
   display: block;
 }
 
@@ -35,26 +49,27 @@
 }
   
 .header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 326px;
+  margin-top: 50px;
   position: relative;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  z-index: 2;
 }
 
 .backButton {
   position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-162.5px);
-  height: 90px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
   background: none;
   border: none;
   font-size: 1.5rem;
   color: #fff;
   cursor: pointer;
-}
-
-.backButton:hover {
-  color: #ffca28; 
+  padding: 0;
 }
 
 .fab {
