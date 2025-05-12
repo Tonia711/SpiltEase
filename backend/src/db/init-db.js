@@ -208,7 +208,7 @@ async function importData() {
         groupId: realGroupId,
         groupBills: (b.groupBills || []).map((gb) => ({
           ...gb,
-          labelId: labelMap[gb.labelId], // 替换为 labels _id
+          labelId: labelMap[gb.labelId],
           paidBy: memberIdMap[gb.paidBy],
           members: gb.members.map((m) => ({
             memberId: memberIdMap[m.memberId], 
