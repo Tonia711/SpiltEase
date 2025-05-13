@@ -19,9 +19,9 @@ Please use good version control practices, such as feature branching, both to ma
 
 # How to Run and Test the Project
 ## 1. Prerequisites
-Node.js (version 18 or above)
-MongoDB (local or Atlas)
-(Optional) Postman – for API testing
+- Node.js (version 18 or above)
+- MongoDB (local or Atlas)
+- (Optional) Postman – for API testing
 ## 2. Project Structure
 /frontend     → React (Next.js) frontend  
 /backend     → Express backend  
@@ -81,10 +81,10 @@ cd frontend
 npm run  test
 ```
 ### Step 6: Test Account Credentials
-Use the following test account to log in and test features:
-Email: mike@gmail.com
-Password：password1
-Join group code: code02
+- Use the following test account to log in and test features:
+- Email: mike@gmail.com
+- Password：password1
+- Join group code: code02
 
 # Features
 1. **OCR Bill Recognition**  
@@ -125,7 +125,7 @@ Join group code: code02
 
 # other documents
 
-### [00 proposal](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/01-Have-you-shown-the-ability-to-carry-out-further-learning-beyond-the-course-material-to-add-value-to-your-prototype%3F)
+### [00 proposal](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/blob/main/Project_Proposal_SplitEase.pdf)
 
 ### [01 Have you shown the ability to carry out further learning beyond the course material to add value to your prototype?](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/01-Have-you-shown-the-ability-to-carry-out-further-learning-beyond-the-course-material-to-add-value-to-your-prototype%3F)
 
