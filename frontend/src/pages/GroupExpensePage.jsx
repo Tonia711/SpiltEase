@@ -354,7 +354,7 @@ export default function GroupExpensePage() {
               </>
             )
           ) : activeTab === "balance" ? (
-            <div>
+            <>
               <div className={styles.memberNameRow}>
                 {owedToMe > 0 ? (
                   <>
@@ -393,7 +393,6 @@ export default function GroupExpensePage() {
 
                     return (
                       <li key={index}>
-                        {/* 展开详情卡片 */}
                         {expandedBalanceId === b._id ? (
                           <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
                             <div className={styles.balanceLineTop}>
@@ -423,7 +422,7 @@ export default function GroupExpensePage() {
                             {confirmMarkPaidId === b._id && (
                               <div className={styles.confirmRow}>
                                 <span className={styles.confirmText}>
-                                  A transfer will be added to group expense.
+                                  A transfer will be added to group.
                                 </span>
                                 <button
                                   className={styles.okButton}
@@ -445,8 +444,8 @@ export default function GroupExpensePage() {
                           <div
                             className={styles.memberItem}
                             data-testid="balance-item"
-                            onClick={() =>
-                              setExpandedBalanceId(b._id === expandedBalanceId ? null : b._id)
+                            onClick={() => 
+                              setExpandedBalanceId(b._id === expandedBalanceId ? null : b._id)                  
                             }
                           >
                             <span>{isIncoming ? other?.userName || "Someone" : `You owe ${other?.userName || "Someone"}`}</span>
@@ -537,7 +536,7 @@ export default function GroupExpensePage() {
                                     {confirmMarkPaidId === b._id && (
                                       <div className={styles.confirmRow}>
                                         <span className={styles.confirmText}>
-                                          A transfer will be added to group expense.
+                                          A transfer will be added to group.
                                         </span>
                                         <button
                                           className={styles.okButton}
@@ -558,7 +557,7 @@ export default function GroupExpensePage() {
                                   <div
                                     className={styles.memberItem}
                                     data-testid="balance-item"
-                                    onClick={() =>
+                                    onClick={() => 
                                       setExpandedBalanceId(
                                         expandedBalanceId === b._id ? null : b._id
                                       )
@@ -579,7 +578,7 @@ export default function GroupExpensePage() {
                   <p className={styles.emptyMessage}>No group member balances to show.</p>
                 )}
               </div>
-            </div>
+            </>
           ) : (
             // Summary tab content
             <GroupSummary
