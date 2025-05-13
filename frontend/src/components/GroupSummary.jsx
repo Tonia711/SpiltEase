@@ -61,7 +61,7 @@ export default function GroupSummary({ groupId, group, groupIconUrl }) {
 
       api.get(`/groups/${groupId}/summary`)
         .then(({ data }) => {
-          console.log("Received summary data:", data);
+          // console.log("Received summary data:", data);
           setSummaryData(data || DEFAULT_SUMMARY_DATA);
           setGroupTotal(parseFloat(data?.groupTotal || 0));
           setUserTotal(parseFloat(data?.userTotal || 0));

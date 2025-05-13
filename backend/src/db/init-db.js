@@ -193,12 +193,11 @@ async function importData() {
     allGroups.forEach((group) => {
       const memberMap = {};
       group.members.forEach((member) => {
-        memberMap[member.memberId] = member._id; // 注意这里是 member._id，不是 userId
+        memberMap[member.memberId] = member._id; // member._id
       });
       groupMemberIdToObjectIdMap[group._id.toString()] = memberMap;
     });
 
-    // 构造 fixedBills，并转换成员的 memberId 为 MongoDB 的 ObjectId
     const fixedBills = bills.map((b) => {
       const realGroupId = groupMap[b.groupId];
       const memberIdMap =

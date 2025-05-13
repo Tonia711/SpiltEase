@@ -351,7 +351,7 @@ export default function EditBillPage() {
         },
       });
 
-      console.log("OCR API Response:", response.data); // Debug response
+      // console.log("OCR API Response:", response.data); // Debug response
 
       // For robust handling, check if the response has the expected structure
       if (!response.data || response.data.success === false) {
@@ -367,7 +367,7 @@ export default function EditBillPage() {
       
       // Apply values that were successfully extracted
       if (hasAmount) {
-        console.log("Setting amount:", response.data.amount);
+        // console.log("Setting amount:", response.data.amount);
         setExpenses(response.data.amount);
         setIsEditing(true);
         setOcrResult({
@@ -377,12 +377,12 @@ export default function EditBillPage() {
       }
       
       if (hasMerchantName) {
-        console.log("Setting merchant name:", response.data.merchantName);
+        // console.log("Setting merchant name:", response.data.merchantName);
         setNote(response.data.merchantName);
       }
       
       if (hasDate) {
-        console.log("Setting transaction date:", response.data.transactionDate);
+        // console.log("Setting transaction date:", response.data.transactionDate);
         setPaidDate(response.data.transactionDate);
       }
 
