@@ -21,7 +21,6 @@ export default function GroupExpensePage() {
   const [activeTab, setActiveTab] = useState("expenses");
   const [balance, setBalance] = useState([]);
   const [expandedBalanceId, setExpandedBalanceId] = useState(null);
-  // const [expandedSource, setExpandedSource] = useState(null);
   const [confirmMarkPaidId, setConfirmMarkPaidId] = useState(null);
 
   const location = useLocation();
