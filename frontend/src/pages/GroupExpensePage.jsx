@@ -25,14 +25,15 @@ export default function GroupExpensePage() {
 
   const location = useLocation();
 
+  // Re-fetch data if coming from bill create/edit/delete
   useEffect(() => {
     if (location.state?.needRefreshBalance) {
       fetchData();
-      // 清除 state，避免重复触发
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state]);
 
+  // Base URL and default image
   const BASE_URL = import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
     : "";
@@ -40,7 +41,7 @@ export default function GroupExpensePage() {
 
   const myUserId = currentUser?._id?.toString() || "";
 
-  // 点击"Okay"按钮后
+  // Mark balance as paid: create a transfer bill and update balance
   const handleConfirmMarkAsPaid = async (balanceItem) => {
     try {
       const { fromMemberId, toMemberId, balance: amount } = balanceItem;
@@ -51,7 +52,6 @@ export default function GroupExpensePage() {
       const fromDisplay = fromMemberId === myGroupMemberObjectId ? "You" : fromUser;
       const toDisplay = toMemberId === myGroupMemberObjectId ? "You" : toUser;
 
-      // 构造一个转账账单
       const newBill = {
         groupId,
         labelId: "000000000000000000000007",
@@ -70,16 +70,15 @@ export default function GroupExpensePage() {
         ],
       };
 
+      // Add transfer bill
       await api.post("/bills", newBill);
 
-      // TODO: 更新对应 balance 的 isFinished 为 true（你需要提供一个接口）
       await api.put(`/balances/group/${groupId}/markPaid`, {
         fromMemberId,
         toMemberId,
       });
-      await fetchData();
+      await fetchData(); // Refresh data
 
-      // 刷新 balance
       const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
       setBalance(balanceData.groupBalances ?? []);
       setConfirmMarkPaidId(null);
@@ -91,15 +90,14 @@ export default function GroupExpensePage() {
     }
   };
 
-
-  // 找到自己在 group.members 里的 _id
+  // Get my group member ID
   const myGroupMemberObjectId = useMemo(() => {
     if (!group || !group.members || !currentUser) return null;
     const myMember = group.members.find(m => m.userId?.toString() === currentUser._id?.toString());
     return myMember?._id?.toString() || null;
   }, [group, currentUser]);
 
-
+  // Calculate my expenses and balance summary
   const { owedToMe, iOwe, myBalances, myExpenses, totalExpenses } = useMemo(() => {
     let myExpenses = 0;
     let totalExpenses = 0;
@@ -155,6 +153,7 @@ export default function GroupExpensePage() {
     return { owedToMe, iOwe, myBalances, myExpenses, totalExpenses };
   }, [balance, myUserId, groupBills, myGroupMemberObjectId]);
 
+  // Fetch balance from server
   const refreshBalance = async () => {
     try {
       const { data: balanceData } = await api.get(`/balances/group/${groupId}`);
@@ -165,6 +164,7 @@ export default function GroupExpensePage() {
     }
   };
 
+  // Fetch group and bill data, then structure by date
   const fetchData = async () => {
     try {
       const [{ data: groupData }, { data: billsData }] = await Promise.all([
@@ -174,12 +174,10 @@ export default function GroupExpensePage() {
 
       setGroup(groupData);
       setGroupBills(billsData);
-
       await refreshBalance();
 
       billsData.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      // 按日期分类账单
       const grouped = {};
       billsData
         .forEach((bill) => {
@@ -189,7 +187,7 @@ export default function GroupExpensePage() {
         });
 
       const sortedGrouped = Object.keys(grouped)
-        .sort((a, b) => new Date(b) - new Date(a)) // 日期 key 也按降序排
+        .sort((a, b) => new Date(b) - new Date(a))
         .reduce((obj, key) => {
           obj[key] = grouped[key];
           return obj;
@@ -205,6 +203,7 @@ export default function GroupExpensePage() {
     }
   }
 
+  // Initial data fetch
   useEffect(() => {
     fetchData();
   }, [groupId]);
@@ -221,6 +220,7 @@ export default function GroupExpensePage() {
       }
     }
 
+    // Load balance when switching to balance tab
     if (activeTab === "balance") {
       fetchBalance();
     }
@@ -230,8 +230,9 @@ export default function GroupExpensePage() {
   if (loading) return <p>Loading expenses...</p>;
   if (error) return <p>{error}</p>;
 
+  // Navigation handlers
   const handleGroupClick = () => {
-    navigate(`/groups/${groupId}`); // 点头像跳 GroupDetailPage
+    navigate(`/groups/${groupId}`);
   };
 
   const handleAddExpenseClick = () => {
@@ -242,6 +243,7 @@ export default function GroupExpensePage() {
     ? (group.iconUrl.startsWith("http") ? group.iconUrl : `${BASE_URL}/${group.iconUrl}`)
     : DEFAULT_ICON;
 
+  // Filter out members who have balanced debts
   const filteredGroupMembers = group?.members?.filter(member => {
     const memberId = member._id?.toString();
     if (!memberId || memberId === myGroupMemberObjectId) return false;
@@ -418,7 +420,6 @@ export default function GroupExpensePage() {
                               </button>
                             </div>
 
-                            {/* ✅ 如果点击了 Mark as paid，就显示 Okay 和 Cancel */}
                             {confirmMarkPaidId === b._id && (
                               <div className={styles.confirmRow}>
                                 <span className={styles.confirmText}>
@@ -440,7 +441,7 @@ export default function GroupExpensePage() {
                             )}
                           </div>
                         ) : (
-                          // 默认显示项
+                      
                           <div
                             className={styles.memberItem}
                             data-testid="balance-item"
@@ -532,8 +533,7 @@ export default function GroupExpensePage() {
                                         Mark as paid
                                       </button>
                                     </div>
-
-                                    {/* 新增确认逻辑 */}
+                          
                                     {confirmMarkPaidId === b._id && (
                                       <div className={styles.confirmRow}>
                                         <span className={styles.confirmText}>
