@@ -21,7 +21,7 @@ export default function GroupExpensePage() {
   const [activeTab, setActiveTab] = useState("expenses");
   const [balance, setBalance] = useState([]);
   const [expandedBalanceId, setExpandedBalanceId] = useState(null);
-  const [expandedSource, setExpandedSource] = useState(null);
+  // const [expandedSource, setExpandedSource] = useState(null);
   const [confirmMarkPaidId, setConfirmMarkPaidId] = useState(null);
 
   const location = useLocation();
@@ -393,8 +393,8 @@ export default function GroupExpensePage() {
                     const other = group?.members?.find(m => m._id?.toString() === otherId?.toString());
 
                     return (
-                      <li key={b._id}>
-                        {expandedBalanceId === b._id && expandedSource === "mine" ? (
+                      <li key={index}>
+                        {expandedBalanceId === b._id ? (
                           <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
                             <div className={styles.balanceLineTop}>
                               <span className={styles.balanceTopText}>
@@ -423,7 +423,7 @@ export default function GroupExpensePage() {
                             {confirmMarkPaidId === b._id && (
                               <div className={styles.confirmRow}>
                                 <span className={styles.confirmText}>
-                                  A transfer will be added to group expense.
+                                  A transfer will be added to group.
                                 </span>
                                 <button
                                   className={styles.okButton}
@@ -445,17 +445,9 @@ export default function GroupExpensePage() {
                           <div
                             className={styles.memberItem}
                             data-testid="balance-item"
-                            onClick={() => {
-                              if (expandedBalanceId === b._id && expandedSource === "mine") {
-                                setExpandedBalanceId(null);
-                                setExpandedSource(null);
-                                setConfirmMarkPaidId(null);
-                              } else {
-                                setExpandedBalanceId(b._id);
-                                setExpandedSource("mine");
-                                setConfirmMarkPaidId(null);
-                              }                          
-                            }}
+                            onClick={() => 
+                              setExpandedBalanceId(b._id === expandedBalanceId ? null : b._id)                  
+                            }
                           >
                             <span>{isIncoming ? other?.userName || "Someone" : `You owe ${other?.userName || "Someone"}`}</span>
                             <span className={isIncoming ? styles.greenText : styles.redText}>
@@ -492,17 +484,11 @@ export default function GroupExpensePage() {
 
                     if (total === 0) return null;
 
-                    const allRelated = unfinished.filter(b =>
-                      (isOwed && b.toMemberId?.toString() === memberId) ||
-                      (!isOwed && b.fromMemberId?.toString() === memberId)
+                    const relatedBalances = unfinished.filter(b =>
+                      !b.isFinished &&
+                      ((isOwed && b.toMemberId?.toString() === memberId) ||
+                        (!isOwed && b.fromMemberId?.toString() === memberId))
                     );
-                    const uniqueKeys = new Set();
-                    const relatedBalances = allRelated.filter((b) => {
-                      const displayKey = [b.fromMemberId, b.toMemberId].sort().join("--");
-                      if (uniqueKeys.has(displayKey)) return false;
-                      uniqueKeys.add(displayKey);
-                      return true;
-                    });
 
                     return (
                       <div key={member._id} className={styles.memberBlock}>
@@ -519,11 +505,10 @@ export default function GroupExpensePage() {
                             const otherId = isOwed ? b.fromMemberId : b.toMemberId;
                             const otherUser = group.members.find(m => m._id?.toString() === otherId?.toString());
                             if (!otherUser) return null;
-                            const expandKey = b._id;
 
                             return (
-                              <li key={expandKey}>
-                                {expandedBalanceId === expandKey && expandedSource === "group" ? (
+                              <li key={index}>
+                                {expandedBalanceId === b._id ? (
                                   <div className={`${styles.balanceDetailBox} ${confirmMarkPaidId === b._id ? styles.confirming : ""}`}>
                                     <div className={styles.balanceLineTop}>
                                       <span>
@@ -552,7 +537,7 @@ export default function GroupExpensePage() {
                                     {confirmMarkPaidId === b._id && (
                                       <div className={styles.confirmRow}>
                                         <span className={styles.confirmText}>
-                                          A transfer will be added to group expense.
+                                          A transfer will be added to group.
                                         </span>
                                         <button
                                           className={styles.okButton}
@@ -573,17 +558,11 @@ export default function GroupExpensePage() {
                                   <div
                                     className={styles.memberItem}
                                     data-testid="balance-item"
-                                    onClick={() => {
-                                      if (expandedBalanceId === expandKey && expandedSource === "group") {
-                                        setExpandedBalanceId(null);
-                                        setExpandedSource(null);
-                                        setConfirmMarkPaidId(null);
-                                      } else {
-                                        setExpandedBalanceId(expandKey);
-                                        setExpandedSource("group");
-                                        setConfirmMarkPaidId(null);
-                                      }
-                                    }}
+                                    onClick={() => 
+                                      setExpandedBalanceId(
+                                        expandedBalanceId === b._id ? null : b._id
+                                      )
+                                    }
                                   >
                                     <span>{otherUser.userName}</span>
                                     <span>${b.balance.toFixed(2)}</span>
