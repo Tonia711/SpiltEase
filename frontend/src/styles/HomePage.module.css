@@ -137,22 +137,3 @@
   color: #ffffff;
   font-size: 16px;
 }
-
-@media (max-width: 360px) {
-  .fab {
-    width: 70px;
-    height: 70px;
-    font-size: 1.5rem;
-    bottom: 24px;
-  }
-}
-
-@media (min-width: 768px) {
-  .fab {
-    width: 100px;
-    height: 100px;
-    font-size: 16px;
-    font-weight: 700;
-    bottom: 40px;
-  }
-}
