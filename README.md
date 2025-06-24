@@ -16,7 +16,7 @@
 ### Step 1: Clone the repository
 
 ```
-git clone https://github.com/UOA-CS732-S1-2025/group-project-pokemasters.git
+git clone https://github.com/Tonia711/SpiltEase.git
 ```
 
 ### Step 2: Install dependencies
