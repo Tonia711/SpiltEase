@@ -18,75 +18,91 @@ Please use good version control practices, such as feature branching, both to ma
 ![](./PokeMasters.png)
 
 # How to Run and Test the Project
+
 ## 1. Prerequisites
+
 - Node.js (version 18 or above)
 - MongoDB (local or Atlas)
 - (Optional) Postman – for API testing
+
 ## 2. Project Structure
-/frontend     → React (Next.js) frontend  
-/backend     → Express backend  
+
+/frontend → React (Next.js) frontend  
+/backend → Express backend
+
 ## 3. Installation Steps
 
 ### Step 1: Clone the repository
+
 ```
 git clone https://github.com/UOA-CS732-S1-2025/group-project-pokemasters.git
 ```
+
 ### Step 2: Install dependencies
+
 Backend
+
 ```
-cd backend 
+cd backend
 npm  install
 ```
+
 Frontend
+
 ```
 cd frontend
 npm install
 ```
+
 ### Step 3: Configure environment variables
+
 In the `/backend` directory, create a .env file with the following contents (has been submitted into Assignment - Private info / API key / etc submission):
+
 ```
-PORT=3000
-DATABASE = mongodb+srv://pokemasters:<PASSWORD>@cluster0.c5u4t48.mongodb.net/splitmate?retryWrites=true&w=majority&appName=Cluster0
-DATABASE_LOCAL = mongodb://localhost:27017/pokemasters
-DATABASE_PASSWORD = pw123456
 
-MONGO_URI=mongodb+srv://pokemasters:pw123456@cluster0.c5u4t48.mongodb.net/splitmate?retryWrites=true&w=majority&appName=Cluster0
-
-JWT_SECRET=yourSecretKey123
-JWT_EXPIRES_IN=7d
-
-AZURE_FORM_RECOGNIZER_ENDPOINT=https://pokemasters-receipt-ocr.cognitiveservices.azure.com/
-AZURE_FORM_RECOGNIZER_KEY=w1jrMsm2sLNQaz5zJtxatBG9LYrBGUKnoxNhBUuovJZ7GnMXVNvdJQQJ99BEACL93NaXJ3w3AAALACOGeyu7
 ```
+
 ### Step 4: Running the Application
+
 Start the backend
+
 ```
-cd backend 
+cd backend
 npm start
 ```
+
 Start the frontend
+
 ```
 cd  frontend
 npm run dev
 ```
+
 ### Step 5: Testing
+
 Backend tests
+
 ```
 cd backend
 npm run test
 ```
+
 Frontend tests
+
 ```
 cd frontend
 npm run  test
 ```
+
 ### Step 6: Test Account Credentials
+
 - Use the following test account to log in and test features:
 - Email: mike@gmail.com
 - Password：password1
 - Join group code: code02
 
 # Features
+
 1. **OCR Bill Recognition**  
    The system supports OCR technology to scan and recognize receipt content automatically. It extracts key details such as date, amount, and item description to reduce manual data entry and improve efficiency.
 
@@ -100,24 +116,27 @@ npm run  test
    Users can create and manage team-based ledgers by organizing expenses into categories. Each record can include an amount, description, image, or note, providing better clarity and shared understanding.
 
 5. **Smart Expense Splitting**  
-   The application supports flexible expense splitting methods, allowing users to:  
-   - Share equally among all members  
-   - Assign fixed amounts to specific users  
+   The application supports flexible expense splitting methods, allowing users to:
+
+   - Share equally among all members
+   - Assign fixed amounts to specific users
    - Randomly allocate any leftover balance from rounding errors
 
 6. **Personal Expense Overview**  
-   Each user has access to their personal dashboard, displaying:  
-   - Total spending and a breakdown by category  
+   Each user has access to their personal dashboard, displaying:
+
+   - Total spending and a breakdown by category
    - Borrowing and lending information, including debts and receivables  
-   This helps users understand their financial contributions and relationships within the group.
+     This helps users understand their financial contributions and relationships within the group.
 
 7. **User Authentication & Account Management**  
    Secure user authentication is implemented, supporting registration, login, and logout. Users can manage their personal profiles and group memberships safely and independently.
 
 8. **Data Analytics & Visualization**  
-   Built-in charts and summaries provide users with clear financial insights. These include:  
-   - Overall group spendin  
-   - Individual spending patterns  
+   Built-in charts and summaries provide users with clear financial insights. These include:
+
+   - Overall group spendin
+   - Individual spending patterns
    - Final balance summaries to simplify settlement and review
 
 9. **Undo/Redo Expense Edits**  
