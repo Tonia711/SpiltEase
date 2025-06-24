@@ -1,22 +1,3 @@
-# CS732 project - Team PokeMasters
-
-Welcome to the CS732 project. We look forward to seeing the amazing things you create this semester! This is your team's repository.
-
-Your team members are:
-
-- Xingxing Tao _(xtao093@aucklanduni.ac.nz)_
-- Mingming Liu _(mliu947@aucklanduni.ac.nz)_
-- Shan Liu _(sliu734@aucklanduni.ac.nz)_
-- Lingyi Yin _(lyin610@aucklanduni.ac.nz)_
-- Pan Wang _(pwan744@aucklanduni.ac.nz)_
-- Exa Fann _(xfan744@aucklanduni.ac.nz)_
-
-You have complete control over how you run this repo. All your members will have admin access. The only thing setup by default is branch protections on `main`, requiring a PR with at least one code reviewer to modify `main` rather than direct pushes.
-
-Please use good version control practices, such as feature branching, both to make it easier for markers to see your group's history and to lower the chances of you tripping over each other during development
-
-![](./PokeMasters.png)
-
 # How to Run and Test the Project
 
 ## 1. Prerequisites
@@ -56,11 +37,7 @@ npm install
 
 ### Step 3: Configure environment variables
 
-In the `/backend` directory, create a .env file with the following contents (has been submitted into Assignment - Private info / API key / etc submission):
-
-```
-
-```
+In the `/backend` directory, create a .env file with the following contents :
 
 ### Step 4: Running the Application
 
@@ -141,21 +118,3 @@ npm run  test
 
 9. **Undo/Redo Expense Edits**  
    The system allows users to undo or redo changes made to expenses, reducing accidental errors and maintaining the accuracy of financial records.
-
-# other documents
-
-### [00 proposal](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/blob/main/Project_Proposal_SplitEase.pdf)
-
-### [01 Have you shown the ability to carry out further learning beyond the course material to add value to your prototype?](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/01-Have-you-shown-the-ability-to-carry-out-further-learning-beyond-the-course-material-to-add-value-to-your-prototype%3F)
-
-### [02 How well is your product designed, especially from a user's perspective?](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/02-How-well-is-your-product-designed,-especially-from-a-user's-perspective%3F)
-
-### [03 How well have you applied principles such as design thinking in the construction of your prototype?](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/03-How-well-have-you-applied-principles-such-as-design-thinking-in-the-construction-of-your-prototype%3F)
-
-### [04 Has your code been developed according to best-practices within your applied frameworks?](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/04-Has-your-code-been-developed-according-to-best%E2%80%90practices-within-your-applied-frameworks%3F)
-
-### [05 Has your code been tested? How?](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/05-Has-your-code-been-tested%3F-How%3F)
-
-### [06 Has your project been deployed?](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki/06-Has-your-project-been-deployed%3F)
-
-### [07 Meetings](https://github.com/UOA-CS732-S1-2025/group-project-pokemasters/wiki)
